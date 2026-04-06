@@ -2,8 +2,6 @@ import { useRef, useEffect, useState, type ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useReactToPrint } from 'react-to-print';
 import { useTranslation } from 'react-i18next';
-import { Download, Printer, Upload } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
 import type { CVData, SavedCV } from './types';
 import { emptyCV } from './data/defaultCV';
 import { CVForm } from './components/CVForm';
@@ -11,8 +9,7 @@ import { PDFPreview } from './components/PDFPreview';
 import { useCVStorage } from './hooks/useCVStorage';
 import { Sidebar } from './components/Sidebar';
 import { Modal } from './components/Modal';
-import { CVDocument } from './components/CVDocument';
-import { LanguageSelector } from './components/LanguageSelector';
+import { AppHeader } from './components/AppHeader';
 
 function App() {
   const { t } = useTranslation();
@@ -79,7 +76,6 @@ function App() {
   };
 
   const contentRef = useRef<HTMLDivElement>(null);
-  const importInputRef = useRef<HTMLInputElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
 
   const sanitizeImportedCV = (item: unknown): SavedCV | null => {
@@ -138,10 +134,6 @@ function App() {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-  };
-
-  const handleRequestImport = () => {
-    importInputRef.current?.click();
   };
 
   const handleImportData = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -240,98 +232,13 @@ function App() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-        <header className="bg-white shadow p-4 sticky top-0 z-10">
-          <input
-            ref={importInputRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={handleImportData}
-          />
-
-          <div className="max-w-7xl mx-auto flex justify-between items-center gap-2 md:gap-4">
-            <div className="flex items-center gap-2 md:gap-3 min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold text-gray-800 truncate">
-                {t('header.title')}
-              </h1>
-              <LanguageSelector />
-            </div>
-
-            {/* Desktop / md+: show download in header; Mobile: hidden */}
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleRequestImport}
-                className="flex items-center gap-2 bg-gray-200 text-gray-800 px-3 py-2 md:px-4 md:py-2 rounded-md hover:bg-gray-300 transition text-sm md:text-base whitespace-nowrap"
-              >
-                <Upload size={18} />
-                <span>{t('header.importData')}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleExportData}
-                className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-md hover:bg-emerald-700 transition text-sm md:text-base whitespace-nowrap"
-              >
-                <Download size={18} />
-                <span>{t('header.exportData')}</span>
-              </button>
-
-              <PDFDownloadLink
-                document={<CVDocument data={data} />}
-                fileName={`${(activeCV?.title || 'meu_curriculo').replaceAll(/\s+/g, '_')}.pdf`}
-              >
-                {({ loading }) => (
-                  <button
-                    disabled={loading}
-                    onClick={() => reactToPrintFn()}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-md hover:bg-indigo-700 transition text-sm md:text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Printer size={20} />
-                    <span className="hidden md:inline">{t('header.download')}</span>
-                    <span className="md:hidden">{t('header.downloadMobile')}</span>
-                  </button>
-                )}
-              </PDFDownloadLink>
-            </div>
-          </div>
-
-          <div className="max-w-7xl mx-auto mt-3 md:hidden flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleRequestImport}
-              className="flex items-center gap-2 bg-gray-200 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-300 transition text-sm whitespace-nowrap"
-            >
-              <Upload size={16} />
-              <span>{t('header.importData')}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExportData}
-              className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md hover:bg-emerald-700 transition text-sm whitespace-nowrap"
-            >
-              <Download size={16} />
-              <span>{t('header.exportData')}</span>
-            </button>
-
-            <PDFDownloadLink
-              document={<CVDocument data={data} />}
-              fileName={`${(activeCV?.title || 'meu_curriculo').replaceAll(/\s+/g, '_')}.pdf`}
-            >
-              {({ loading }) => (
-                <button
-                  disabled={loading}
-                  onClick={() => reactToPrintFn()}
-                  className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Printer size={16} />
-                  <span>{t('header.download')}</span>
-                </button>
-              )}
-            </PDFDownloadLink>
-          </div>
-        </header>
+        <AppHeader
+          data={data}
+          activeTitle={activeCV?.title || 'meu_curriculo'}
+          onImportData={handleImportData}
+          onExportData={handleExportData}
+          onDownloadPdf={reactToPrintFn}
+        />
 
         <main className="flex-1 mx-auto w-full p-4 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
