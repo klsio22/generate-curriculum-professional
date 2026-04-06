@@ -45,7 +45,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Overlay for mobile */}
       {isOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Fechar sidebar"
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
           onClick={toggleSidebar}
         />

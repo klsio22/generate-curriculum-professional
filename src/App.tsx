@@ -11,6 +11,49 @@ import { Sidebar } from './components/Sidebar';
 import { Modal } from './components/Modal';
 import { AppHeader } from './components/AppHeader';
 
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const sanitizeImportedCV = (item: unknown): SavedCV | null => {
+  if (!item || typeof item !== 'object') return null;
+
+  const candidate = item as Partial<SavedCV>;
+  const requiredStringFields = [
+    candidate.id,
+    candidate.title,
+    candidate.fullName,
+    candidate.jobTitle,
+    candidate.address,
+    candidate.phone,
+    candidate.email,
+    candidate.linkedin,
+    candidate.objective,
+    candidate.skills,
+  ];
+
+  if (requiredStringFields.some((field) => !isNonEmptyString(field))) return null;
+  if (!Array.isArray(candidate.education) || !Array.isArray(candidate.experience)) return null;
+
+  return {
+    ...candidate,
+    updatedAt: typeof candidate.updatedAt === 'number' ? candidate.updatedAt : Date.now(),
+    education: candidate.education,
+    experience: candidate.experience,
+    references: Array.isArray(candidate.references) ? candidate.references : [],
+    projects: Array.isArray(candidate.projects) ? candidate.projects : [],
+    languages: isNonEmptyString(candidate.languages) ? candidate.languages : '',
+    softSkills: isNonEmptyString(candidate.softSkills) ? candidate.softSkills : '',
+    interpersonalSkills: isNonEmptyString(candidate.interpersonalSkills)
+      ? candidate.interpersonalSkills
+      : '',
+    linkedinName: isNonEmptyString(candidate.linkedinName) ? candidate.linkedinName : '',
+    github: isNonEmptyString(candidate.github) ? candidate.github : '',
+    githubName: isNonEmptyString(candidate.githubName) ? candidate.githubName : '',
+    portfolio: isNonEmptyString(candidate.portfolio) ? candidate.portfolio : '',
+    portfolioName: isNonEmptyString(candidate.portfolioName) ? candidate.portfolioName : '',
+  } as SavedCV;
+};
+
 function App() {
   const { t } = useTranslation();
   const {
@@ -78,43 +121,6 @@ function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
 
-  const sanitizeImportedCV = (item: unknown): SavedCV | null => {
-    if (!item || typeof item !== 'object') return null;
-    const candidate = item as Partial<SavedCV>;
-    if (typeof candidate.id !== 'string' || !candidate.id.trim()) return null;
-    if (typeof candidate.title !== 'string') return null;
-    if (typeof candidate.fullName !== 'string') return null;
-    if (typeof candidate.jobTitle !== 'string') return null;
-    if (typeof candidate.address !== 'string') return null;
-    if (typeof candidate.phone !== 'string') return null;
-    if (typeof candidate.email !== 'string') return null;
-    if (typeof candidate.linkedin !== 'string') return null;
-    if (typeof candidate.objective !== 'string') return null;
-    if (typeof candidate.skills !== 'string') return null;
-    if (!Array.isArray(candidate.education)) return null;
-    if (!Array.isArray(candidate.experience)) return null;
-
-    return {
-      ...candidate,
-      updatedAt: typeof candidate.updatedAt === 'number' ? candidate.updatedAt : Date.now(),
-      education: candidate.education,
-      experience: candidate.experience,
-      references: Array.isArray(candidate.references) ? candidate.references : [],
-      projects: Array.isArray(candidate.projects) ? candidate.projects : [],
-      languages: typeof candidate.languages === 'string' ? candidate.languages : '',
-      softSkills: typeof candidate.softSkills === 'string' ? candidate.softSkills : '',
-      interpersonalSkills:
-        typeof candidate.interpersonalSkills === 'string'
-          ? candidate.interpersonalSkills
-          : '',
-      linkedinName: typeof candidate.linkedinName === 'string' ? candidate.linkedinName : '',
-      github: typeof candidate.github === 'string' ? candidate.github : '',
-      githubName: typeof candidate.githubName === 'string' ? candidate.githubName : '',
-      portfolio: typeof candidate.portfolio === 'string' ? candidate.portfolio : '',
-      portfolioName: typeof candidate.portfolioName === 'string' ? candidate.portfolioName : '',
-    } as SavedCV;
-  };
-
   const handleExportData = () => {
     const payload = {
       version: 1,
@@ -147,18 +153,19 @@ function App() {
         activeId?: unknown;
       } | unknown[];
 
-      const importedList = Array.isArray(parsed)
-        ? parsed
-        : Array.isArray(parsed.cvs)
-          ? parsed.cvs
-          : [];
+      let importedList: unknown[] = [];
+      if (Array.isArray(parsed)) {
+        importedList = parsed;
+      } else if (Array.isArray(parsed.cvs)) {
+        importedList = parsed.cvs;
+      }
 
       const normalized = importedList
         .map(sanitizeImportedCV)
         .filter((cv): cv is SavedCV => cv !== null);
 
       if (normalized.length === 0) {
-        window.alert(t('header.importInvalid'));
+        globalThis.alert(t('header.importInvalid'));
         return;
       }
 
@@ -169,13 +176,13 @@ function App() {
 
       const imported = importCVs(normalized, preferredActiveId);
       if (!imported) {
-        window.alert(t('header.importInvalid'));
+        globalThis.alert(t('header.importInvalid'));
         return;
       }
 
-      window.alert(t('header.importSuccess'));
+      globalThis.alert(t('header.importSuccess'));
     } catch {
-      window.alert(t('header.importError'));
+      globalThis.alert(t('header.importError'));
     } finally {
       event.target.value = '';
     }
