@@ -1,23 +1,23 @@
-# Documentacao do projeto
+# Project Documentation
 
-Este diretorio centraliza a documentacao tecnica da aplicacao de geracao de curriculos.
+This directory centralizes the technical documentation for the resume generator application.
 
-## Conteudo
+## Contents
 
-- [Visao geral](./arquitetura.md)
-- [Componentes](./componentes.md)
-- [Dependencias e libs](./dependencias.md)
+- [Overview](./arquitetura.md)
+- [Components](./componentes.md)
+- [Dependencies and libraries](./dependencias.md)
 
-## Escopo
+## Scope
 
-A documentacao aqui cobre:
+The documentation here covers:
 
-- arquitetura da aplicacao
-- fluxo de dados e persistencia
-- responsabilidade de cada componente
-- bibliotecas principais e o papel de cada uma
-- pontos de extensao mais comuns
+- application architecture
+- data flow and persistence
+- responsibilities of each component
+- core libraries and the role of each one
+- common extension points
 
-## Como usar
+## How to use
 
-Use estes arquivos como referencia rapida ao evoluir a aplicacao, adicionar novas telas ou revisar o fluxo de exportacao em PDF.
+Use these files as a quick reference when evolving the application, adding new screens, or reviewing the PDF export flow.

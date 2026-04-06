@@ -1,45 +1,45 @@
-# Dependencias e libs
+# Dependencies and Libraries
 
-Abaixo esta o proposito das bibliotecas principais usadas na aplicacao.
+Below is the purpose of the main libraries used by the application.
 
 ## Runtime
 
-- `react`: base da interface.
-- `react-dom`: renderizacao no DOM.
-- `react-hook-form`: controle do formulario com boa performance.
-- `react-i18next` e `i18next`: internacionalizacao da interface e dos textos do PDF.
-- `@react-pdf/renderer`: renderizacao e geracao do PDF.
-- `react-to-print`: suporte a impressao/fluxos de exportacao.
-- `lucide-react`: icones da interface.
+- `react`: UI foundation.
+- `react-dom`: DOM rendering.
+- `react-hook-form`: high-performance form state handling.
+- `react-i18next` and `i18next`: UI and PDF text internationalization.
+- `@react-pdf/renderer`: PDF rendering and generation.
+- `react-to-print`: browser print support/export flow integration.
+- `lucide-react`: UI icons.
 
-## Build e tooling
+## Build and Tooling
 
-- `vite`: servidor de desenvolvimento e build.
-- `typescript`: tipagem estatico da aplicacao.
-- `eslint` e `typescript-eslint`: analise estatica e padroes de codigo.
-- `@vitejs/plugin-react`: integracao do React com Vite.
-- `tailwindcss` e `@tailwindcss/vite`: estilizacao utilitaria.
-- `daisyui`: conjunto de componentes utilitarios sobre Tailwind.
-- `globals`, `@types/react`, `@types/react-dom`, `@types/node`: tipos e ambientes auxiliares.
+- `vite`: development server and build pipeline.
+- `typescript`: static typing for the application.
+- `eslint` and `typescript-eslint`: static analysis and code quality rules.
+- `@vitejs/plugin-react`: React integration for Vite.
+- `tailwindcss` and `@tailwindcss/vite`: utility-first styling.
+- `daisyui`: utility component layer on top of Tailwind.
+- `globals`, `@types/react`, `@types/react-dom`, `@types/node`: environment and type support.
 
-## Dependencias por area
+## Dependencies by Area
 
-### Formulario
+### Form
 
-O formulario usa `react-hook-form` e `useFieldArray` para lidar com blocos repetiveis como experiencia, formacao e projetos.
+The form uses `react-hook-form` and `useFieldArray` to handle repeatable sections such as experience, education, and projects.
 
 ### PDF
 
-A geracao do PDF depende de `@react-pdf/renderer` e dos estilos definidos em `src/styles/pdfStyles.ts`.
+PDF generation depends on `@react-pdf/renderer` and styles defined in `src/styles/pdfStyles.ts`.
 
-### Idiomas
+### Languages
 
-A aplicacao registra os recursos de idioma em `src/i18n/config.ts` e alterna entre portugues e ingles.
+The application registers language resources in `src/i18n/config.ts` and switches between Portuguese and English.
 
-### Persistencia
+### Persistence
 
-Nao existe dependencia externa para banco ou API. O estado fica salvo no navegador via `localStorage`.
+There is no external database or API dependency. State is stored in the browser through `localStorage`.
 
-## Observacao
+## Note
 
-O arquivo `package.json` deve ser a fonte de verdade para versoes exatas e scripts disponiveis.
+The `package.json` file should be considered the source of truth for exact versions and available scripts.

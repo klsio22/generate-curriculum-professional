@@ -1,107 +1,107 @@
 # **Curriculum Generator**
 
-> **Aplicação web para criação, edição e exportação de currículos profissionais no padrão ABNT**, com preview em tempo real e exportação em PDF.
+> **Web application for creating, editing, and exporting professional resumes in ABNT format**, with real-time preview and PDF export.
 
-🚀 **Demo ao vivo:** [generate-curriculum-professional.vercel.app](https://generate-curriculum-professional.vercel.app/)
-
----
-
-## **✨ Funcionalidades Principais**
-
-| Recurso | Descrição |
-|---------|-----------|
-| **Editor Inteligente** | Formulário com validação em tempo real e persistência local (localStorage) |
-| **Preview ABNT A4** | Visualização fiel do currículo no formato A4 brasileiro |
-| **Exportação PDF** | Geração de PDF profissional pronto para impressão ou envio |
-| **Múltiplos Currículos** | Criar, duplicar e gerenciar várias versões de currículo |
-| **Design Responsivo** | Interface adaptável com Tailwind CSS e DaisyUI |
+🚀 **Live demo:** [generate-curriculum-professional.vercel.app](https://generate-curriculum-professional.vercel.app/)
 
 ---
 
-## **🛠️ Stack Tecnológico**
+## **✨ Main Features**
+
+| Feature | Description |
+|---------|-------------|
+| **Smart Editor** | Form with real-time updates and local persistence (localStorage) |
+| **ABNT A4 Preview** | Accurate resume preview in Brazilian A4 format |
+| **PDF Export** | Professional PDF generation ready for printing or sharing |
+| **Multiple Resumes** | Create, duplicate, and manage multiple resume versions |
+| **Responsive Design** | Adaptive interface with Tailwind CSS and DaisyUI |
+
+---
+
+## **🛠️ Tech Stack**
 
 ```
-React 19 .................. Biblioteca UI moderna com hooks
-TypeScript 5.9 ............ Tipagem estática para código robusto
-Vite ...................... Build tool rápido e otimizado
-Tailwind CSS + DaisyUI .... Estilização utilitária e componentes
-React Hook Form ........... Gerenciamento de formulários performático
-@react-pdf/renderer ....... Geração de PDF server-side no browser
-react-to-print ............ API de impressão nativa do navegador
-Lucide React .............. Ícones modernos e consistentes
+React 19 .................. Modern UI library with hooks
+TypeScript 5.9 ............ Static typing for robust code
+Vite ...................... Fast and optimized build tool
+Tailwind CSS + DaisyUI .... Utility-first styling and UI components
+React Hook Form ........... High-performance form state management
+@react-pdf/renderer ....... Browser-based PDF rendering/generation
+react-to-print ............ Native browser printing integration
+Lucide React .............. Modern and consistent icon set
 ```
 
-> 📦 Veja `package.json` para versões exatas e dependências.
+> 📦 Check `package.json` for exact versions and dependencies.
 
 ---
 
-## **🚀 Começando**
+## **🚀 Getting Started**
 
-### **Desenvolvimento local**
+### **Local development**
 
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/curriculum-generator.git
+# Clone the repository
+git clone https://github.com/your-username/curriculum-generator.git
 
-# Instale as dependências
+# Install dependencies
 npm install
 
-# Inicie o servidor de desenvolvimento
+# Start the development server
 npm run dev
 ```
 
-### **Build de produção**
+### **Production build**
 
 ```bash
-# Gera build otimizada
+# Create optimized build
 npm run build
 
-# Preview local do build de produção
+# Preview production build locally
 npm run preview
 ```
 
 ---
 
-## **📁 Estrutura do Projeto**
+## **📁 Project Structure**
 
 ```
 src/
-├── components/
-│   ├── CVForm.tsx ............... Formulário de edição do currículo
-│   ├── PDFPreview.tsx ........... Preview A4 + componente de PDF
-│   └── Sidebar.tsx .............. Lista e gerenciamento de currículos
 ├── App.tsx
 ├── main.tsx
 ├── index.css
 ├── types.ts
 ├── assets/
 ├── components/
-│   ├── CVDocument.tsx ........... Documento PDF / export
-│   ├── CVForm.tsx ............... Formulário de edição do currículo
-│   ├── Modal.tsx ................ Componente de diálogos
-│   ├── PDFPreview.tsx ........... Preview A4 + componente de PDF
-│   └── Sidebar.tsx .............. Lista e gerenciamento de currículos
+│   ├── CVDocument.tsx ........... PDF document / export
+│   ├── CVForm.tsx ............... Resume editing form
+│   ├── Modal.tsx ................ Dialog component
+│   ├── PDFPreview.tsx ........... A4 preview + PDF viewer
+│   ├── Sidebar.tsx .............. Resume list and management
+│   └── LanguageSelector.tsx ..... Language switcher
 ├── data/
-│   └── defaultCV.ts ............. Dados iniciais do currículo
+│   └── defaultCV.ts ............. Initial resume data
 ├── hooks/
-│   └── useCVStorage.ts .......... Persistência local (CRUD completo)
+│   └── useCVStorage.ts .......... Local persistence (full CRUD)
+├── i18n/
+│   ├── config.ts
+│   └── locales/
 ├── styles/
-│   └── pdfStyles.ts ............. Estilos específicos para PDF
-├── utils/
-│   └── textUtils.ts ............. Utilitários de formatação (datas, URLs)
+│   └── pdfStyles.ts ............. PDF-specific styling
+└── utils/
+	└── textUtils.ts ............. Text formatting utilities (dates, URLs)
 ```
 
 ---
 
-## **🌐 Deploy**
+## **🌐 Deployment**
 
-### **Vercel (recomendado)**
+### **Vercel (recommended)**
 
-1. Conecte seu repositório GitHub na [Vercel](https://vercel.com)
-2. **Variáveis de ambiente:** Nenhuma necessária
-3. **Build command:** `npm run build` (detectado automaticamente)
+1. Connect your GitHub repository on [Vercel](https://vercel.com)
+2. **Environment variables:** none required
+3. **Build command:** `npm run build` (auto-detected)
 
-### **Deploy manual via CLI**
+### **Manual deployment via CLI**
 
 ```bash
 npm run build
@@ -110,23 +110,23 @@ vercel --prod
 
 ---
 
-## **⚙️ Personalização**
+## **⚙️ Customization**
 
-| Arquivo | O que editar |
-|---------|--------------|
-| `src/styles/pdfStyles.ts` | Margens, fontes e espaçamento do PDF |
-| `src/data/defaultCV.ts` | Dados iniciais do currículo padrão |
+| File | What to edit |
+|------|---------------|
+| `src/styles/pdfStyles.ts` | PDF margins, fonts, and spacing |
+| `src/data/defaultCV.ts` | Default resume seed data |
 
 ---
 
-## **📄 Licença**
+## **📄 License**
 
-MIT © 2024 Klésio
+MIT © 2024 Klesio
 
 ---
 
 ## **🔗 Links**
 
 - 🌐 **Demo:** [generate-curriculum-professional.vercel.app](https://generate-curriculum-professional.vercel.app/)
-- 💼 **Portfólio:** [klesio-dev.vercel.app](https://klesio-dev.vercel.app/)
+- 💼 **Portfolio:** [klesio-dev.vercel.app](https://klesio-dev.vercel.app/)
 - 💻 **GitHub:** [github.com/klsio22](https://github.com/klsio22)

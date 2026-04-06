@@ -1,130 +1,130 @@
-# Componentes
+# Components
 
-Este documento descreve a responsabilidade de cada componente em `src/components` e dos modulos centrais relacionados.
+This document describes the responsibility of each component in `src/components` and related core modules.
 
 ## App.tsx
 
-Componente raiz da interface.
+Root UI component.
 
-Responsabilidades:
+Responsibilities:
 
-- carregar o estado de curriculos via `useCVStorage`
-- controlar o curriculo ativo
-- abrir e fechar a sidebar em telas pequenas
-- exibir modais de confirmacao para exclusao e limpeza
-- conectar o formulario ao preview e ao PDF
-- coordenar a exportacao com `PDFDownloadLink` e `react-to-print`
+- load resume state through `useCVStorage`
+- control the active resume
+- open and close the sidebar on small screens
+- display confirmation modals for delete and clear actions
+- connect the form to preview and PDF rendering
+- coordinate export with `PDFDownloadLink` and `react-to-print`
 
 ## CVForm.tsx
 
-Formulario principal de edicao do curriculo.
+Main resume editing form.
 
-Responsabilidades:
+Responsibilities:
 
-- editar dados pessoais
-- editar objetivo profissional
-- adicionar e remover blocos repetiveis de experiencia, formacao e projetos
-- editar competencias tecnicas, idiomas, soft skills, competencias interpessoais e referencias
-- disparar salvamento automatico no blur dos campos
+- edit personal data
+- edit professional objective
+- add and remove repeatable blocks for experience, education, and projects
+- edit technical skills, languages, soft skills, interpersonal competencies, and references
+- trigger auto-save on input blur
 
-Dependencias principais:
+Main dependencies:
 
 - `react-hook-form`
 - `useFieldArray`
-- `i18next` para textos traduzidos
+- `i18next` for translated labels
 
 ## CVDocument.tsx
 
-Representacao do curriculo em PDF.
+PDF representation of the resume.
 
-Responsabilidades:
+Responsibilities:
 
-- converter `CVData` em um documento pronto para exportacao
-- renderizar secoes condicionais conforme os dados preenchidos
-- formatar links externos e textos multi-linha
-- aplicar estilos de PDF via `pdfStyles.ts`
+- convert `CVData` into an export-ready document
+- render conditional sections based on filled data
+- format external links and multi-line text blocks
+- apply PDF styles from `pdfStyles.ts`
 
 ## PDFPreview.tsx
 
-Container do preview do PDF.
+PDF preview container.
 
-Responsabilidades:
+Responsibilities:
 
-- renderizar o documento em um `PDFViewer`
-- mostrar o curriculo em formato visual semelhante ao PDF final
-- servir como preview central da area lateral direita da tela
+- render the document inside `PDFViewer`
+- display the resume in a layout similar to final output
+- provide the central preview area on the right column
 
 ## Sidebar.tsx
 
-Painel lateral de gerenciamento de curriculos.
+Side panel for resume management.
 
-Responsabilidades:
+Responsibilities:
 
-- listar curriculos salvos
-- selecionar curriculo ativo
-- criar novo curriculo
-- duplicar curriculo
-- solicitar exclusao de um curriculo
-- solicitar limpeza total dos dados
-- lidar com comportamento responsivo em tela menor
+- list saved resumes
+- select active resume
+- create a new resume
+- duplicate a resume
+- request resume deletion
+- request full data clearing
+- handle responsive behavior on smaller screens
 
 ## Modal.tsx
 
-Dialogo generico de confirmacao.
+Generic confirmation dialog.
 
-Responsabilidades:
+Responsibilities:
 
-- exibir confirmacoes de exclusao e limpeza
-- fechar com clique fora ou tecla Escape
-- renderizar titulo, conteudo e acoes de confirmar/cancelar
+- show delete and clear confirmations
+- close on outside click or Escape key
+- render title, content, and confirm/cancel actions
 
 ## LanguageSelector.tsx
 
-Seletor de idioma da interface.
+UI language switcher.
 
-Responsabilidades:
+Responsibilities:
 
-- alternar entre `pt-BR` e `en`
-- persistir a escolha no `localStorage`
-- refletir o idioma ativo na interface
+- switch between `pt-BR` and `en`
+- persist selection in `localStorage`
+- reflect current language state in the UI
 
 ## useCVStorage.ts
 
-Hook de persistencia e CRUD de curriculos.
+Persistence and resume CRUD hook.
 
-Responsabilidades:
+Responsibilities:
 
-- carregar dados iniciais do `localStorage`
-- criar curriculos com dados padrao
-- duplicar curriculos existentes
-- atualizar curriculos
-- excluir curriculos
-- limpar tudo e reconstruir o estado inicial
+- load initial data from `localStorage`
+- create resumes from default seed data
+- duplicate existing resumes
+- update resume content
+- delete resumes
+- clear everything and rebuild initial state
 
 ## defaultCV.ts
 
-Dados iniciais usados como base para novos curriculos.
+Initial data used as a base for new resumes.
 
-Responsabilidades:
+Responsibilities:
 
-- fornecer um exemplo completo de preenchimento
-- servir como fallback quando nao ha dados salvos
+- provide a complete prefilled example
+- act as fallback when no saved data exists
 
 ## pdfStyles.ts
 
-Estilos dedicados ao PDF.
+Dedicated PDF styles.
 
-Responsabilidades:
+Responsibilities:
 
-- definir tipografia, espaco e hierarquia visual do documento
-- manter o layout do PDF separado do CSS da interface web
+- define typography, spacing, and visual hierarchy in the document
+- keep PDF layout separate from web UI CSS
 
 ## textUtils.ts
 
-Utilitarios de texto usados principalmente no PDF.
+Text helpers used mainly in PDF rendering.
 
-Responsabilidades:
+Responsibilities:
 
-- normalizar datas
-- normalizar URLs antes de gerar links clicaveis
-- aplicar quebra/truncamento simples em textos longos
+- normalize date strings
+- normalize URLs before creating clickable links
+- apply simple wrapping/truncation for long text

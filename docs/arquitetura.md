@@ -1,41 +1,41 @@
-# Visao geral da aplicacao
+# Application Overview
 
-A aplicacao e um gerador de curriculos em React que permite criar, editar, duplicar, excluir e exportar varios curriculos salvos localmente.
+The application is a React-based resume generator that allows users to create, edit, duplicate, delete, and export multiple resumes stored locally.
 
-## Fluxo principal
+## Main Flow
 
-1. `main.tsx` inicializa o React e carrega a configuracao de i18n.
-2. `App.tsx` orquestra a interface principal, o formulario, a sidebar, os modais e o preview em PDF.
-3. `useCVStorage.ts` mantem a lista de curriculos em memoria do estado e sincroniza com `localStorage`.
-4. `CVForm.tsx` edita os dados do curriculo com `react-hook-form`.
-5. `CVDocument.tsx` transforma os dados em documento PDF com `@react-pdf/renderer`.
-6. `PDFPreview.tsx` mostra a pre-visualizacao do PDF na interface.
+1. `main.tsx` initializes React and loads i18n configuration.
+2. `App.tsx` orchestrates the main interface, form, sidebar, modals, and PDF preview.
+3. `useCVStorage.ts` keeps the resume list in state and synchronizes with `localStorage`.
+4. `CVForm.tsx` edits resume data using `react-hook-form`.
+5. `CVDocument.tsx` converts data into a PDF document using `@react-pdf/renderer`.
+6. `PDFPreview.tsx` renders the PDF preview inside the UI.
 
-## Estrutura de estado
+## State Structure
 
-O estado principal e dividido em duas partes:
+The main state is divided into two parts:
 
-- lista de curriculos salvos, cada um com `id`, `title` e `updatedAt`
-- curriculo ativo, usado pelo editor e pela exportacao
+- list of saved resumes, each with `id`, `title`, and `updatedAt`
+- active resume, used by both the editor and export flow
 
-A persistencia usa duas chaves no navegador:
+Persistence uses two browser keys:
 
-- `cv-data` para salvar a lista completa de curriculos
-- `cv-selected-id` para restaurar o curriculo ativo
+- `cv-data` to save the complete resume list
+- `cv-selected-id` to restore the active resume
 
-## Funcionalidades de produto
+## Product Features
 
-- criar novo curriculo com dados base
-- duplicar um curriculo existente
-- excluir um curriculo individual
-- limpar tudo e voltar para um curriculo padrao
-- editar dados pessoais, formacao, experiencia, projetos, habilidades, idiomas, soft skills, competencias interpessoais e referencias
-- alternar entre portugues e ingles
-- visualizar o resultado em formato A4
-- baixar ou imprimir o curriculo em PDF
+- create a new resume from base data
+- duplicate an existing resume
+- delete a single resume
+- clear everything and return to a default resume
+- edit personal data, education, experience, projects, skills, languages, soft skills, interpersonal competencies, and references
+- switch between Portuguese and English
+- preview the result in A4 format
+- download or print the resume as PDF
 
-## Observacoes de implementacao
+## Implementation Notes
 
-- O formulario usa atualizacao incremental para reduzir perda de dados durante a edicao.
-- O PDF e gerado a partir do mesmo conjunto de dados do editor, evitando divergencia entre preview e exportacao.
-- A aplicacao depende de `localStorage`, entao os dados ficam no proprio navegador do usuario.
+- The form uses incremental updates to reduce data loss during editing.
+- The PDF is generated from the same data source used by the editor, preventing preview/export mismatch.
+- The application depends on `localStorage`, so data stays in the user's browser.
