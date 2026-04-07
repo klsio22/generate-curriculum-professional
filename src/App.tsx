@@ -1,18 +1,58 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, type ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useReactToPrint } from 'react-to-print';
 import { useTranslation } from 'react-i18next';
-import { Printer } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import type { CVData } from './types';
+import type { CVData, SavedCV } from './types';
 import { emptyCV } from './data/defaultCV';
 import { CVForm } from './components/CVForm';
 import { PDFPreview } from './components/PDFPreview';
 import { useCVStorage } from './hooks/useCVStorage';
 import { Sidebar } from './components/Sidebar';
 import { Modal } from './components/Modal';
-import { CVDocument } from './components/CVDocument';
-import { LanguageSelector } from './components/LanguageSelector';
+import { AppHeader } from './components/AppHeader';
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const sanitizeImportedCV = (item: unknown): SavedCV | null => {
+  if (!item || typeof item !== 'object') return null;
+
+  const candidate = item as Partial<SavedCV>;
+  const requiredStringFields = [
+    candidate.id,
+    candidate.title,
+    candidate.fullName,
+    candidate.jobTitle,
+    candidate.address,
+    candidate.phone,
+    candidate.email,
+    candidate.linkedin,
+    candidate.objective,
+    candidate.skills,
+  ];
+
+  if (requiredStringFields.some((field) => !isNonEmptyString(field))) return null;
+  if (!Array.isArray(candidate.education) || !Array.isArray(candidate.experience)) return null;
+
+  return {
+    ...candidate,
+    updatedAt: typeof candidate.updatedAt === 'number' ? candidate.updatedAt : Date.now(),
+    education: candidate.education,
+    experience: candidate.experience,
+    references: Array.isArray(candidate.references) ? candidate.references : [],
+    projects: Array.isArray(candidate.projects) ? candidate.projects : [],
+    languages: isNonEmptyString(candidate.languages) ? candidate.languages : '',
+    softSkills: isNonEmptyString(candidate.softSkills) ? candidate.softSkills : '',
+    interpersonalSkills: isNonEmptyString(candidate.interpersonalSkills)
+      ? candidate.interpersonalSkills
+      : '',
+    linkedinName: isNonEmptyString(candidate.linkedinName) ? candidate.linkedinName : '',
+    github: isNonEmptyString(candidate.github) ? candidate.github : '',
+    githubName: isNonEmptyString(candidate.githubName) ? candidate.githubName : '',
+    portfolio: isNonEmptyString(candidate.portfolio) ? candidate.portfolio : '',
+    portfolioName: isNonEmptyString(candidate.portfolioName) ? candidate.portfolioName : '',
+  } as SavedCV;
+};
 
 function App() {
   const { t } = useTranslation();
@@ -26,6 +66,7 @@ function App() {
     deleteCV,
     clearAll,
     duplicateCV,
+    importCVs,
   } = useCVStorage();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -80,6 +121,73 @@ function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
 
+  const handleExportData = () => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      activeId,
+      cvs,
+    };
+
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const dateTag = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `resume-backup-${dateTag}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const raw = await file.text();
+      const parsed = JSON.parse(raw) as {
+        cvs?: unknown;
+        activeId?: unknown;
+      } | unknown[];
+
+      let importedList: unknown[] = [];
+      if (Array.isArray(parsed)) {
+        importedList = parsed;
+      } else if (Array.isArray(parsed.cvs)) {
+        importedList = parsed.cvs;
+      }
+
+      const normalized = importedList
+        .map(sanitizeImportedCV)
+        .filter((cv): cv is SavedCV => cv !== null);
+
+      if (normalized.length === 0) {
+        globalThis.alert(t('header.importInvalid'));
+        return;
+      }
+
+      const preferredActiveId =
+        !Array.isArray(parsed) && typeof parsed.activeId === 'string'
+          ? parsed.activeId
+          : null;
+
+      const imported = importCVs(normalized, preferredActiveId);
+      if (!imported) {
+        globalThis.alert(t('header.importInvalid'));
+        return;
+      }
+
+      globalThis.alert(t('header.importSuccess'));
+    } catch {
+      globalThis.alert(t('header.importError'));
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   const currentCV = activeCV ?? emptyCV;
 
   return (
@@ -131,36 +239,13 @@ function App() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-        <header className="bg-white shadow p-4 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto flex justify-between items-center gap-2 md:gap-4">
-            <div className="flex items-center gap-2 md:gap-3 min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold text-gray-800 truncate">
-                {t('header.title')}
-              </h1>
-              <LanguageSelector />
-            </div>
-
-            {/* Desktop / md+: show download in header; Mobile: hidden */}
-            <div className="hidden md:block">
-              <PDFDownloadLink
-                document={<CVDocument data={data} />}
-                fileName={`${(activeCV?.title || 'meu_curriculo').replaceAll(/\s+/g, '_')}.pdf`}
-              >
-                {({ loading }) => (
-                  <button
-                    disabled={loading}
-                    onClick={() => reactToPrintFn()}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-md hover:bg-indigo-700 transition text-sm md:text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Printer size={20} />
-                    <span className="hidden md:inline">{t('header.download')}</span>
-                    <span className="md:hidden">{t('header.downloadMobile')}</span>
-                  </button>
-                )}
-              </PDFDownloadLink>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          data={data}
+          activeTitle={activeCV?.title || 'meu_curriculo'}
+          onImportData={handleImportData}
+          onExportData={handleExportData}
+          onDownloadPdf={reactToPrintFn}
+        />
 
         <main className="flex-1 mx-auto w-full p-4 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -205,24 +290,6 @@ function App() {
                   <h2 className="text-xl font-semibold text-gray-700">
                     {t('header.preview')}
                   </h2>
-                  {/* Mobile: show download button below the title */}
-                  <div className="mt-2 md:hidden">
-                    <PDFDownloadLink
-                      document={<CVDocument data={data} />}
-                      fileName={`${(activeCV?.title || 'meu_curriculo').replaceAll(/\s+/g, '_')}.pdf`}
-                    >
-                      {({ loading }) => (
-                        <button
-                          disabled={loading}
-                          onClick={() => reactToPrintFn()}
-                          className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Printer size={18} />
-                          <span>{t('header.download')}</span>
-                        </button>
-                      )}
-                    </PDFDownloadLink>
-                  </div>
                 </div>
                 <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded">
                   {t('header.a4Preview')}

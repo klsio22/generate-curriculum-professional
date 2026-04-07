@@ -48,7 +48,7 @@ interface SelectAction {
 
 interface ResetAction {
   type: 'RESET';
-  payload: SavedCV[];
+  payload: { cvs: SavedCV[]; activeId?: string | null };
 }
 
 type Action =
@@ -108,11 +108,17 @@ function reducer(state: State, action: Action): State {
       };
     }
     case 'RESET': {
-      const newCvs = action.payload;
+      const { cvs: newCvs, activeId: requestedActiveId } = action.payload;
+      const fallbackActiveId = newCvs.length > 0 ? newCvs[0].id : null;
+      const newActiveId =
+        requestedActiveId && newCvs.some((cv) => cv.id === requestedActiveId)
+          ? requestedActiveId
+          : fallbackActiveId;
+
       return {
         ...state,
         cvs: newCvs,
-        activeId: newCvs.length > 0 ? newCvs[0].id : null,
+        activeId: newActiveId,
       };
     }
     default:
@@ -208,7 +214,16 @@ export function useCVStorage() {
       console.error('Failed to clear storage', e);
     }
     const newCV = generateNewCV(0);
-    dispatch({ type: 'RESET', payload: [newCV] });
+    dispatch({ type: 'RESET', payload: { cvs: [newCV], activeId: newCV.id } });
+  }, []);
+
+  const importCVs = useCallback((importedCvs: SavedCV[], preferredActiveId?: string | null) => {
+    if (!Array.isArray(importedCvs) || importedCvs.length === 0) return false;
+    dispatch({
+      type: 'RESET',
+      payload: { cvs: importedCvs, activeId: preferredActiveId ?? null },
+    });
+    return true;
   }, []);
 
   const updateCV = useCallback((id: string, data: Partial<SavedCV>) => {
@@ -234,5 +249,6 @@ export function useCVStorage() {
     deleteCV,
     clearAll,
     duplicateCV,
+    importCVs,
   };
 }

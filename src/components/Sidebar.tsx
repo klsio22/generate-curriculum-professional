@@ -45,7 +45,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Overlay for mobile */}
       {isOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Fechar sidebar"
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
           onClick={toggleSidebar}
         />
@@ -66,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <aside
         ref={asideRef}
-        className={`fixed inset-y-0 left-0 bg-gray-900 text-white w-64 transform transition-transform duration-200 ease-in-out z-30 ${
+        className={`fixed inset-y-0 left-0 bg-gray-900 text-white w-72 transform transition-transform duration-200 ease-in-out z-30 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -111,24 +113,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div className="flex-1 overflow-y-auto space-y-2">
             {cvs.map((cv) => (
-              <div
+              <button
+                type="button"
                 key={cv.id}
                 onClick={() => onSelect(cv.id)}
-                className={`group flex items-center justify-between p-3 rounded cursor-pointer transition-colors ${
+                className={`group flex w-full items-start justify-between gap-3 p-3 rounded text-left transition-colors ${
                   activeId === cv.id
                     ? 'bg-gray-800 border-l-4 border-indigo-500'
                     : 'hover:bg-gray-800 border-l-4 border-transparent'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
                   <FileText
                     size={18}
                     className={
-                      activeId === cv.id ? 'text-indigo-400' : 'text-gray-400'
+                      `${activeId === cv.id ? 'text-indigo-400' : 'text-gray-400'} mt-0.5 shrink-0`
                     }
                   />
-                  <div className="flex flex-col truncate">
-                    <span className="mr-2 font-medium text-sm wrap-break-word whitespace-normal ">
+                  <div className="min-w-0 flex-1 flex flex-col">
+                    <span className="mr-2 font-medium text-sm leading-snug wrap-break-word whitespace-normal">
                       {cv.title}
                     </span>
                     <span className="text-xs text-gray-500">
@@ -136,13 +139,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center">
+                <div className="flex shrink-0 items-center gap-1 self-start sm:self-center">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onDuplicate(cv.id);
                     }}
-                    className="text-gray-500 hover:text-indigo-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 mr-2"
+                    className="text-gray-500 hover:text-indigo-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1"
                     title="Duplicar"
                   >
                     <Copy size={16} />
@@ -159,7 +162,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Trash2 size={16} />
                   </button>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
