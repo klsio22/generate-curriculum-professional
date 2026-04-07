@@ -260,7 +260,7 @@ function App() {
               className={`space-y-6 w-full transition-all duration-300 ease-in-out ${
                 isPreviewVisible
                   ? 'lg:flex-1 lg:min-w-0'
-                  : 'lg:max-w-4xl lg:mx-auto'
+                  : 'lg:max-w-6xl lg:mx-auto'
               }`}
             >
               <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -308,7 +308,7 @@ function App() {
             </section>
 
             {isPreviewVisible && (
-              <section className="space-y-6 w-full lg:w-1/3 lg:sticky lg:top-24 transition-all duration-300 ease-in-out">
+              <section className="space-y-6 w-full lg:w-[40%] lg:sticky lg:top-24 transition-all duration-300 ease-in-out">
                 <div className="flex justify-between items-baseline gap-3">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-700">
