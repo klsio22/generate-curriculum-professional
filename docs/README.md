@@ -7,6 +7,7 @@ This directory centralizes the technical documentation for the resume generator 
 - [Overview](./arquitetura.md)
 - [Components](./componentes.md)
 - [Dependencies and libraries](./dependencias.md)
+- [JSON import/export feature](./import-export-json.md)
 
 ## Scope
 
@@ -16,6 +17,7 @@ The documentation here covers:
 - data flow and persistence
 - responsibilities of each component
 - core libraries and the role of each one
+- JSON backup and restore flow
 - common extension points
 
 ## How to use

@@ -12,8 +12,21 @@ Responsibilities:
 - control the active resume
 - open and close the sidebar on small screens
 - display confirmation modals for delete and clear actions
+- handle JSON import/export actions from the header
 - connect the form to preview and PDF rendering
 - coordinate export with `PDFDownloadLink` and `react-to-print`
+
+## AppHeader.tsx
+
+Header component used by the application shell.
+
+Responsibilities:
+
+- render the title and language selector
+- expose the JSON import trigger on desktop and mobile
+- expose the JSON export action
+- expose the PDF download action
+- keep the top bar logic out of `App.tsx`
 
 ## CVForm.tsx
 
@@ -100,6 +113,7 @@ Responsibilities:
 - update resume content
 - delete resumes
 - clear everything and rebuild initial state
+- import a restored list of resumes and update the active resume
 
 ## defaultCV.ts
 
