@@ -34,9 +34,10 @@ export const CVForm: React.FC<CVFormProps> = ({
   };
 
   const reg = (name: Path<CVData>) => ({ ...register(name), onBlur: callSave });
+
   const {
     fields: eduFields,
-    append: appendEdu,
+    prepend: prependEdu,
     remove: removeEdu,
   } = useFieldArray({
     control,
@@ -45,7 +46,7 @@ export const CVForm: React.FC<CVFormProps> = ({
 
   const {
     fields: expFields,
-    append: appendExp,
+    prepend: prependExp,
     remove: removeExp,
   } = useFieldArray({
     control,
@@ -54,18 +55,16 @@ export const CVForm: React.FC<CVFormProps> = ({
 
   const {
     fields: refFields,
-    append: appendRef,
+    prepend: prependRef,
     remove: removeRef,
   } = useFieldArray({
     control,
     name: 'references',
   });
 
-  
-
   const {
     fields: projectFields,
-    append: appendProject,
+    prepend: prependProject,
     remove: removeProject,
   } = useFieldArray({
     control,
@@ -196,6 +195,22 @@ export const CVForm: React.FC<CVFormProps> = ({
       </div>
 
       <SectionHeader title={t('form.experience')} />
+      <button
+        type="button"
+        onClick={() => {
+          prependExp({
+            id: '',
+            role: '',
+            company: '',
+            startDate: '',
+            endDate: '',
+            description: '',
+          });
+        }}
+        className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
+      >
+        <Plus size={18} className="mr-1" /> {t('form.addExperience')}
+      </button>
       {expFields.map((field, index) => (
         <div
           key={field.id}
@@ -205,8 +220,6 @@ export const CVForm: React.FC<CVFormProps> = ({
             type="button"
             onClick={() => {
               removeExp(index);
-              // let react-hook-form update internal state, then trigger save
-              setTimeout(() => callSave(), 0);
             }}
             className="absolute top-2 right-2 text-red-500 hover:text-red-700"
           >
@@ -257,25 +270,24 @@ export const CVForm: React.FC<CVFormProps> = ({
           </div>
         </div>
       ))}
+
+      <SectionHeader title={t('form.education')} />
       <button
         type="button"
         onClick={() => {
-          appendExp({
+          prependEdu({
             id: '',
-            role: '',
-            company: '',
+            course: '',
+            institution: '',
             startDate: '',
             endDate: '',
-            description: '',
+            topics: '',
           });
-          setTimeout(() => callSave(), 0);
         }}
         className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
       >
-        <Plus size={18} className="mr-1" /> {t('form.addExperience')}
+        <Plus size={18} className="mr-1" /> {t('form.addEducation')}
       </button>
-
-      <SectionHeader title={t('form.education')} />
       {eduFields.map((field, index) => (
         <div
           key={field.id}
@@ -285,7 +297,6 @@ export const CVForm: React.FC<CVFormProps> = ({
             type="button"
             onClick={() => {
               removeEdu(index);
-              setTimeout(() => callSave(), 0);
             }}
             className="absolute top-2 right-2 text-red-500 hover:text-red-700"
           >
@@ -339,27 +350,25 @@ export const CVForm: React.FC<CVFormProps> = ({
           </div>
         </div>
       ))}
+
+      <SectionHeader title={t('form.projects')} />
       <button
         type="button"
         onClick={() => {
-          appendEdu({
+          prependProject({
             id: '',
-            course: '',
-            institution: '',
+            name: '',
+            description: '',
+            technologies: '',
+            link: '',
             startDate: '',
             endDate: '',
-            topics: '',
           });
-          setTimeout(() => callSave(), 0);
         }}
         className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
       >
-        <Plus size={18} className="mr-1" /> {t('form.addEducation')}
+        <Plus size={18} className="mr-1" /> {t('form.addProject')}
       </button>
-
-
-
-      <SectionHeader title={t('form.projects')} />
       {projectFields.map((field, index) => (
         <div
           key={field.id}
@@ -369,7 +378,6 @@ export const CVForm: React.FC<CVFormProps> = ({
             type="button"
             onClick={() => {
               removeProject(index);
-              setTimeout(() => callSave(), 0);
             }}
             className="absolute top-2 right-2 text-red-500 hover:text-red-700"
           >
@@ -434,26 +442,6 @@ export const CVForm: React.FC<CVFormProps> = ({
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={() => {
-          appendProject({
-            id: '',
-            name: '',
-            description: '',
-            technologies: '',
-            link: '',
-            startDate: '',
-            endDate: '',
-          });
-          setTimeout(() => callSave(), 0);
-        }}
-        className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
-      >
-        <Plus size={18} className="mr-1" /> {t('form.addProject')}
-      </button>
-
-      
 
       <SectionHeader title={t('form.skills')} />
       <div>
@@ -503,9 +491,21 @@ export const CVForm: React.FC<CVFormProps> = ({
         />
       </div>
 
-      
-
       <SectionHeader title={t('form.references')} />
+      <button
+        type="button"
+        onClick={() => {
+          prependRef({
+            id: '',
+            name: '',
+            email: '',
+            phone: '',
+          });
+        }}
+        className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
+      >
+        <Plus size={18} className="mr-1" /> {t('form.addReference')}
+      </button>
       {refFields.map((field, index) => (
         <div
           key={field.id}
@@ -515,7 +515,6 @@ export const CVForm: React.FC<CVFormProps> = ({
             type="button"
             onClick={() => {
               removeRef(index);
-              setTimeout(() => callSave(), 0);
             }}
             className="absolute top-2 right-2 text-red-500 hover:text-red-700"
           >
@@ -550,21 +549,6 @@ export const CVForm: React.FC<CVFormProps> = ({
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={() => {
-          appendRef({
-            id: '',
-            name: '',
-            email: '',
-            phone: '',
-          });
-          setTimeout(() => callSave(), 0);
-        }}
-        className="flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
-      >
-        <Plus size={18} className="mr-1" /> {t('form.addReference')}
-      </button>
     </div>
   );
 };
