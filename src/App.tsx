@@ -243,9 +243,11 @@ function App() {
         <AppHeader
           data={data}
           activeTitle={activeCV?.title || 'meu_curriculo'}
+          isPreviewVisible={isPreviewVisible}
           onImportData={handleImportData}
           onExportData={handleExportData}
           onDownloadPdf={reactToPrintFn}
+          onTogglePreview={() => setIsPreviewVisible((value) => !value)}
         />
 
         <main className="flex-1 mx-auto w-full p-4 lg:p-8">

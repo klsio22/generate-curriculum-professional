@@ -13,6 +13,8 @@ export const ptBR = {
     a4Preview: 'A4 Preview',
     hidePreview: 'Ocultar preview',
     showPreview: 'Mostrar preview',
+    menu: 'Menu',
+    closeMenu: 'Fechar menu',
   },
   form: {
     personalData: 'Dados Pessoais',

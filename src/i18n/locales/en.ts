@@ -13,6 +13,8 @@ export const en = {
     a4Preview: 'A4 Preview',
     hidePreview: 'Hide preview',
     showPreview: 'Show preview',
+    menu: 'Menu',
+    closeMenu: 'Close menu',
   },
   form: {
     personalData: 'Personal Information',
