@@ -11,6 +11,8 @@ export const en = {
     edit: 'Edit Information',
     preview: 'Preview',
     a4Preview: 'A4 Preview',
+    hidePreview: 'Hide preview',
+    showPreview: 'Show preview',
   },
   form: {
     personalData: 'Personal Information',

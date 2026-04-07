@@ -70,6 +70,7 @@ function App() {
   } = useCVStorage();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
@@ -248,12 +249,33 @@ function App() {
         />
 
         <main className="flex-1 mx-auto w-full p-4 lg:p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Editor Column */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-700">
-                {t('header.edit')}
-              </h2>
+          <div
+            className={`flex flex-col gap-8 items-start transition-all duration-300 ease-in-out ${
+              isPreviewVisible ? 'lg:flex-row' : 'lg:flex-row lg:justify-center'
+            }`}
+          >
+            <section
+              className={`space-y-6 w-full transition-all duration-300 ease-in-out ${
+                isPreviewVisible
+                  ? 'lg:flex-1 lg:min-w-0'
+                  : 'lg:max-w-4xl lg:mx-auto'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-xl font-semibold text-gray-700">
+                  {t('header.edit')}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsPreviewVisible((value) => !value)}
+                  className="inline-flex items-center gap-2 rounded-md bg-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 transition"
+                >
+                  {isPreviewVisible
+                    ? t('header.hidePreview')
+                    : t('header.showPreview')}
+                </button>
+              </div>
+
               <div key={activeId}>
                 {/* CV Title Input */}
                 <div className="bg-white p-6 shadow rounded-lg mb-4">
@@ -281,26 +303,26 @@ function App() {
                   onSave={handleSave}
                 />
               </div>
-            </div>
+            </section>
 
-            {/* Preview Column */}
-            <div className="space-y-6 lg:sticky lg:top-24">
-              <div className="flex justify-between items-baseline">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-700">
-                    {t('header.preview')}
-                  </h2>
+            {isPreviewVisible && (
+              <section className="space-y-6 w-full lg:w-1/3 lg:sticky lg:top-24 transition-all duration-300 ease-in-out">
+                <div className="flex justify-between items-baseline gap-3">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-700">
+                      {t('header.preview')}
+                    </h2>
+                  </div>
+                  <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                    {t('header.a4Preview')}
+                  </span>
                 </div>
-                <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                  {t('header.a4Preview')}
-                </span>
-              </div>
 
-              {/* PDF Download Button */}
-              <div className="flex justify-center">
-                <PDFPreview data={data} />
-              </div>
-            </div>
+                <div className="flex justify-center">
+                  <PDFPreview data={data} />
+                </div>
+              </section>
+            )}
           </div>
         </main>
       </div>

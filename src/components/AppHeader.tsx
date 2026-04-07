@@ -39,7 +39,7 @@ export const AppHeader = ({
       />
 
       <div className="max-w-7xl mx-auto flex justify-center md:justify-between items-center gap-2 md:gap-4">
-        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+        <div className="flex items-center gap-2 md:gap-3 md:ml-8 min-w-0">
           <h1 className="text-lg md:text-2xl font-bold text-gray-800 truncate">
             {t('header.title')}
           </h1>

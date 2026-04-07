@@ -11,6 +11,8 @@ export const ptBR = {
     edit: 'Editar Informações',
     preview: 'Visualização',
     a4Preview: 'A4 Preview',
+    hidePreview: 'Ocultar preview',
+    showPreview: 'Mostrar preview',
   },
   form: {
     personalData: 'Dados Pessoais',
