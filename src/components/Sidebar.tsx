@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Plus, Trash2, FileText, Copy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { SavedCV } from '../types';
 
 interface SidebarProps {
@@ -25,7 +26,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   toggleSidebar,
 }) => {
+  const { i18n } = useTranslation();
   const asideRef = React.useRef<HTMLElement | null>(null);
+  const dateLocale = i18n.language === 'pt-BR' ? 'pt-BR' : 'en-US';
 
   React.useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
@@ -135,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {cv.title}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {new Date(cv.updatedAt).toLocaleDateString()}
+                      {new Date(cv.updatedAt).toLocaleDateString(dateLocale)}
                     </span>
                   </div>
                 </div>
