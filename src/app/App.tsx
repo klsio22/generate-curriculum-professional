@@ -11,6 +11,7 @@ import { Sidebar } from '@/features/cv-editor/Sidebar';
 import { Modal } from '@/shared/components/Modal';
 import { AppHeader } from './AppHeader';
 import { AISettingsModal } from '@/features/ai/AISettingsModal';
+import { TailorJobModal } from '@/features/ai/TailorJobModal';
 import { useAISettings } from '@/features/ai/useAISettings';
 
 const isNonEmptyString = (value: unknown): value is string =>
@@ -69,6 +70,7 @@ function App() {
     clearAll,
     duplicateCV,
     importCVs,
+    addCV,
   } = useCVStorage();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -76,6 +78,7 @@ function App() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
+  const [showTailor, setShowTailor] = useState(false);
   const aiSettings = useAISettings();
 
   const initialValues = activeCV ?? emptyCV;
@@ -248,6 +251,20 @@ function App() {
           onForgetKey={aiSettings.forgetKey}
           onClose={() => setShowAISettings(false)}
         />
+
+        <TailorJobModal
+          isOpen={showTailor}
+          onClose={() => setShowTailor(false)}
+          settings={aiSettings.settings}
+          isConfigured={aiSettings.isConfigured}
+          onOpenSettings={() => {
+            setShowTailor(false);
+            setShowAISettings(true);
+          }}
+          cvs={cvs}
+          activeId={activeId}
+          onSave={addCV}
+        />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
@@ -258,6 +275,7 @@ function App() {
           onExportData={handleExportData}
           onDownloadPdf={reactToPrintFn}
           onOpenAISettings={() => setShowAISettings(true)}
+          onOpenTailor={() => setShowTailor(true)}
           isAIConfigured={aiSettings.isConfigured}
         />
 

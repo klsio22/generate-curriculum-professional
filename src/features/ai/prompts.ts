@@ -50,8 +50,8 @@ export const resumeForPrompt = (cv: CVData) => ({
   softSkills: cv.softSkills ?? '',
   interpersonalSkills: cv.interpersonalSkills ?? '',
   languages: cv.languages ?? '',
-  experience: cv.experience.map(({ id, role, company, startDate, endDate, description, achievements }) => ({
-    id, role, company, startDate, endDate, description, achievements: achievements ?? [],
+  experience: cv.experience.map(({ id, role, company, startDate, endDate, description }) => ({
+    id, role, company, startDate, endDate, description,
   })),
   projects: (cv.projects ?? []).map(({ id, name, description, technologies }) => ({
     id, name, description, technologies: technologies ?? '',
@@ -73,7 +73,7 @@ Reply with ONLY a JSON object, no markdown, with this shape:
   "skills": string,               // technical skills, one per line, most relevant first
   "softSkills": string,           // one per line, most relevant first
   "interpersonalSkills": string,  // short paragraph or one item per line; "" if the base is empty
-  "experience": [ { "id": string, "description": string, "achievements": string[] } ],
+  "experience": [ { "id": string, "description": string } ],  // one activity or achievement per line, like the base
   "projects": [ { "id": string, "description": string } ],   // most relevant first; leave out unrelated ones
   "education": [ { "id": string, "topics": string[] } ],     // keep only topics relevant to the job, copied exactly
   "missingKeywords": string[],    // job keywords the base resume gives NO evidence for

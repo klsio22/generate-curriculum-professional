@@ -100,13 +100,10 @@ export const mergeTailoredCV = (base: CVData, raw: unknown): TailorResult => {
   cv.experience = base.experience.map((original): Experience => {
     const rewrite = aiExperience.find((e) => str(e.id) === original.id);
     if (!rewrite) return { ...original };
-    const description = str(rewrite.description);
-    const achievements = nonEmptyStrings(rewrite.achievements);
-    return {
-      ...original,
-      description: description || original.description,
-      achievements: achievements.length > 0 ? achievements : original.achievements,
-    };
+    // The form and the PDF show only `description` (one item per line), so any
+    // separate achievements the model returns are folded into it.
+    const lines = [str(rewrite.description), ...nonEmptyStrings(rewrite.achievements)].filter(Boolean);
+    return { ...original, description: lines.length > 0 ? lines.join('\n') : original.description };
   });
 
   // Projects: the model may reorder by relevance and leave out unrelated ones.

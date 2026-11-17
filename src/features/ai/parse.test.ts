@@ -105,8 +105,9 @@ describe('mergeTailoredCV', () => {
     expect(cv.experience).toHaveLength(2);
     expect(cv.experience[0]).toMatchObject({
       id: 'x1', role: 'Dev Front-end', company: 'Loja X', startDate: '2021',
-      description: 'Built React apps.', achievements: ['Shipped 10 screens'],
+      description: 'Built React apps.\nShipped 10 screens',
     });
+    expect(cv.experience[0].achievements).toBeUndefined();
     expect(cv.experience[1]).toEqual(base.experience[1]);
     expect(discardedItems).toBe(1);
 

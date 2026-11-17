@@ -198,6 +198,13 @@ export function useCVStorage() {
     dispatch({ type: 'CREATE', payload: newCV });
   }, [state.cvs]);
 
+  /** Adds a ready resume (e.g. one tailored by AI) and selects it. Returns the new id. */
+  const addCV = useCallback((cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
+    const newCV: SavedCV = { ...cv, id: crypto.randomUUID(), updatedAt: Date.now() };
+    dispatch({ type: 'CREATE', payload: newCV });
+    return newCV.id;
+  }, []);
+
   const deleteCV = useCallback((id: string) => {
     // Pre-generate a new CV in case deletions make the list empty
     const newCVIfEmpty = generateNewCV();
@@ -250,5 +257,6 @@ export function useCVStorage() {
     clearAll,
     duplicateCV,
     importCVs,
+    addCV,
   };
 }

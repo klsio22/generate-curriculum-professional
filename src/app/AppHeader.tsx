@@ -1,5 +1,5 @@
 import { useRef, type ChangeEvent } from 'react';
-import { Download, Printer, Settings, Upload } from 'lucide-react';
+import { Download, Printer, Settings, Sparkles, Upload } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next';
 import type { CVData } from '@/types/cv';
@@ -13,6 +13,7 @@ interface AppHeaderProps {
   onExportData: () => void;
   onDownloadPdf: () => void;
   onOpenAISettings: () => void;
+  onOpenTailor: () => void;
   isAIConfigured: boolean;
 }
 
@@ -23,6 +24,7 @@ export const AppHeader = ({
   onExportData,
   onDownloadPdf,
   onOpenAISettings,
+  onOpenTailor,
   isAIConfigured,
 }: AppHeaderProps) => {
   const { t } = useTranslation();
@@ -31,6 +33,17 @@ export const AppHeader = ({
   const triggerImport = () => {
     importInputRef.current?.click();
   };
+
+  const tailorButton = (iconSize: number, extraClass: string) => (
+    <button
+      type="button"
+      onClick={onOpenTailor}
+      className={`flex items-center gap-2 bg-violet-700 text-white rounded-md hover:bg-violet-800 transition whitespace-nowrap ${extraClass}`}
+    >
+      <Sparkles size={iconSize} aria-hidden />
+      <span>{t('ai.tailor.open')}</span>
+    </button>
+  );
 
   const aiSettingsButton = (iconSize: number, extraClass: string) => (
     <button
@@ -66,6 +79,7 @@ export const AppHeader = ({
         </div>
 
         <div className="hidden md:flex items-center gap-2">
+          {tailorButton(18, 'px-3 py-2 md:px-4 md:py-2 text-sm md:text-base')}
           {aiSettingsButton(18, 'px-3 py-2 md:px-4 md:py-2 text-sm md:text-base')}
 
           <button
@@ -106,6 +120,7 @@ export const AppHeader = ({
       </div>
 
       <div className="max-w-7xl mx-auto mt-3 md:hidden flex flex-wrap gap-2 justify-center items-center">
+        {tailorButton(16, 'px-3 py-2 text-sm')}
         {aiSettingsButton(16, 'px-3 py-2 text-sm')}
 
         <button
