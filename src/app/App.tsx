@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useReactToPrint } from 'react-to-print';
 import { useTranslation } from 'react-i18next';
@@ -13,52 +13,19 @@ import { AppHeader } from './AppHeader';
 import { AISettingsModal } from '@/features/ai/AISettingsModal';
 import { TailorJobModal } from '@/features/ai/TailorJobModal';
 import { useAISettings } from '@/features/ai/useAISettings';
-
-const isNonEmptyString = (value: unknown): value is string =>
-  typeof value === 'string' && value.trim().length > 0;
-
-const sanitizeImportedCV = (item: unknown): SavedCV | null => {
-  if (!item || typeof item !== 'object') return null;
-
-  const candidate = item as Partial<SavedCV>;
-  const requiredStringFields = [
-    candidate.id,
-    candidate.title,
-    candidate.fullName,
-    candidate.jobTitle,
-    candidate.address,
-    candidate.phone,
-    candidate.email,
-    candidate.linkedin,
-    candidate.objective,
-    candidate.skills,
-  ];
-
-  if (requiredStringFields.some((field) => !isNonEmptyString(field))) return null;
-  if (!Array.isArray(candidate.education) || !Array.isArray(candidate.experience)) return null;
-
-  return {
-    ...candidate,
-    updatedAt: typeof candidate.updatedAt === 'number' ? candidate.updatedAt : Date.now(),
-    education: candidate.education,
-    experience: candidate.experience,
-    references: Array.isArray(candidate.references) ? candidate.references : [],
-    projects: Array.isArray(candidate.projects) ? candidate.projects : [],
-    languages: isNonEmptyString(candidate.languages) ? candidate.languages : '',
-    softSkills: isNonEmptyString(candidate.softSkills) ? candidate.softSkills : '',
-    interpersonalSkills: isNonEmptyString(candidate.interpersonalSkills)
-      ? candidate.interpersonalSkills
-      : '',
-    linkedinName: isNonEmptyString(candidate.linkedinName) ? candidate.linkedinName : '',
-    github: isNonEmptyString(candidate.github) ? candidate.github : '',
-    githubName: isNonEmptyString(candidate.githubName) ? candidate.githubName : '',
-    portfolio: isNonEmptyString(candidate.portfolio) ? candidate.portfolio : '',
-    portfolioName: isNonEmptyString(candidate.portfolioName) ? candidate.portfolioName : '',
-  } as SavedCV;
-};
+import {
+  BackupError,
+  backupFileName,
+  createBackup,
+  mergeImportedCVs,
+  parseBackupFile,
+  type ParsedBackup,
+} from '@/features/backup/backup';
+import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
+import { Notice, type NoticeMessage } from '@/shared/components/Notice';
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     cvs,
     activeId,
@@ -79,6 +46,8 @@ function App() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [showTailor, setShowTailor] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
+  const [notice, setNotice] = useState<NoticeMessage | null>(null);
   const aiSettings = useAISettings();
 
   const initialValues = activeCV ?? emptyCV;
@@ -128,71 +97,50 @@ function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
 
-  const handleExportData = () => {
-    const payload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      activeId,
-      cvs,
-    };
+  const showNotice = useCallback((kind: NoticeMessage['kind'], message: string) => {
+    setNotice({ kind, message, id: Date.now() });
+  }, []);
+  const closeNotice = useCallback(() => setNotice(null), []);
 
-    const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+  const handleSaveBackup = () => {
+    const json = JSON.stringify(createBackup(cvs, activeId), null, 2);
+    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
     const link = document.createElement('a');
-    const dateTag = new Date().toISOString().slice(0, 10);
     link.href = url;
-    link.download = `resume-backup-${dateTag}.json`;
+    link.download = backupFileName(i18n.language);
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+    showNotice('success', t('backup.saved', { count: cvs.length }));
   };
 
-  const handleImportData = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const handleRestoreFile = async (file: File) => {
     try {
-      const raw = await file.text();
-      const parsed = JSON.parse(raw) as {
-        cvs?: unknown;
-        activeId?: unknown;
-      } | unknown[];
-
-      let importedList: unknown[] = [];
-      if (Array.isArray(parsed)) {
-        importedList = parsed;
-      } else if (Array.isArray(parsed.cvs)) {
-        importedList = parsed.cvs;
-      }
-
-      const normalized = importedList
-        .map(sanitizeImportedCV)
-        .filter((cv): cv is SavedCV => cv !== null);
-
-      if (normalized.length === 0) {
-        globalThis.alert(t('header.importInvalid'));
-        return;
-      }
-
-      const preferredActiveId =
-        !Array.isArray(parsed) && typeof parsed.activeId === 'string'
-          ? parsed.activeId
-          : null;
-
-      const imported = importCVs(normalized, preferredActiveId);
-      if (!imported) {
-        globalThis.alert(t('header.importInvalid'));
-        return;
-      }
-
-      globalThis.alert(t('header.importSuccess'));
-    } catch {
-      globalThis.alert(t('header.importError'));
-    } finally {
-      event.target.value = '';
+      setPendingRestore(parseBackupFile(await file.text()));
+    } catch (error) {
+      const code = error instanceof BackupError ? error.code : 'not_json';
+      showNotice('error', t(`backup.errors.${code}`));
     }
+  };
+
+  const handleRestoreAdd = () => {
+    if (!pendingRestore) return;
+    importCVs(mergeImportedCVs(cvs, pendingRestore.cvs, t('backup.restoredSuffix')), activeId);
+    showNotice('success', t('backup.added', { count: pendingRestore.cvs.length }));
+    setPendingRestore(null);
+  };
+
+  const handleRestoreReplace = () => {
+    if (!pendingRestore) return;
+    importCVs(pendingRestore.cvs, pendingRestore.activeId);
+    showNotice('success', t('backup.replaced', { count: pendingRestore.cvs.length }));
+    setPendingRestore(null);
+  };
+
+  const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
+    addCV(cv);
+    showNotice('success', t('ai.tailor.saved', { title: cv.title }));
   };
 
   const currentCV = activeCV ?? emptyCV;
@@ -263,16 +211,26 @@ function App() {
           }}
           cvs={cvs}
           activeId={activeId}
-          onSave={addCV}
+          onSave={handleSaveTailored}
+        />
+
+        <RestoreBackupModal
+          backup={pendingRestore}
+          currentCount={cvs.length}
+          onAdd={handleRestoreAdd}
+          onReplace={handleRestoreReplace}
+          onCancel={() => setPendingRestore(null)}
         />
       </div>
+
+      <Notice notice={notice} onClose={closeNotice} />
 
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <AppHeader
           data={data}
           activeTitle={activeCV?.title || 'meu_curriculo'}
-          onImportData={handleImportData}
-          onExportData={handleExportData}
+          onRestoreFile={handleRestoreFile}
+          onSaveBackup={handleSaveBackup}
           onDownloadPdf={reactToPrintFn}
           onOpenAISettings={() => setShowAISettings(true)}
           onOpenTailor={() => setShowTailor(true)}
@@ -289,10 +247,11 @@ function App() {
               <div key={activeId}>
                 {/* CV Title Input */}
                 <div className="bg-white p-6 shadow rounded-lg mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="cv-document-title" className="block text-sm font-medium text-gray-700 mb-2">
                     {t('form.docName')}
                   </label>
                   <input
+                    id="cv-document-title"
                     type="text"
                     defaultValue={activeCV?.title ?? 'Novo Currículo'}
                     onBlur={(e) => {
