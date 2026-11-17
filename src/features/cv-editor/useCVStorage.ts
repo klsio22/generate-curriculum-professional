@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useCallback } from 'react';
-import type { SavedCV } from '../types';
-import { defaultCV } from '../data/defaultCV';
+import type { SavedCV } from '@/types/cv';
+import { defaultCV } from './defaultCV';
 
 const STORAGE_KEY = 'cv-data';
 const SELECTED_KEY = 'cv-selected-id';

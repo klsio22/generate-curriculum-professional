@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Plus, Trash2, FileText, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { SavedCV } from '../types';
+import type { SavedCV } from '@/types/cv';
 
 interface SidebarProps {
   cvs: SavedCV[];

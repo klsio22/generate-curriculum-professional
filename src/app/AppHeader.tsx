@@ -2,9 +2,9 @@ import { useRef, type ChangeEvent } from 'react';
 import { Download, Printer, Upload } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next';
-import type { CVData } from '../types';
-import { CVDocument } from './CVDocument';
-import { LanguageSelector } from './LanguageSelector';
+import type { CVData } from '@/types/cv';
+import { CVDocument } from '@/features/pdf/CVDocument';
+import { LanguageSelector } from '@/shared/components/LanguageSelector';
 
 interface AppHeaderProps {
   data: CVData;

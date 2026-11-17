@@ -30,7 +30,7 @@ The form uses `react-hook-form` and `useFieldArray` to handle repeatable section
 
 ### PDF
 
-PDF generation depends on `@react-pdf/renderer` and styles defined in `src/styles/pdfStyles.ts`.
+PDF generation depends on `@react-pdf/renderer` and styles defined in `src/features/pdf/pdfStyles.ts`.
 
 ### Languages
 

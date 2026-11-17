@@ -1,6 +1,14 @@
 # Components
 
-This document describes the responsibility of each component in `src/components` and related core modules.
+This document describes the responsibility of each component and core module. Files are grouped by feature:
+
+| Folder | Files |
+|---|---|
+| `src/app/` | `App.tsx`, `AppHeader.tsx` |
+| `src/features/cv-editor/` | `CVForm.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts` |
+| `src/features/pdf/` | `CVDocument.tsx`, `PDFPreview.tsx`, `pdfStyles.ts`, `textUtils.ts` |
+| `src/shared/components/` | `Modal.tsx`, `LanguageSelector.tsx` |
+| `src/types/` | `cv.ts` (resume data types) |
 
 ## App.tsx
 

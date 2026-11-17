@@ -4,12 +4,21 @@ The application is a React-based resume generator that allows users to create, e
 
 ## Main Flow
 
-1. `main.tsx` initializes React and loads i18n configuration.
-2. `App.tsx` orchestrates the main interface, form, sidebar, modals, and PDF preview.
-3. `useCVStorage.ts` keeps the resume list in state and synchronizes with `localStorage`.
-4. `CVForm.tsx` edits resume data using `react-hook-form`.
-5. `CVDocument.tsx` converts data into a PDF document using `@react-pdf/renderer`.
-6. `PDFPreview.tsx` renders the PDF preview inside the UI.
+1. `src/main.tsx` (the only file at the root of `src/`) initializes React and loads global styles and i18n configuration.
+2. `app/App.tsx` orchestrates the main interface, form, sidebar, modals, and PDF preview.
+3. `features/cv-editor/useCVStorage.ts` keeps the resume list in state and synchronizes with `localStorage`.
+4. `features/cv-editor/CVForm.tsx` edits resume data using `react-hook-form`.
+5. `features/pdf/CVDocument.tsx` converts data into a PDF document using `@react-pdf/renderer`.
+6. `features/pdf/PDFPreview.tsx` renders the PDF preview inside the UI.
+
+## Folder Structure
+
+- `src/app/`: application shell that combines the features (layout, header, modals).
+- `src/features/<name>/`: everything that belongs to one feature (components, hooks, helpers). A feature imports only from `shared/` and `types/`, never from another feature.
+- `src/shared/components/`: generic UI with no business rules.
+- `src/types/`: data types shared across features.
+- `src/styles/index.css`: global styles.
+- Imports use the `@/` alias for `src/`, configured in `vite.config.ts` and `tsconfig.app.json`.
 
 ## State Structure
 

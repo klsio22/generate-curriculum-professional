@@ -2,14 +2,14 @@ import { useRef, useEffect, useState, type ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useReactToPrint } from 'react-to-print';
 import { useTranslation } from 'react-i18next';
-import type { CVData, SavedCV } from './types';
-import { emptyCV } from './data/defaultCV';
-import { CVForm } from './components/CVForm';
-import { PDFPreview } from './components/PDFPreview';
-import { useCVStorage } from './hooks/useCVStorage';
-import { Sidebar } from './components/Sidebar';
-import { Modal } from './components/Modal';
-import { AppHeader } from './components/AppHeader';
+import type { CVData, SavedCV } from '@/types/cv';
+import { emptyCV } from '@/features/cv-editor/defaultCV';
+import { CVForm } from '@/features/cv-editor/CVForm';
+import { PDFPreview } from '@/features/pdf/PDFPreview';
+import { useCVStorage } from '@/features/cv-editor/useCVStorage';
+import { Sidebar } from '@/features/cv-editor/Sidebar';
+import { Modal } from '@/shared/components/Modal';
+import { AppHeader } from './AppHeader';
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;

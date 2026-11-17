@@ -66,30 +66,35 @@ npm run preview
 
 ```
 src/
-├── App.tsx
-├── main.tsx
-├── index.css
-├── types.ts
-├── assets/
-├── components/
-│   ├── CVDocument.tsx ........... PDF document / export
-│   ├── CVForm.tsx ............... Resume editing form
-│   ├── Modal.tsx ................ Dialog component
-│   ├── PDFPreview.tsx ........... A4 preview + PDF viewer
-│   ├── Sidebar.tsx .............. Resume list and management
-│   └── LanguageSelector.tsx ..... Language switcher
-├── data/
-│   └── defaultCV.ts ............. Initial resume data
-├── hooks/
-│   └── useCVStorage.ts .......... Local persistence (full CRUD)
+├── main.tsx ..................... Entry point (the only file at the root)
+├── app/
+│   ├── App.tsx .................. Application shell: wires features together
+│   └── AppHeader.tsx ............ Top bar (language, import/export, PDF)
+├── features/
+│   ├── cv-editor/
+│   │   ├── CVForm.tsx ........... Resume editing form
+│   │   ├── Sidebar.tsx .......... Resume list and management
+│   │   ├── useCVStorage.ts ...... Local persistence (full CRUD)
+│   │   └── defaultCV.ts ......... Initial resume data
+│   └── pdf/
+│       ├── CVDocument.tsx ....... PDF document / export
+│       ├── PDFPreview.tsx ....... A4 preview + PDF viewer
+│       ├── pdfStyles.ts ......... PDF-specific styling
+│       └── textUtils.ts ......... Text formatting utilities (dates, URLs)
+├── shared/
+│   └── components/
+│       ├── Modal.tsx ............ Dialog component
+│       └── LanguageSelector.tsx . Language switcher
 ├── i18n/
 │   ├── config.ts
 │   └── locales/
 ├── styles/
-│   └── pdfStyles.ts ............. PDF-specific styling
-└── utils/
-	└── textUtils.ts ............. Text formatting utilities (dates, URLs)
+│   └── index.css ................ Global styles (Tailwind + daisyUI)
+└── types/
+    └── cv.ts .................... Resume data types
 ```
+
+Each feature folder holds everything that belongs to it. Features import only from `shared/` and `types/`; `app/` is the place that combines them. Imports use the `@/` alias for `src/` (for example `@/features/pdf/CVDocument`).
 
 ---
 
@@ -114,8 +119,8 @@ vercel --prod
 
 | File | What to edit |
 |------|---------------|
-| `src/styles/pdfStyles.ts` | PDF margins, fonts, and spacing |
-| `src/data/defaultCV.ts` | Default resume seed data |
+| `src/features/pdf/pdfStyles.ts` | PDF margins, fonts, and spacing |
+| `src/features/cv-editor/defaultCV.ts` | Default resume seed data |
 
 ---
 

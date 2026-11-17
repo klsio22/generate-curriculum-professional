@@ -8,9 +8,9 @@ import {
     Path,
 } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next';
-import styles from '../styles/pdfStyles';
-import type { CVData } from '../types';
-import { formatDate, normalizeUrl } from '../utils/textUtils';
+import styles from './pdfStyles';
+import type { CVData } from '@/types/cv';
+import { formatDate, normalizeUrl } from './textUtils';
 import type { ReactNode } from 'react';
 
 export interface PDFPreviewProps {
