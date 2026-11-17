@@ -14,6 +14,9 @@
 | **ABNT A4 Preview** | Accurate resume preview in Brazilian A4 format |
 | **PDF Export** | Professional PDF generation ready for printing or sharing |
 | **Multiple Resumes** | Create, duplicate, and manage multiple resume versions |
+| **Tailor to a Job (AI)** | Paste a job posting and get a new resume aimed at it, with keyword coverage and a before/after review. Uses your own API key (OpenRouter, Gemini or any OpenAI-compatible API), no back-end. See [docs/ia-adaptacao-vaga.md](docs/ia-adaptacao-vaga.md) |
+| **Backup** | Save all resumes to a file and restore them later, choosing to add or replace. See [docs/import-export-json.md](docs/import-export-json.md) |
+| **PDF Metadata** | Title, author, subject and keywords filled in; file named after the person and the job |
 | **Responsive Design** | Adaptive interface with Tailwind CSS and DaisyUI |
 
 ---
@@ -29,6 +32,7 @@ React Hook Form ........... High-performance form state management
 @react-pdf/renderer ....... Browser-based PDF rendering/generation
 react-to-print ............ Native browser printing integration
 Lucide React .............. Modern and consistent icon set
+Vitest .................... Unit tests
 ```
 
 > 📦 Check `package.json` for exact versions and dependencies.
@@ -60,6 +64,14 @@ npm run build
 npm run preview
 ```
 
+### **Tests and lint**
+
+```bash
+npm test          # run unit tests once
+npm run test:watch
+npm run lint
+```
+
 ---
 
 ## **📁 Project Structure**
@@ -76,14 +88,31 @@ src/
 │   │   ├── Sidebar.tsx .......... Resume list and management
 │   │   ├── useCVStorage.ts ...... Local persistence (full CRUD)
 │   │   └── defaultCV.ts ......... Initial resume data
-│   └── pdf/
-│       ├── CVDocument.tsx ....... PDF document / export
-│       ├── PDFPreview.tsx ....... A4 preview + PDF viewer
-│       ├── pdfStyles.ts ......... PDF-specific styling
-│       └── textUtils.ts ......... Text formatting utilities (dates, URLs)
+│   ├── pdf/
+│   │   ├── CVDocument.tsx ....... PDF document / export
+│   │   ├── PDFPreview.tsx ....... A4 preview + PDF viewer
+│   │   ├── pdfMetadata.ts ....... PDF properties and file name
+│   │   ├── pdfStyles.ts ......... PDF-specific styling
+│   │   └── textUtils.ts ......... Text formatting utilities (dates, URLs)
+│   ├── backup/
+│   │   ├── backup.ts ............ Save/restore logic and validation
+│   │   ├── BackupMenu.tsx ....... Header menu with plain-language help
+│   │   └── RestoreBackupModal.tsx Add or replace confirmation
+│   └── ai/
+│       ├── client.ts ............ OpenAI-compatible API client
+│       ├── providers.ts ......... OpenRouter / Gemini / custom presets
+│       ├── prompts.ts ........... Prompts (contact data is never sent)
+│       ├── parse.ts ............. Answer validation and anti-invention merge
+│       ├── jobTailoring.ts ...... Analyze job + tailor resume
+│       ├── keywords.ts .......... Keyword coverage counted in code
+│       ├── useAISettings.ts ..... Provider settings (stored locally)
+│       ├── AISettingsModal.tsx .. Provider, key and model setup
+│       ├── TailorJobModal.tsx ... Job → analysis → result dialog
+│       └── TailorResultView.tsx . Coverage table and before/after
 ├── shared/
 │   └── components/
-│       ├── Modal.tsx ............ Dialog component
+│       ├── Modal.tsx ............ Accessible dialog (focus trap, Escape)
+│       ├── Notice.tsx ........... Success/error notices (live regions)
 │       └── LanguageSelector.tsx . Language switcher
 ├── i18n/
 │   ├── config.ts
@@ -103,7 +132,7 @@ Each feature folder holds everything that belongs to it. Features import only fr
 ### **Vercel (recommended)**
 
 1. Connect your GitHub repository on [Vercel](https://vercel.com)
-2. **Environment variables:** none required
+2. **Environment variables:** none required (the AI feature uses each user's own key, entered in the app)
 3. **Build command:** `npm run build` (auto-detected)
 
 ### **Manual deployment via CLI**

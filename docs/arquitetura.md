@@ -31,6 +31,8 @@ Persistence uses two browser keys:
 
 - `cv-data` to save the complete resume list
 - `cv-selected-id` to restore the active resume
+- `ai-settings` for the AI provider, model and the user's API key (never sent anywhere except to that provider)
+- `language` for the interface language
 
 ## Product Features
 
@@ -38,8 +40,8 @@ Persistence uses two browser keys:
 - duplicate an existing resume
 - delete a single resume
 - clear everything and return to a default resume
-- export all saved resumes to a JSON backup file
-- import resumes from a JSON backup file
+- save all resumes to a backup file and restore them (add or replace)
+- tailor a resume to a job posting with AI, saved as a new resume
 - edit personal data, education, experience, projects, skills, languages, soft skills, interpersonal competencies, and references
 - switch between Portuguese and English
 - preview the result in A4 format
@@ -50,4 +52,5 @@ Persistence uses two browser keys:
 - The form uses incremental updates to reduce data loss during editing.
 - The PDF is generated from the same data source used by the editor, preventing preview/export mismatch.
 - The application depends on `localStorage`, so data stays in the user's browser.
-- JSON import restores the saved resume list and the active resume when the backup includes it.
+- Restoring a backup asks whether to add the resumes or replace everything.
+- There is no back-end. The AI feature calls the provider directly from the browser with the user's key; see `ia-adaptacao-vaga.md`.
