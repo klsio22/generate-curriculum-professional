@@ -10,6 +10,8 @@ import { useCVStorage } from '@/features/cv-editor/useCVStorage';
 import { Sidebar } from '@/features/cv-editor/Sidebar';
 import { Modal } from '@/shared/components/Modal';
 import { AppHeader } from './AppHeader';
+import { AISettingsModal } from '@/features/ai/AISettingsModal';
+import { useAISettings } from '@/features/ai/useAISettings';
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;
@@ -73,6 +75,8 @@ function App() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const aiSettings = useAISettings();
 
   const initialValues = activeCV ?? emptyCV;
   const { register, control, reset, getValues } = useForm<CVData>({
@@ -236,6 +240,14 @@ function App() {
         >
           <p>{t('modal.clearMessage')}</p>
         </Modal>
+
+        <AISettingsModal
+          isOpen={showAISettings}
+          settings={aiSettings.settings}
+          onSave={aiSettings.saveSettings}
+          onForgetKey={aiSettings.forgetKey}
+          onClose={() => setShowAISettings(false)}
+        />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
@@ -245,6 +257,8 @@ function App() {
           onImportData={handleImportData}
           onExportData={handleExportData}
           onDownloadPdf={reactToPrintFn}
+          onOpenAISettings={() => setShowAISettings(true)}
+          isAIConfigured={aiSettings.isConfigured}
         />
 
         <main className="flex-1 mx-auto w-full p-4 lg:p-8">
