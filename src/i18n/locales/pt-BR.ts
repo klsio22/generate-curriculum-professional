@@ -81,6 +81,7 @@ export const ptBR = {
     addReference: 'Adicionar Referência',
   },
   pdf: {
+    resume: 'Currículo',
     profile: 'PERFIL',
     experience: 'EXPERIÊNCIA PROFISSIONAL',
     education: 'FORMAÇÃO ACADÊMICA',

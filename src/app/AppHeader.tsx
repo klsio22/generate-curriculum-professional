@@ -4,6 +4,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next';
 import type { CVData } from '@/types/cv';
 import { CVDocument } from '@/features/pdf/CVDocument';
+import { buildPdfFileName } from '@/features/pdf/pdfMetadata';
 import { LanguageSelector } from '@/shared/components/LanguageSelector';
 
 interface AppHeaderProps {
@@ -29,6 +30,7 @@ export const AppHeader = ({
 }: AppHeaderProps) => {
   const { t } = useTranslation();
   const importInputRef = useRef<HTMLInputElement>(null);
+  const pdfFileName = buildPdfFileName(data, activeTitle);
 
   const triggerImport = () => {
     importInputRef.current?.click();
@@ -102,7 +104,7 @@ export const AppHeader = ({
 
           <PDFDownloadLink
             document={<CVDocument data={data} />}
-            fileName={`${activeTitle.replaceAll(/\s+/g, '_')}.pdf`}
+            fileName={pdfFileName}
           >
             {({ loading }) => (
               <button
@@ -143,7 +145,7 @@ export const AppHeader = ({
 
         <PDFDownloadLink
           document={<CVDocument data={data} />}
-          fileName={`${activeTitle.replaceAll(/\s+/g, '_')}.pdf`}
+          fileName={pdfFileName}
         >
           {({ loading }) => (
             <button

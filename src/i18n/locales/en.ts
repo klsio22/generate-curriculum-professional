@@ -81,6 +81,7 @@ export const en = {
     addReference: 'Add Reference',
   },
   pdf: {
+    resume: 'Resume',
     profile: 'PROFILE',
     experience: 'PROFESSIONAL EXPERIENCE',
     education: 'ACADEMIC EDUCATION',
