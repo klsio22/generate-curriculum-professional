@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Claude Code (skills e configurações locais)
+.claude/
+specs/
+
+# Cursor (regras e configurações locais)
+.cursor/
+.cursorrules
