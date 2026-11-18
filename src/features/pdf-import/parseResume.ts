@@ -288,6 +288,14 @@ const wrapsInto = (previous: PdfLine, line: PdfLine, columnRight: ColumnRight) =
   return previous.right + charWidth * firstWord.length > right - charWidth;
 };
 
+const MAX_HANGING_INDENT_CHARS = 4;
+
+const startsAlignedWith = (previous: PdfLine, line: PdfLine) => {
+  if (Math.abs(previous.x - line.x) <= 3) return true;
+  const indent = line.x - previous.x;
+  return BULLET.test(previous.text) && indent > 0 && indent <= charWidthOf(previous) * MAX_HANGING_INDENT_CHARS;
+};
+
 const toParagraphs = (lines: PdfLine[], columnRight: ColumnRight): Paragraph[] => {
   const paragraphs: Paragraph[] = [];
   let previous: PdfLine | null = null;
@@ -299,7 +307,7 @@ const toParagraphs = (lines: PdfLine[], columnRight: ColumnRight): Paragraph[] =
     const continues =
       previous !== null &&
       closeEnough &&
-      Math.abs(previous.x - line.x) <= 3 &&
+      startsAlignedWith(previous, line) &&
       previous.fontSize === line.fontSize &&
       previous.bold === line.bold &&
       previous.italic === line.italic &&
