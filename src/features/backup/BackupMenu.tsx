@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Dropdown, theme, type MenuProps } from 'antd';
 import { ArchiveRestore, ChevronUp, Download, FileText, HardDrive, Upload } from 'lucide-react';
 import { useFocusReturn } from '@/shared/components/useFocusReturn';
+import { MenuItemLabel } from './MenuItemLabel';
 
 interface BackupMenuProps {
   onSaveBackup: () => void;
@@ -29,15 +30,6 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf }: BackupM
     boxShadow: token.boxShadowSecondary,
   };
 
-  const itemLabel = (title: string, help: string) => (
-    <span className="block max-w-72 py-1">
-      <span className="block font-medium">{title}</span>
-      <span className="block text-xs whitespace-normal" style={{ color: token.colorTextDescription }}>
-        {help}
-      </span>
-    </span>
-  );
-
   const pickFile = (action: FileAction) => {
     fileActionRef.current = action;
     if (!fileRef.current) return;
@@ -49,19 +41,19 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf }: BackupM
     {
       key: 'save',
       icon: <Download size={18} className="text-emerald-400" aria-hidden />,
-      label: itemLabel(t('backup.save'), t('backup.saveHelp')),
+      label: <MenuItemLabel title={t('backup.save')} help={t('backup.saveHelp')} />,
       onClick: onSaveBackup,
     },
     {
       key: 'restore',
       icon: <Upload size={18} className="text-indigo-300" aria-hidden />,
-      label: itemLabel(t('backup.restore'), t('backup.restoreHelp')),
+      label: <MenuItemLabel title={t('backup.restore')} help={t('backup.restoreHelp')} />,
       onClick: () => pickFile('restore'),
     },
     {
       key: 'importPdf',
       icon: <FileText size={18} className="text-amber-300" aria-hidden />,
-      label: itemLabel(t('pdfImport.menu'), t('pdfImport.menuHelp')),
+      label: <MenuItemLabel title={t('pdfImport.menu')} help={t('pdfImport.menuHelp')} />,
       onClick: () => pickFile('importPdf'),
     },
   ];
