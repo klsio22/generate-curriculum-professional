@@ -18,10 +18,10 @@ export const extractJSON = (text: string): unknown => {
   }
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const str = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
+export const str = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
 const nonEmptyStrings = (value: unknown): string[] =>
   Array.isArray(value) ? value.map(str).filter(Boolean) : [];

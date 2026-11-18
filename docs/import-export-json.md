@@ -27,7 +27,7 @@ File name: `curriculos-backup-YYYY-MM-DD.json` (Portuguese UI) or `resume-backup
 - `version`: schema version for future migrations
 - `exportedAt`: when the backup was made (shown when restoring)
 - `activeId`: the resume that was selected
-- `cvs`: every saved resume, including the optional `meta` of AI-tailored resumes
+- `cvs`: every saved resume, including the optional `meta` of AI-tailored resumes and the optional resume language `locale` (`pt-BR` or `en`; any other value is dropped when restoring)
 
 A plain array of resumes is also accepted.
 

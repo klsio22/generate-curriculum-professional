@@ -2,10 +2,11 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import { Alert, Button, Collapse, Descriptions, Form, Input, Modal, Select, Steps, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Check, Sparkles } from 'lucide-react';
-import type { SavedCV } from '@/types/cv';
+import type { CVData, SavedCV } from '@/types/cv';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
 import { StatusAlert } from '@/shared/components/StatusAlert';
 import { analyzeJob, tailorResume } from './jobTailoring';
+import { prepareTailorBase } from './translation';
 import { computeKeywordCoverage, findNewTerms } from './keywords';
 import type { TailorResult } from './parse';
 import { MAX_JOB_DESCRIPTION_LENGTH } from './prompts';
@@ -30,6 +31,11 @@ type Step = 'input' | 'analysis' | 'result';
 type OutputLanguage = 'auto' | 'pt-BR' | 'en';
 
 const STEPS: Step[] = ['input', 'analysis', 'result'];
+const BUSY_MESSAGE = {
+  analyzing: 'ai.tailor.analyzing',
+  translating: 'ai.tailor.translatingBase',
+  generating: 'ai.tailor.generating',
+} as const;
 const PRIORITIES: KeywordPriority[] = ['high', 'medium', 'low'];
 
 
@@ -63,7 +69,8 @@ const TailorJobDialog = ({
   const [analysis, setAnalysis] = useState<JobAnalysis | null>(null);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [newTitle, setNewTitle] = useState('');
-  const [busy, setBusy] = useState<null | 'analyzing' | 'generating'>(null);
+  const [busy, setBusy] = useState<null | 'analyzing' | 'translating' | 'generating'>(null);
+  const [workingBase, setWorkingBase] = useState<CVData | null>(null);
   const [error, setError] = useState<AIErrorDescription | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -80,16 +87,21 @@ const TailorJobDialog = ({
     () => (baseCV && analysis ? computeKeywordCoverage(baseCV, analysis.keywords) : []),
     [baseCV, analysis],
   );
+  const resultBase = workingBase ?? baseCV;
+  const resultBaseCoverage = useMemo(
+    () => (resultBase && analysis ? computeKeywordCoverage(resultBase, analysis.keywords) : []),
+    [resultBase, analysis],
+  );
   const resultCoverage = useMemo(
     () => (result && analysis ? computeKeywordCoverage(result.cv, analysis.keywords) : []),
     [result, analysis],
   );
   const newTerms = useMemo(
-    () => (baseCV && result && analysis ? findNewTerms(baseCV, result.cv, analysis.keywords) : []),
-    [baseCV, result, analysis],
+    () => (resultBase && result && analysis ? findNewTerms(resultBase, result.cv, analysis.keywords) : []),
+    [resultBase, result, analysis],
   );
 
-  const run = async (kind: 'analyzing' | 'generating', action: (signal: AbortSignal) => Promise<void>) => {
+  const run = async (kind: 'analyzing' | 'translating' | 'generating', action: (signal: AbortSignal) => Promise<void>) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -109,13 +121,20 @@ const TailorJobDialog = ({
       const next = await analyzeJob(settings, jobText, { signal });
       setAnalysis(next);
       setResult(null);
+      setWorkingBase(null);
       setStep('analysis');
     });
 
   const handleGenerate = () => {
     if (!baseCV || !analysis) return;
     return run('generating', async (signal) => {
-      const next = await tailorResume(settings, baseCV, analysis, resolveLanguage(language, analysis), { signal });
+      const outputLanguage = resolveLanguage(language, analysis);
+      const base = await prepareTailorBase(settings, baseCV, outputLanguage, i18n.language, { signal }, () =>
+        setBusy('translating'),
+      );
+      setBusy('generating');
+      const next = await tailorResume(settings, base, analysis, outputLanguage, { signal });
+      setWorkingBase(base);
       setResult(next);
       setNewTitle(analysis.jobTitle.trim() || `${baseCV.title} — ${t('ai.tailor.aiSuffix')}`);
       setStep('result');
@@ -210,7 +229,7 @@ const TailorJobDialog = ({
 
         <output className="block" aria-live="polite">
           {busy && (
-            <StatusAlert tone="busy">{busy === 'analyzing' ? t('ai.tailor.analyzing') : t('ai.tailor.generating')}</StatusAlert>
+            <StatusAlert tone="busy">{t(BUSY_MESSAGE[busy])}</StatusAlert>
           )}
         </output>
 
@@ -359,15 +378,15 @@ const TailorJobDialog = ({
           </div>
         )}
 
-        {step === 'result' && result && baseCV && (
+        {step === 'result' && result && resultBase && (
           <div className="space-y-4">
             <h3 ref={headingRef} tabIndex={-1} className="text-base font-semibold text-gray-800 outline-none">
               {t('ai.tailor.stepResult')}
             </h3>
             <TailorResultView
-              base={baseCV}
+              base={resultBase}
               result={result}
-              coverageBefore={baseCoverage}
+              coverageBefore={resultBaseCoverage}
               coverageAfter={resultCoverage}
               newTerms={newTerms}
               title={newTitle}

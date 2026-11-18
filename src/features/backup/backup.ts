@@ -1,4 +1,5 @@
 import type { SavedCV } from '@/types/cv';
+import { isResumeLocale } from '@/shared/locale';
 
 export const BACKUP_VERSION = 1;
 
@@ -50,7 +51,7 @@ const TEXT_FIELDS = [
 export const sanitizeImportedCV = (item: unknown): SavedCV | null => {
   if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
 
-  const candidate = item as Partial<SavedCV> & Record<string, unknown>;
+  const { locale, ...candidate } = item as Partial<SavedCV> & Record<string, unknown>;
   if (!isNonEmptyString(candidate.id)) return null;
   if (!isNonEmptyString(candidate.title) && !isNonEmptyString(candidate.fullName)) return null;
   if (!Array.isArray(candidate.education) || !Array.isArray(candidate.experience)) return null;
@@ -69,6 +70,7 @@ export const sanitizeImportedCV = (item: unknown): SavedCV | null => {
     experience: candidate.experience,
     references: Array.isArray(candidate.references) ? candidate.references : [],
     projects: Array.isArray(candidate.projects) ? candidate.projects : [],
+    ...(isResumeLocale(locale) ? { locale } : {}),
   } as SavedCV;
 };
 

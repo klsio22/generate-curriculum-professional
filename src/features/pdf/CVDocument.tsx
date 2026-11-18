@@ -12,6 +12,8 @@ import styles from './pdfStyles';
 import type { CVData } from '@/types/cv';
 import { formatDate, normalizeUrl } from './textUtils';
 import { buildPdfMetadata } from './pdfMetadata';
+import { GITHUB_PATH, LINKEDIN_PATH } from '@/shared/brandPaths';
+import { detectResumeLocale } from '@/shared/locale';
 import type { ReactNode } from 'react';
 
 export interface PDFPreviewProps {
@@ -19,8 +21,10 @@ export interface PDFPreviewProps {
 }
 
 export const CVDocument = ({ data }: PDFPreviewProps) => {
-    const { t, i18n } = useTranslation();
-    const metadata = buildPdfMetadata(data, i18n.language, t('pdf.resume'));
+    const { i18n } = useTranslation();
+    const locale = detectResumeLocale(data, i18n.language);
+    const t = i18n.getFixedT(locale);
+    const metadata = buildPdfMetadata(data, locale, t('pdf.resume'));
     const skillsList =
         data.skills
             ?.split('\n')
@@ -87,9 +91,9 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
 
                                     {data.linkedin && (
                                         <View style={styles.socialItem}>
-                                            <Svg width={18} height={18} style={{ marginRight: 6 }} viewBox="0 0 256 256">
+                                            <Svg width={18} height={18} style={{ marginRight: 6 }} viewBox={LINKEDIN_PATH.viewBox}>
                                                 <Path
-                                                    d="M216,24H40A16,16,0,0,0,24,40V216a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V40A16,16,0,0,0,216,24Zm0,192H40V40H216V216ZM96,112v64a8,8,0,0,1-16,0V112a8,8,0,0,1,16,0Zm88,28v36a8,8,0,0,1-16,0V140a20,20,0,0,0-40,0v36a8,8,0,0,1-16,0V112a8,8,0,0,1,15.79-1.78A36,36,0,0,1,184,140ZM100,84A12,12,0,1,1,88,72,12,12,0,0,1,100,84Z"
+                                                    d={LINKEDIN_PATH.d}
                                                     fill="#000"
                                                 />
                                             </Svg>
@@ -101,9 +105,9 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
 
                                     {data.github && (
                                         <View style={styles.socialItem}>
-                                            <Svg width={18} height={18} style={{ marginRight: 6 }} viewBox="0 0 24 24">
+                                            <Svg width={18} height={18} style={{ marginRight: 6 }} viewBox={GITHUB_PATH.viewBox}>
                                                 <Path
-                                                    d="M12 .297C5.373 .297 0 5.67 0 12.297c0 5.297 3.438 9.792 8.205 11.387.6.113.82-.26.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.612-4.042-1.612-.546-1.387-1.333-1.757-1.333-1.757-1.089-.745.083-.73.083-.73 1.205.085 1.84 1.237 1.84 1.237 1.07 1.835 2.808 1.305 3.492.998.108-.775.418-1.305.76-1.605-2.665-.305-5.466-1.332-5.466-5.93 0-1.31.468-2.381 1.235-3.221-.123-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.29-1.552 3.296-1.23 3.296-1.23.654 1.653.243 2.874.12 3.176.77.84 1.233 1.911 1.233 3.221 0 4.61-2.803 5.62-5.475 5.92.43.372.814 1.103.814 2.222 0 1.606-.015 2.896-.015 3.286 0 .32.216.694.825.576C20.565 22.086 24 17.594 24 12.297 24 5.67 18.627 .297 12 .297z"
+                                                    d={GITHUB_PATH.d}
                                                     fill="#000"
                                                 />
                                             </Svg>

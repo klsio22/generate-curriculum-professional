@@ -34,6 +34,8 @@ export interface Project {
   endDate?: string;
 }
 
+export type ResumeLocale = 'pt-BR' | 'en';
+
 export interface CVMeta {
   targetJob?: string;
   company?: string;
@@ -65,6 +67,7 @@ export interface CVData {
   
   references?: Reference[];
 
+  locale?: ResumeLocale;
   meta?: CVMeta;
 }
 

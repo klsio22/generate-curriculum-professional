@@ -7,10 +7,13 @@ import { CVForm } from '@/features/cv-editor/CVForm';
 import { PDFPreview } from '@/features/pdf/PDFPreview';
 import { useCVStorage } from '@/features/cv-editor/useCVStorage';
 import { Sidebar } from '@/features/cv-editor/Sidebar';
-import { App as AntdApp, Card, Form, Input, Tag } from 'antd';
+import { DocumentSettings } from '@/features/cv-editor/DocumentSettings';
+import { detectResumeLocale, guessResumeLocale } from '@/shared/locale';
+import { App as AntdApp, Tag } from 'antd';
 import { AppHeader } from './AppHeader';
 import { AISettingsDrawer } from '@/features/ai/AISettingsDrawer';
 import { TailorJobModal } from '@/features/ai/TailorJobModal';
+import { TranslateModal } from '@/features/ai/TranslateModal';
 import { useAISettings } from '@/features/ai/useAISettings';
 import {
   BackupError,
@@ -49,6 +52,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [returnToTailor, setReturnToTailor] = useState(false);
+  const [translateId, setTranslateId] = useState<string | null>(null);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
   const [pdfImport, setPdfImport] = useState<PdfImportState | null>(null);
@@ -176,6 +180,10 @@ function App() {
     showNotice('success', t('pdfImport.created', { title }));
   };
 
+  const updateActive = (changes: Partial<SavedCV>) => {
+    if (activeId) updateCV(activeId, changes);
+  };
+
   const pdfTitle = activeCV?.title || 'meu_curriculo';
   const handleDownloadError = () => showNotice('error', t('header.downloadError'));
 
@@ -186,6 +194,11 @@ function App() {
   const handleOpenAISettings = () => {
     closeSidebarIfOverlay();
     setShowAISettings(true);
+  };
+
+  const handleSaveTranslated = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
+    addCV(cv);
+    showNotice('success', t('ai.translate.saved', { title: cv.title }));
   };
 
   const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
@@ -205,6 +218,10 @@ function App() {
         }}
         onCreate={() => {
           createCV();
+          closeSidebarIfOverlay();
+        }}
+        onTranslate={(id) => {
+          setTranslateId(id);
           closeSidebarIfOverlay();
         }}
         onDuplicate={(id: string) => {
@@ -256,6 +273,15 @@ function App() {
           onSave={handleSaveTailored}
         />
 
+        <TranslateModal
+          cv={showAISettings ? null : (cvs.find((cv) => cv.id === translateId) ?? null)}
+          settings={aiSettings.settings}
+          isConfigured={aiSettings.isConfigured}
+          onOpenSettings={() => setShowAISettings(true)}
+          onClose={() => setTranslateId(null)}
+          onSave={handleSaveTranslated}
+        />
+
         <RestoreBackupModal
           backup={pendingRestore}
           currentCount={cvs.length}
@@ -289,23 +315,14 @@ function App() {
                 {t('header.edit')}
               </h2>
               <div key={activeId}>
-                <Card className="mb-4 shadow-sm">
-                  <Form layout="vertical" component={false}>
-                    <Form.Item label={t('form.docName')} htmlFor="cv-document-title" className="mb-0">
-                      <Input
-                        key={activeCV?.title}
-                        id="cv-document-title"
-                        defaultValue={activeCV?.title ?? 'Novo Currículo'}
-                        onBlur={(e) => {
-                          if (activeId) {
-                            updateCV(activeId, { title: e.target.value });
-                          }
-                        }}
-                        placeholder={t('form.docNamePlaceholder')}
-                      />
-                    </Form.Item>
-                  </Form>
-                </Card>
+                <DocumentSettings
+                  title={activeCV?.title ?? 'Novo Currículo'}
+                  locale={detectResumeLocale(activeCV ?? {}, i18n.language)}
+                  contentLocale={activeCV ? guessResumeLocale(activeCV) : null}
+                  onRename={(title) => updateActive({ title })}
+                  onLocaleChange={(locale) => updateActive({ locale })}
+                  onTranslate={() => setTranslateId(activeId)}
+                />
 
                 <CVForm control={control} onSave={handleSave} />
               </div>
