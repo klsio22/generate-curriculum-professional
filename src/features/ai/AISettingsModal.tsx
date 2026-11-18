@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, ExternalLink, Loader2 } from 'lucide-react';
 import { Modal } from '@/shared/components/Modal';
@@ -43,6 +43,8 @@ const AISettingsDialog = ({
     model: useId(),
     modelHelp: useId(),
     modelList: useId(),
+    modelSearch: useId(),
+    modelCount: useId(),
     privacy: useId(),
   };
 
@@ -226,7 +228,6 @@ const AISettingsDialog = ({
             <input
               id={ids.model}
               type="text"
-              list={ids.modelList}
               value={draft.model}
               onChange={(e) => update({ model: e.target.value })}
               placeholder={t('ai.settings.modelExample', { example: preset.modelExample })}
@@ -234,11 +235,6 @@ const AISettingsDialog = ({
               spellCheck={false}
               className={inputClass}
             />
-            <datalist id={ids.modelList}>
-              {models.map((model) => (
-                <option key={model} value={model} />
-              ))}
-            </datalist>
             <button
               type="button"
               onClick={handleLoadModels}
@@ -251,6 +247,15 @@ const AISettingsDialog = ({
           <p id={ids.modelHelp} className="mt-1 text-xs text-gray-500">
             {t('ai.settings.modelHelp')}
           </p>
+
+          {models.length > 0 && (
+            <ModelPicker
+              models={models}
+              value={draft.model}
+              onPick={(model) => update({ model })}
+              ids={{ search: ids.modelSearch, list: ids.modelList, count: ids.modelCount }}
+            />
+          )}
         </div>
 
         <p id={ids.privacy} className="rounded-md bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
@@ -289,5 +294,97 @@ const AISettingsDialog = ({
         </div>
       </form>
     </Modal>
+  );
+};
+
+interface ModelPickerProps {
+  models: string[];
+  value: string;
+  onPick: (model: string) => void;
+  ids: { search: string; list: string; count: string };
+}
+
+/** OpenRouter marks free models with the ":free" suffix. */
+const isFreeModel = (model: string) => model.endsWith(':free');
+
+/**
+ * Visible, searchable list of the provider's models. A native <select size>
+ * is used as the listbox, so keyboard and screen reader support come for free.
+ */
+const ModelPicker = ({ models, value, onPick, ids }: ModelPickerProps) => {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  const [freeOnly, setFreeOnly] = useState(false);
+  const hasFreeModels = useMemo(() => models.some(isFreeModel), [models]);
+
+  const filtered = useMemo(() => {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    return models.filter(
+      (model) =>
+        (!freeOnly || isFreeModel(model)) && terms.every((term) => model.toLowerCase().includes(term)),
+    );
+  }, [models, query, freeOnly]);
+
+  return (
+    <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-48 flex-1">
+          <label htmlFor={ids.search} className="block text-xs font-medium text-gray-700 mb-1">
+            {t('ai.settings.modelSearch')}
+          </label>
+          <input
+            id={ids.search}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('ai.settings.modelSearchPlaceholder')}
+            aria-controls={ids.list}
+            spellCheck={false}
+            className={inputClass}
+          />
+        </div>
+        {hasFreeModels && (
+          <label className="flex items-center gap-2 pb-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={freeOnly}
+              onChange={(e) => setFreeOnly(e.target.checked)}
+              className="h-4 w-4 accent-indigo-600"
+            />
+            {t('ai.settings.freeOnly')}
+          </label>
+        )}
+      </div>
+
+      <label htmlFor={ids.list} className="sr-only">
+        {t('ai.settings.modelList')}
+      </label>
+      {filtered.length > 0 ? (
+        <select
+          id={ids.list}
+          size={8}
+          value={filtered.includes(value) ? value : ''}
+          onChange={(e) => onPick(e.target.value)}
+          aria-describedby={ids.count}
+          className={`${inputClass} font-mono text-xs`}
+        >
+          {/* Without this, React selects the first option when the current model is
+              not in the list, and clicking that option would not fire a change. */}
+          {!filtered.includes(value) && <option value="" disabled hidden />}
+          {filtered.map((model) => (
+            <option key={model} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <p className="rounded-md border border-dashed border-gray-300 bg-white p-3 text-sm text-gray-600">
+          {t('ai.settings.noModelMatch')}
+        </p>
+      )}
+      <p id={ids.count} aria-live="polite" className="text-xs text-gray-500">
+        {t('ai.settings.modelCount', { shown: filtered.length, total: models.length })}
+      </p>
+    </div>
   );
 };
