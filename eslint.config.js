@@ -20,4 +20,19 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Screens use Ant Design components (Button, Input, Select, Form.Item...) instead of raw form elements.
+    // The PDF feature is excluded: it renders with @react-pdf, not the DOM.
+    files: ['src/app/**/*.tsx', 'src/features/**/*.tsx', 'src/shared/**/*.tsx'],
+    ignores: ['src/features/pdf/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...['button', 'input', 'select', 'textarea', 'label'].map((element) => ({
+          selector: `JSXOpeningElement[name.name='${element}']`,
+          message: `Use the Ant Design component instead of <${element}> (see docs/componentes.md).`,
+        })),
+      ],
+    },
+  },
 ])

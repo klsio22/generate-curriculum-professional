@@ -131,8 +131,6 @@ export const en = {
     delete: 'Delete',
     clear: 'Clear',
     cancel: 'Cancel',
-    confirm: 'Confirm',
-    close: 'Close',
   },
   ai: {
     settings: {
@@ -158,7 +156,6 @@ export const en = {
       modelHelp: 'Click the field to see the provider\'s models, grouped by company. Type to filter or to use a name that is not in the list.',
       loadingModels: 'Loading models...',
       freeOnly: 'Show only free models',
-      modelList: 'Available models',
       modelCount: '{{shown}} of {{total}} models',
       noModelMatch: 'No model matches this search.',
       modelFree: 'Free',
@@ -178,7 +175,6 @@ export const en = {
       keyForgotten: 'Key removed from this browser.',
       save: 'Save',
       modelPlaceholder: 'Pick or type, e.g. {{example}}',
-      showModels: 'Show models',
       retryModels: 'Try again',
       noModels: 'The provider returned no models.',
       otherVendor: 'Others',

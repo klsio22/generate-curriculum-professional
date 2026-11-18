@@ -131,8 +131,6 @@ export const ptBR = {
     delete: 'Excluir',
     clear: 'Limpar',
     cancel: 'Cancelar',
-    confirm: 'Confirmar',
-    close: 'Fechar',
   },
   ai: {
     settings: {
@@ -158,7 +156,6 @@ export const ptBR = {
       modelHelp: 'Clique no campo para ver os modelos do provedor, agrupados por empresa. Digite para filtrar ou para usar um nome que não está na lista.',
       loadingModels: 'Carregando modelos...',
       freeOnly: 'Mostrar só modelos gratuitos',
-      modelList: 'Modelos disponíveis',
       modelCount: '{{shown}} de {{total}} modelos',
       noModelMatch: 'Nenhum modelo encontrado com essa busca.',
       modelFree: 'Grátis',
@@ -178,7 +175,6 @@ export const ptBR = {
       keyForgotten: 'Chave apagada deste navegador.',
       save: 'Salvar',
       modelPlaceholder: 'Escolha ou digite, ex.: {{example}}',
-      showModels: 'Mostrar modelos',
       retryModels: 'Tentar de novo',
       noModels: 'O provedor não devolveu nenhum modelo.',
       otherVendor: 'Outros',
