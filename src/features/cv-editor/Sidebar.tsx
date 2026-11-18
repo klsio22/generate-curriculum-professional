@@ -6,6 +6,7 @@ import {
   Copy,
   FileText,
   GripVertical,
+  History,
   Languages,
   MoreHorizontal,
   Pencil,
@@ -45,6 +46,7 @@ interface SidebarProps {
   onCreate: () => void;
   onDuplicate: (id: string) => void;
   onTranslate: (id: string) => void;
+  onShowHistory: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onMove: (id: string, toIndex: number) => void;
   onRequestDelete: (id: string) => void;
@@ -69,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCreate,
   onDuplicate,
   onTranslate,
+  onShowHistory,
   onRename,
   onMove,
   onRequestDelete,
@@ -122,6 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: t(`sidebar.translateTo_${otherLocale(contentLocaleOf(cv, i18n.language)) === 'pt-BR' ? 'pt' : 'en'}`),
       onClick: () => onTranslate(cv.id),
     },
+    { key: 'history', icon: <History size={16} aria-hidden />, label: t('sidebar.history'), onClick: () => onShowHistory(cv.id) },
     {
       key: 'up',
       icon: <ArrowUp size={16} aria-hidden />,

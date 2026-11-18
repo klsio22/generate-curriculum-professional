@@ -26,7 +26,8 @@ import {
 } from '@/features/backup/backup';
 import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
 import { useCVHistory } from '@/features/history/useCVHistory';
-import type { HistoryRecord } from '@/features/history/history';
+import { contentOf, entriesFor, type HistoryEntry, type HistoryRecord } from '@/features/history/history';
+import { HistoryDrawer } from '@/features/history/HistoryDrawer';
 import { ImportPdfModal, type PdfImportState } from '@/features/pdf-import/ImportPdfModal';
 import { BackupMenu } from '@/features/backup/BackupMenu';
 import { AISettingsButton } from '@/features/ai/AISettingsButton';
@@ -56,6 +57,7 @@ function App() {
   const [showAISettings, setShowAISettings] = useState(false);
   const [returnToTailor, setReturnToTailor] = useState(false);
   const [translateId, setTranslateId] = useState<string | null>(null);
+  const [historyId, setHistoryId] = useState<string | null>(null);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
   const [pdfImport, setPdfImport] = useState<PdfImportState | null>(null);
@@ -215,6 +217,15 @@ function App() {
     showNotice('success', t('ai.translate.saved', { title: cv.title }));
   };
 
+  const handleRestoreVersion = (entry: HistoryEntry) => {
+    const cv = cvs.find((item) => item.id === entry.cvId);
+    if (!cv) return;
+    history.record(cv.id, { kind: 'restore', before: contentOf(cv), after: structuredClone(entry.after), changes: [] });
+    updateCV(cv.id, structuredClone(entry.after));
+    const date = new Date(entry.createdAt).toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'short' });
+    showNotice('success', t('history.restored', { date }));
+  };
+
   const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>, record: HistoryRecord) => {
     history.record(addCV(cv), record, aiSettings.settings.model);
     showNotice('success', t('ai.tailor.saved', { title: cv.title }));
@@ -232,6 +243,10 @@ function App() {
         }}
         onCreate={() => {
           createCV();
+          closeSidebarIfOverlay();
+        }}
+        onShowHistory={(id) => {
+          setHistoryId(id);
           closeSidebarIfOverlay();
         }}
         onTranslate={(id) => {
@@ -294,6 +309,13 @@ function App() {
           onOpenSettings={() => setShowAISettings(true)}
           onClose={() => setTranslateId(null)}
           onSave={handleSaveTranslated}
+        />
+
+        <HistoryDrawer
+          cv={cvs.find((cv) => cv.id === historyId) ?? null}
+          entries={historyId ? entriesFor(history.entries, historyId) : []}
+          onClose={() => setHistoryId(null)}
+          onRestore={handleRestoreVersion}
         />
 
         <RestoreBackupModal
