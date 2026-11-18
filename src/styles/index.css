@@ -1,5 +1,8 @@
+/* Order of the cascade layers: antd (see AntdProvider) sits above Tailwind's base
+   (preflight) and below utilities, so Tailwind classes can still adjust antd components. */
+@layer theme, base, antd, components, utilities;
+
 @import 'tailwindcss';
-@plugin "daisyui";
 
 @layer base {
   body {
