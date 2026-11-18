@@ -1,16 +1,16 @@
+import type { ReactNode } from 'react';
 import { Menu, PanelLeftClose } from 'lucide-react';
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CVData } from '@/types/cv';
 import { DownloadPdfButton } from '@/features/pdf/DownloadPdfButton';
-import { TailorButton } from '@/features/ai/TailorButton';
 import { LanguageSelector } from '@/shared/components/LanguageSelector';
 
 interface AppHeaderProps {
   data: CVData;
   activeTitle: string;
   onDownloadError: () => void;
-  onOpenTailor: () => void;
+  aiActions: ReactNode;
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
 }
@@ -19,7 +19,7 @@ export const AppHeader = ({
   data,
   activeTitle,
   onDownloadError,
-  onOpenTailor,
+  aiActions,
   isSidebarOpen,
   onToggleSidebar,
 }: AppHeaderProps) => {
@@ -50,7 +50,7 @@ export const AppHeader = ({
         </div>
 
         <div className="ml-auto hidden items-center gap-2 md:flex">
-          <TailorButton size="large" onClick={onOpenTailor} />
+          {aiActions}
           <DownloadPdfButton data={data} activeTitle={activeTitle} onError={onDownloadError} size="large" />
         </div>
       </div>
