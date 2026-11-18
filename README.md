@@ -31,7 +31,6 @@ Ant Design 6 ............. UI components (buttons, fields, dialogs, menus)
 Tailwind CSS ............. Layout and spacing
 React Hook Form ........... High-performance form state management
 @react-pdf/renderer ....... Browser-based PDF rendering/generation
-react-to-print ............ Native browser printing integration
 Lucide React .............. Modern and consistent icon set
 Vitest .................... Unit tests
 ```

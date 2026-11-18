@@ -37,7 +37,7 @@ Responsibilities:
 - hold the AI settings and open the AI dialogs
 - show success notices (`message`, close by themselves) and errors (`notification`, stay until closed)
 - connect the form to preview and PDF rendering
-- coordinate export with `PDFDownloadLink` and `react-to-print`
+- pass the resume data to the preview, which only rebuilds the PDF when the data or the language change
 
 ## AppHeader.tsx
 
@@ -90,6 +90,10 @@ Responsibilities:
 - provide the central preview area on the right column
 
 ## Sidebar.tsx
+
+Building the PDF is expensive and reloads the viewer, so the preview is wrapped in `memo` and keeps the same document element until the resume data or the language change: opening menus, dialogs or notices does not rebuild it. While typing, it waits for a 400 ms pause (`useDebouncedValue`) before building it again.
+
+The header's "Download" button builds the PDF only when clicked (`downloadResumePdf` in `src/features/pdf/downloadPdf.tsx`), instead of keeping a `PDFDownloadLink` that rebuilt it on every change.
 
 Side panel for resume management: an antd `Drawer` from the left, with the dark theme (`theme.darkAlgorithm` in a nested `ConfigProvider`).
 
