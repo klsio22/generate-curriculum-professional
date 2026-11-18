@@ -56,7 +56,7 @@ The **Local proxy** provider is for an OpenAI-compatible server running on the u
 
 ## Translate a resume
 
-"Translate to English / Portuguese" in the resume's ⋯ menu creates a **copy** in the other language; the original never changes. The source language is the language detected in the text, not the chosen resume language, so a resume written in English but set to Portuguese is translated from English (`contentLocaleOf` in `src/shared/locale.ts`). It can also be started from the banner that appears under "Resume language" when the chosen language and the text do not match.
+"Translate to English / Portuguese" in the resume's ⋯ menu creates a **copy** in the other language; the original never changes. The copy is named after the original with the new language in parentheses; a previous language suffix is replaced, not added ("Resume (Português)" → "Resume (English)", `titleWithoutLanguage`). The source language is the language detected in the text, not the chosen resume language, so a resume written in English but set to Portuguese is translated from English (`contentLocaleOf` in `src/shared/locale.ts`). It can also be started from the banner that appears under "Resume language" when the chosen language and the text do not match.
 
 The AI translates the headline, summary, skills, soft and interpersonal skills, languages ("Inglês: avançado" → "English: advanced"), and in each experience, education and project: role, course, project name, dates and description. It keeps technologies, product names, certifications and acronyms as written. The user reviews a before/after of every section and the new name, then saves.
 
@@ -73,7 +73,11 @@ The ▾ next to "Tailor to a job" opens a menu with **Adjust in a chat**, **Tran
 
 The chat (`RefineChatDrawer.tsx`, `refine.ts`) works on the open resume. The candidate asks for changes in their own words ("make the summary shorter", "I studied GraphQL in 2026"). If the resume came from a job tailoring, the job posting goes along as context and the keywords the resume still does not show become "I have …" shortcuts that start the message.
 
+The reply is in the site language by default; if the candidate writes in another language, or asks for one, the AI answers in that language without the site language changing. The resume text always stays in the resume language, and the AI does not use dashes (— or –) to join sentences.
+
 Each answer is a short reply and, when something should change, a **proposal**: a before/after of the sections it touches, with **Apply** and **Discard**. Nothing changes until the candidate applies it. Applying is recorded in the history (entry "Adjusted in the chat"), so it can be undone with "Restore this version". A proposal made before another one was applied can no longer be applied, since the resume changed.
+
+The conversation is saved per resume in `localStorage` (key `cv-chat`, `chatHistory.ts`), so it comes back when the panel is reopened or the page reloads. Each resume keeps its last 40 messages; a new request still sends only the last 12 (starting at a candidate message), so the cost of a long conversation stays bounded. A proposal keeps only the resume content (`contentOf`), not the whole resume. If storage is full, the oldest conversations are dropped first. Deleting a resume or clearing all data deletes its conversation, and "Clear conversation" in the panel deletes it on demand. Conversations are not part of the backup file.
 
 `applyRefinePatch` guards the answer: only the fields in the patch change; contact data, companies, roles, dates and institutions never change; entries cannot be added or removed (the AI tells the candidate to add them in the form) and unknown ids are counted and ignored.
 

@@ -51,9 +51,9 @@ Top bar of the application shell, fixed at the top (56 px on small screens, 64 p
 
 Responsibilities:
 
-- left: the button that opens the resume list (☰; while the list is open it shows "close panel" and closes it), the title and the language selector
+- left, on the page margin (aligned with "Edit information"): the button that opens the resume list (☰; while the list is open it shows "close panel" and closes it) and the title
 - on small screens the title is the short one (`header.shortTitle`), centered between ☰ and the language selector
-- from `md`, on the right, only the two workflow actions: "Tailor to a job" (`AIActions`, secondary, soft purple, with a ▾ menu for the chat, translation and AI history of the open resume) and "Download resume" (`DownloadPdfButton`, primary)
+- on the right: the site language (🌐 PT ▾), then, from `md`, only the two workflow actions: "Tailor to a job" (`AIActions`, secondary, soft purple, with a ▾ menu for the chat, translation and AI history of the open resume) and "Download resume" (`DownloadPdfButton`, primary)
 - "AI settings" and "Backup" are not here: they are in the sidebar footer
 
 ## CVForm.tsx
@@ -138,7 +138,7 @@ For antd `Dropdown`: when the menu closes and focus was lost (on `<body>` or sti
 
 ## RefineChatDrawer.tsx
 
-See "Adjust in a chat" in `ia-adaptacao-vaga.md`. An antd `Drawer` from the right: intro, the job used as context, suggestions to start, "I have …" shortcuts, the conversation (`role="log"`, announced politely), each AI answer with its proposal (`ResumeComparison` of the changed sections, Apply / Discard) and its declared facts, and a message box at the bottom (Enter sends, Shift+Enter adds a line, Cancel while waiting). The conversation lives only while the panel is open for that resume.
+See "Adjust in a chat" in `ia-adaptacao-vaga.md`. An antd `Drawer` from the right: intro, the job used as context, suggestions to start, "I have …" shortcuts, the conversation (`role="log"`, announced politely), each AI answer with its proposal (`ResumeComparison` of the changed sections, Apply / Discard) and its declared facts, and a message box at the bottom (Enter sends, Shift+Enter adds a line, Cancel while waiting). The conversation is saved per resume in this browser (`chatHistory.ts`, see "Adjust in a chat"), and "Clear conversation" deletes it.
 
 ## HistoryDrawer.tsx
 
@@ -162,14 +162,14 @@ See `ia-adaptacao-vaga.md`. Settings: provider, key, model, connection test, for
 
 ## LanguageSelector.tsx
 
-UI language switcher (antd `Segmented` with `shape="round"`, PT / EN).
+Language of the **site** (interface), shown in the header as a discreet text button with a globe: 🌐 PT ▾ (antd `Dropdown` with Português / English).
 
 Responsibilities:
 
 - switch between `pt-BR` and `en`
 - persist selection in `localStorage`
-- reflect current language state in the UI
-- show a round flag for each language (Brazil, United States, `LocaleFlag`), drawn as inline SVG because flag emoji do not render on Windows; on small screens only the flag is shown, and the language name stays in `aria-label`
+- reflect the current language in the button; its label says "Site language: …"
+- no flags here on purpose: flags (`LocaleFlag`) are used only for the **resume language** in `DocumentSettings`, so the two controls do not look alike
 
 ## useCVStorage.ts
 
