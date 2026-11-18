@@ -38,7 +38,7 @@ The **Local proxy** provider is for an OpenAI-compatible server running on the u
 ## Privacy
 
 - The API key is stored only in this browser (`localStorage`, key `ai-settings`) and is sent only to the chosen provider. **Forget key** removes it. Avoid saving it on shared computers.
-- What is sent to the provider: the job posting and the resume **content** (headline, summary, skills, experience, projects, education, languages).
+- What is sent to the provider: the job posting and the resume **content** (headline, summary, skills, experience, projects, education, languages); in the chat, also the messages and the facts the candidate stated.
 - What is never sent: name, email, phone, address, LinkedIn/GitHub/portfolio links and references (`resumeForPrompt` in `prompts.ts`, covered by a test).
 
 ## Flow
@@ -67,13 +67,28 @@ The AI translates the headline, summary, skills, soft and interpersonal skills, 
 - A translated date is used only if its numbers are the same as the original's ("jan 2020" → "Jan 2020" is fine, "Jan 2021" is ignored).
 - An empty field stays empty; a field the AI leaves empty keeps the original text.
 
+## Adjust in a chat
+
+The ▾ next to "Tailor to a job" opens a menu with **Adjust in a chat**, **Translate** and **AI history** for the open resume (`AIActions.tsx`).
+
+The chat (`RefineChatDrawer.tsx`, `refine.ts`) works on the open resume. The candidate asks for changes in their own words ("make the summary shorter", "I studied GraphQL in 2026"). If the resume came from a job tailoring, the job posting goes along as context and the keywords the resume still does not show become "I have …" shortcuts that start the message.
+
+Each answer is a short reply and, when something should change, a **proposal**: a before/after of the sections it touches, with **Apply** and **Discard**. Nothing changes until the candidate applies it. Applying is recorded in the history (entry "Adjusted in the chat"), so it can be undone with "Restore this version". A proposal made before another one was applied can no longer be applied, since the resume changed.
+
+`applyRefinePatch` guards the answer: only the fields in the patch change; contact data, companies, roles, dates and institutions never change; entries cannot be added or removed (the AI tells the candidate to add them in the form) and unknown ids are counted and ignored.
+
+**Declared facts**: when the candidate states something about themselves, the AI returns it as a short fact. Facts are kept in the resume (`meta.declaredFacts`) and sent with the next messages, so the AI can use them without inventing. For a tailored resume, "Also use in the base resume" keeps them in the base resume too, after a confirmation; tailoring from that base then sends them as `<candidate_facts>`, and the prompt allows facts from the base resume or from that list. Only the last 12 messages go with each request.
+
 ## History
 
 "AI history" in the resume's ⋯ menu opens a side panel with what the AI did to that resume, newest first (`src/features/history/`, `HistoryDrawer.tsx`):
 
 - **Tailored to <job>**: date, model, keyword coverage before → after, new terms, keywords the resume could not support, the AI's list of changes, the job posting (collapsed) and a before/after of every section.
 - **Translated from <language> to <language>**: date, model and the before/after.
+- **Adjusted in the chat**: the request, the AI's reply and the before/after.
 - **Version restored**: when a version is brought back.
+
+The keywords that were missing in a tailoring have an "I have …" button that opens the chat with the message started.
 
 **Restore this version** puts that entry's result back into the resume (headline, summary, skills, experience, education, projects, languages and resume language; contact data does not change), after a confirmation. The restore is itself saved as an entry, so it can be undone the same way.
 

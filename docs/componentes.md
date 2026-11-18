@@ -21,7 +21,7 @@ Files are grouped by feature:
 | `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `RestoreBackupModal.tsx` |
 | `src/features/history/` | `history.ts`, `useCVHistory.ts`, `HistoryDrawer.tsx` |
 | `src/features/pdf-import/` | `extractPdf.ts`, `parseResume.ts`, `importResumePdf.ts`, `ImportPdfModal.tsx` |
-| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorButton.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx`, `ResumeComparison.tsx`, `compareResumes.ts`, `translation.ts`, `TranslateModal.tsx` |
+| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `AIActions.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx`, `ResumeComparison.tsx`, `compareResumes.ts`, `translation.ts`, `TranslateModal.tsx`, `refine.ts`, `RefineChatDrawer.tsx` |
 | `src/shared/` | `locale.ts` (resume language), `text.ts` |
 | `src/shared/components/` | `StatusAlert.tsx`, `LanguageSelector.tsx`, `LocaleFlag.tsx`, `useFocusReturn.ts` |
 | `src/shared/hooks/` | `useDebouncedValue.ts`, `useMediaQuery.ts` |
@@ -42,7 +42,7 @@ Responsibilities:
 - hold the AI settings and open the AI dialogs
 - show success notices (`message`, close by themselves) and errors (`notification`, stay until closed)
 - connect the form to preview and PDF rendering
-- on small screens (below `md`), show "Tailor to a job" as a soft purple button above "Edit information" and keep "Download resume" in a bar fixed at the bottom of the screen
+- on small screens (below `md`), show "Tailor to a job" (with its ▾ menu) as a soft purple button above "Edit information" and keep "Download resume" in a bar fixed at the bottom of the screen
 - pass the resume data to the preview, which only rebuilds the PDF when the data or the language change
 
 ## AppHeader.tsx
@@ -53,7 +53,7 @@ Responsibilities:
 
 - left: the button that opens the resume list (☰; while the list is open it shows "close panel" and closes it), the title and the language selector
 - on small screens the title is the short one (`header.shortTitle`), centered between ☰ and the language selector
-- from `md`, on the right, only the two workflow actions: "Tailor to a job" (`TailorButton`, secondary, soft purple) and "Download resume" (`DownloadPdfButton`, primary)
+- from `md`, on the right, only the two workflow actions: "Tailor to a job" (`AIActions`, secondary, soft purple, with a ▾ menu for the chat, translation and AI history of the open resume) and "Download resume" (`DownloadPdfButton`, primary)
 - "AI settings" and "Backup" are not here: they are in the sidebar footer
 
 ## CVForm.tsx
@@ -135,6 +135,10 @@ Result of an action as an antd `Alert` (`success`, `error`, `info`, `busy` with 
 ## useFocusReturn.ts
 
 For antd `Dropdown`: when the menu closes and focus was lost (on `<body>` or still on an item of the closing menu, e.g. after Escape), focus goes back to the button that opened it. When an action moved focus somewhere on purpose (a rename field, a dialog), it is left alone.
+
+## RefineChatDrawer.tsx
+
+See "Adjust in a chat" in `ia-adaptacao-vaga.md`. An antd `Drawer` from the right: intro, the job used as context, suggestions to start, "I have …" shortcuts, the conversation (`role="log"`, announced politely), each AI answer with its proposal (`ResumeComparison` of the changed sections, Apply / Discard) and its declared facts, and a message box at the bottom (Enter sends, Shift+Enter adds a line, Cancel while waiting). The conversation lives only while the panel is open for that resume.
 
 ## HistoryDrawer.tsx
 
