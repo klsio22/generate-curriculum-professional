@@ -21,9 +21,13 @@ import {
   createBackup,
   mergeImportedCVs,
   parseBackupFile,
+  restoredIdMap,
   type ParsedBackup,
 } from '@/features/backup/backup';
 import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
+import { useCVHistory } from '@/features/history/useCVHistory';
+import { contentOf, entriesFor, type HistoryEntry, type HistoryRecord } from '@/features/history/history';
+import { HistoryDrawer } from '@/features/history/HistoryDrawer';
 import { ImportPdfModal, type PdfImportState } from '@/features/pdf-import/ImportPdfModal';
 import { BackupMenu } from '@/features/backup/BackupMenu';
 import { AISettingsButton } from '@/features/ai/AISettingsButton';
@@ -53,12 +57,14 @@ function App() {
   const [showAISettings, setShowAISettings] = useState(false);
   const [returnToTailor, setReturnToTailor] = useState(false);
   const [translateId, setTranslateId] = useState<string | null>(null);
+  const [historyId, setHistoryId] = useState<string | null>(null);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
   const [pdfImport, setPdfImport] = useState<PdfImportState | null>(null);
   const pdfImportRunRef = useRef(0);
   const { modal, message, notification } = AntdApp.useApp();
   const aiSettings = useAISettings();
+  const history = useCVHistory();
   const isPushLayout = useMediaQuery('(min-width: 1280px)');
   const isSidebarPushed = isPushLayout && isSidebarOpen;
 
@@ -95,7 +101,10 @@ function App() {
       okText: t('modal.delete'),
       okButtonProps: { danger: true },
       cancelText: t('modal.cancel'),
-      onOk: () => deleteCV(id),
+      onOk: () => {
+        deleteCV(id);
+        history.removeFor(id);
+      },
     });
   };
 
@@ -106,7 +115,10 @@ function App() {
       okText: t('modal.clear'),
       okButtonProps: { danger: true },
       cancelText: t('modal.cancel'),
-      onOk: clearAll,
+      onOk: () => {
+        clearAll();
+        history.replaceAll([]);
+      },
     });
   };
 
@@ -120,7 +132,7 @@ function App() {
   );
 
   const handleSaveBackup = () => {
-    const json = JSON.stringify(createBackup(cvs, activeId), null, 2);
+    const json = JSON.stringify(createBackup(cvs, activeId, history.entries), null, 2);
     const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
@@ -143,7 +155,9 @@ function App() {
 
   const handleRestoreAdd = () => {
     if (!pendingRestore) return;
-    importCVs(mergeImportedCVs(cvs, pendingRestore.cvs, t('backup.restoredSuffix')), activeId);
+    const merged = mergeImportedCVs(cvs, pendingRestore.cvs, t('backup.restoredSuffix'));
+    importCVs(merged, activeId);
+    history.mergeImported(pendingRestore.history, restoredIdMap(pendingRestore.cvs, merged));
     showNotice('success', t('backup.added', { count: pendingRestore.cvs.length }));
     setPendingRestore(null);
   };
@@ -151,6 +165,8 @@ function App() {
   const handleRestoreReplace = () => {
     if (!pendingRestore) return;
     importCVs(pendingRestore.cvs, pendingRestore.activeId);
+    const restoredIds = new Set(pendingRestore.cvs.map((cv) => cv.id));
+    history.replaceAll(pendingRestore.history.filter((entry) => restoredIds.has(entry.cvId)));
     showNotice('success', t('backup.replaced', { count: pendingRestore.cvs.length }));
     setPendingRestore(null);
   };
@@ -196,13 +212,22 @@ function App() {
     setShowAISettings(true);
   };
 
-  const handleSaveTranslated = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
-    addCV(cv);
+  const handleSaveTranslated = (cv: Omit<SavedCV, 'id' | 'updatedAt'>, record: HistoryRecord) => {
+    history.record(addCV(cv), record, aiSettings.settings.model);
     showNotice('success', t('ai.translate.saved', { title: cv.title }));
   };
 
-  const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
-    addCV(cv);
+  const handleRestoreVersion = (entry: HistoryEntry) => {
+    const cv = cvs.find((item) => item.id === entry.cvId);
+    if (!cv) return;
+    history.record(cv.id, { kind: 'restore', before: contentOf(cv), after: structuredClone(entry.after), changes: [] });
+    updateCV(cv.id, structuredClone(entry.after));
+    const date = new Date(entry.createdAt).toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'short' });
+    showNotice('success', t('history.restored', { date }));
+  };
+
+  const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>, record: HistoryRecord) => {
+    history.record(addCV(cv), record, aiSettings.settings.model);
     showNotice('success', t('ai.tailor.saved', { title: cv.title }));
   };
 
@@ -218,6 +243,10 @@ function App() {
         }}
         onCreate={() => {
           createCV();
+          closeSidebarIfOverlay();
+        }}
+        onShowHistory={(id) => {
+          setHistoryId(id);
           closeSidebarIfOverlay();
         }}
         onTranslate={(id) => {
@@ -280,6 +309,13 @@ function App() {
           onOpenSettings={() => setShowAISettings(true)}
           onClose={() => setTranslateId(null)}
           onSave={handleSaveTranslated}
+        />
+
+        <HistoryDrawer
+          cv={cvs.find((cv) => cv.id === historyId) ?? null}
+          entries={historyId ? entriesFor(history.entries, historyId) : []}
+          onClose={() => setHistoryId(null)}
+          onRestore={handleRestoreVersion}
         />
 
         <RestoreBackupModal

@@ -19,8 +19,9 @@ Files are grouped by feature:
 | `src/features/cv-editor/` | `CVForm.tsx`, `DocumentSettings.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts`, `components/FormField.tsx`, `components/FormSection.tsx`, `components/RepeatableList.tsx` |
 | `src/features/pdf/` | `CVDocument.tsx`, `PDFPreview.tsx`, `DownloadPdfButton.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
 | `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `RestoreBackupModal.tsx` |
+| `src/features/history/` | `history.ts`, `useCVHistory.ts`, `HistoryDrawer.tsx` |
 | `src/features/pdf-import/` | `extractPdf.ts`, `parseResume.ts`, `importResumePdf.ts`, `ImportPdfModal.tsx` |
-| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorButton.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx`, `ResumeComparison.tsx`, `translation.ts`, `TranslateModal.tsx` |
+| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorButton.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx`, `ResumeComparison.tsx`, `compareResumes.ts`, `translation.ts`, `TranslateModal.tsx` |
 | `src/shared/` | `locale.ts` (resume language), `text.ts` |
 | `src/shared/components/` | `StatusAlert.tsx`, `LanguageSelector.tsx`, `LocaleFlag.tsx`, `useFocusReturn.ts` |
 | `src/shared/hooks/` | `useDebouncedValue.ts`, `useMediaQuery.ts` |
@@ -118,7 +119,7 @@ Responsibilities:
 
 - list saved resumes in the user's order, select the active one, create a new one
 - reorder: drag by the handle on desktop (`@dnd-kit`, also with the keyboard: Space, arrows, Space; Escape cancels; moves are announced to screen readers), or "Move up" / "Move down" in the ⋯ menu on any screen size (on small screens the handle is hidden and the menu is the way to move)
-- ⋯ menu per resume (antd `Dropdown`): rename (inline field: Enter or leaving saves, Escape cancels), duplicate, translate to the other language (the label says which one, from the language of the text, `contentLocaleOf`), move up, move down, delete; Escape returns focus to the ⋯ button
+- ⋯ menu per resume (antd `Dropdown`): rename (inline field: Enter or leaving saves, Escape cancels), duplicate, translate to the other language (the label says which one, from the language of the text, `contentLocaleOf`), AI history, move up, move down, delete; Escape returns focus to the ⋯ button
 - AI-tailored resumes show a ✨ icon, the job as title and the company on the line below
 - the current resume has a lighter background, a thin purple bar on the left and a bold title
 - the list scrolls on its own with a thin scrollbar (`scrollbar-thin` utility in `src/styles/index.css`), so "New resume" and the footer stay in place; the ⋯ button is 40 px on touch screens
@@ -134,6 +135,10 @@ Result of an action as an antd `Alert` (`success`, `error`, `info`, `busy` with 
 ## useFocusReturn.ts
 
 For antd `Dropdown`: when the menu closes and focus was lost (on `<body>` or still on an item of the closing menu, e.g. after Escape), focus goes back to the button that opened it. When an action moved focus somewhere on purpose (a rename field, a dialog), it is left alone.
+
+## HistoryDrawer.tsx
+
+See the "History" section of `ia-adaptacao-vaga.md`. An antd `Drawer` from the right with one `Collapse` panel per entry (newest open): icon and title by kind, date and model, then job details, the AI's changes, the job posting (collapsed), the before/after (`ResumeComparison` with `compareResumes`, which pairs experiences and education by id) and "Restore this version" with a `modal.confirm`.
 
 ## BackupMenu.tsx / RestoreBackupModal.tsx
 

@@ -67,6 +67,18 @@ The AI translates the headline, summary, skills, soft and interpersonal skills, 
 - A translated date is used only if its numbers are the same as the original's ("jan 2020" → "Jan 2020" is fine, "Jan 2021" is ignored).
 - An empty field stays empty; a field the AI leaves empty keeps the original text.
 
+## History
+
+"AI history" in the resume's ⋯ menu opens a side panel with what the AI did to that resume, newest first (`src/features/history/`, `HistoryDrawer.tsx`):
+
+- **Tailored to <job>**: date, model, keyword coverage before → after, new terms, keywords the resume could not support, the AI's list of changes, the job posting (collapsed) and a before/after of every section.
+- **Translated from <language> to <language>**: date, model and the before/after.
+- **Version restored**: when a version is brought back.
+
+**Restore this version** puts that entry's result back into the resume (headline, summary, skills, experience, education, projects, languages and resume language; contact data does not change), after a confirmation. The restore is itself saved as an entry, so it can be undone the same way.
+
+Only AI actions are saved, not every manual edit (autosave would flood the history). Each entry keeps only the parts the AI can change (`contentOf`), never contact data. The history lives in `localStorage` under `cv-history`, keeps the last 20 entries per resume, is deleted with its resume, and when the browser storage is full the oldest entries are dropped first (`fitToStorage`).
+
 ## Honesty guarantees (in code, not only in the prompt)
 
 `mergeTailoredCV` (`parse.ts`) applies the AI answer on top of the base resume:

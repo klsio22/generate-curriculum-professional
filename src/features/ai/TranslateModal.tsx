@@ -3,10 +3,12 @@ import { Alert, Button, Form, Input, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
 import type { CVData, ResumeLocale, SavedCV } from '@/types/cv';
+import { contentOf, type HistoryRecord } from '@/features/history/history';
 import { StatusAlert } from '@/shared/components/StatusAlert';
 import { contentLocaleOf, otherLocale } from '@/shared/locale';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
-import { ResumeComparison, type Comparison } from './ResumeComparison';
+import { ResumeComparison } from './ResumeComparison';
+import { compareResumes } from './compareResumes';
 import { translateResume, type TranslateResult } from './translation';
 import type { AISettings } from './types';
 
@@ -16,7 +18,7 @@ interface TranslateDialogProps {
   isConfigured: boolean;
   onOpenSettings: () => void;
   onClose: () => void;
-  onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => void;
+  onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>, record: HistoryRecord) => void;
 }
 
 interface TranslateModalProps extends Omit<TranslateDialogProps, 'cv'> {
@@ -24,43 +26,6 @@ interface TranslateModalProps extends Omit<TranslateDialogProps, 'cv'> {
 }
 
 const LOCALE_KEY: Record<ResumeLocale, 'pt' | 'en'> = { 'pt-BR': 'pt', en: 'en' };
-
-const lines = (...parts: (string | undefined)[]) => parts.filter((part) => part?.trim()).join('\n');
-
-const dates = (start?: string, end?: string) => [start, end].filter((part) => part?.trim()).join(' – ');
-
-const projectsText = (cv: CVData) =>
-  (cv.projects ?? []).map((project) => `${project.name}: ${project.description}`).join('\n\n');
-
-const useComparisons = (base: CVData, cv: CVData): Comparison[] => {
-  const { t } = useTranslation();
-  return [
-    { key: 'headline', label: t('ai.tailor.section_headline'), before: base.jobTitle, after: cv.jobTitle },
-    { key: 'summary', label: t('ai.tailor.section_summary'), before: base.objective, after: cv.objective },
-    { key: 'skills', label: t('ai.tailor.section_skills'), before: base.skills, after: cv.skills },
-    { key: 'softSkills', label: t('ai.tailor.softSkills'), before: base.softSkills ?? '', after: cv.softSkills ?? '' },
-    {
-      key: 'interpersonal',
-      label: t('ai.translate.section_interpersonal'),
-      before: base.interpersonalSkills ?? '',
-      after: cv.interpersonalSkills ?? '',
-    },
-    ...base.experience.map((original, index) => ({
-      key: `experience-${original.id}`,
-      label: `${t('ai.tailor.section_experience')}: ${original.company}`,
-      before: lines(original.role, dates(original.startDate, original.endDate), original.description),
-      after: lines(cv.experience[index].role, dates(cv.experience[index].startDate, cv.experience[index].endDate), cv.experience[index].description),
-    })),
-    ...base.education.map((original, index) => ({
-      key: `education-${original.id}`,
-      label: `${t('ai.tailor.section_education')}: ${original.institution}`,
-      before: lines(original.course, dates(original.startDate, original.endDate), original.topics),
-      after: lines(cv.education[index].course, dates(cv.education[index].startDate, cv.education[index].endDate), cv.education[index].topics),
-    })),
-    { key: 'projects', label: t('ai.tailor.section_projects'), before: projectsText(base), after: projectsText(cv) },
-    { key: 'languages', label: t('ai.translate.section_languages'), before: base.languages ?? '', after: cv.languages ?? '' },
-  ];
-};
 
 const TranslateResultView = ({
   base,
@@ -75,7 +40,7 @@ const TranslateResultView = ({
 }) => {
   const { t } = useTranslation();
   const titleId = useId();
-  const comparisons = useComparisons(base, result.cv);
+  const comparisons = compareResumes(t, base, result.cv);
 
   return (
     <div className="space-y-4">
@@ -139,10 +104,18 @@ const TranslateDialog = ({ cv, settings, isConfigured, onOpenSettings, onClose, 
 
   const handleSave = () => {
     if (!result) return;
-    onSave({
+    const saved = {
       ...result.cv,
       title: title.trim() || cv.title,
       meta: { ...cv.meta, sourceCvId: cv.id, createdByAI: true },
+    };
+    onSave(saved, {
+      kind: 'translate',
+      before: contentOf(cv),
+      after: contentOf(saved),
+      changes: [],
+      from,
+      to,
     });
     onClose();
   };

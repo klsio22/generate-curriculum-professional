@@ -1,19 +1,22 @@
 import type { SavedCV } from '@/types/cv';
 import { isResumeLocale } from '@/shared/locale';
+import { sanitizeHistory, type HistoryEntry } from '@/features/history/history';
 
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 
 export interface BackupFile {
   version: number;
   exportedAt: string;
   activeId: string | null;
   cvs: SavedCV[];
+  history: HistoryEntry[];
 }
 
 export interface ParsedBackup {
   cvs: SavedCV[];
   activeId: string | null;
   exportedAt: string | null;
+  history: HistoryEntry[];
 }
 
 export class BackupError extends Error {
@@ -100,15 +103,27 @@ export const parseBackupFile = (text: string): ParsedBackup => {
     cvs,
     activeId: typeof record?.activeId === 'string' ? record.activeId : null,
     exportedAt: typeof record?.exportedAt === 'string' ? record.exportedAt : null,
+    history: sanitizeHistory(record?.history),
   };
 };
 
-export const createBackup = (cvs: SavedCV[], activeId: string | null, now = new Date()): BackupFile => ({
+export const createBackup = (
+  cvs: SavedCV[],
+  activeId: string | null,
+  history: HistoryEntry[] = [],
+  now = new Date(),
+): BackupFile => ({
   version: BACKUP_VERSION,
   exportedAt: now.toISOString(),
   activeId,
   cvs,
+  history,
 });
+
+export const restoredIdMap = (incoming: SavedCV[], merged: SavedCV[]): Map<string, string> => {
+  const added = merged.slice(merged.length - incoming.length);
+  return new Map(incoming.map((cv, index) => [cv.id, added[index].id]));
+};
 
 export const backupFileName = (language: string, now = new Date()): string => {
   const prefix = language.startsWith('pt') ? 'curriculos-backup' : 'resume-backup';

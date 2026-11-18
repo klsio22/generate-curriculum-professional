@@ -17,16 +17,18 @@ File name: `curriculos-backup-YYYY-MM-DD.json` (Portuguese UI) or `resume-backup
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "exportedAt": "2026-11-17T12:00:00.000Z",
   "activeId": "resume-id",
-  "cvs": []
+  "cvs": [],
+  "history": []
 }
 ```
 
 - `version`: schema version for future migrations
 - `exportedAt`: when the backup was made (shown when restoring)
 - `activeId`: the resume that was selected
+- `history`: the AI history of the saved resumes (version 2; version 1 files have none and are still accepted)
 - `cvs`: every saved resume, including the optional `meta` of AI-tailored resumes and the optional resume language `locale` (`pt-BR` or `en`; any other value is dropped when restoring)
 
 A plain array of resumes is also accepted.
@@ -36,8 +38,8 @@ A plain array of resumes is also accepted.
 1. The file is read and validated (`parseBackupFile`).
 2. A dialog shows how many resumes the file has, their titles and the backup date.
 3. The user chooses:
-   - **Add to my resumes** (default, focused first): keeps the current resumes and adds the ones from the file. A restored resume whose id already exists gets a new id and the suffix "(restaurado)" / "(restored)" (`mergeImportedCVs`).
-   - **Replace everything**: deletes the current resumes and keeps only the file's. The dialog says how many resumes will be deleted.
+   - **Add to my resumes** (default, focused first): keeps the current resumes and adds the ones from the file. A restored resume whose id already exists gets a new id and the suffix "(restaurado)" / "(restored)" (`mergeImportedCVs`). Their AI history comes along, moved to the new ids (`restoredIdMap`, `mergeImportedHistory`).
+   - **Replace everything**: deletes the current resumes and keeps only the file's, with the file's AI history. The dialog says how many resumes will be deleted.
 4. The result is announced in a notice (`role="status"`); errors use `role="alert"`. There are no `alert()` popups.
 
 ## Validation
