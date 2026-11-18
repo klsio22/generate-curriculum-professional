@@ -38,6 +38,7 @@ function App() {
     duplicateCV,
     importCVs,
     addCV,
+    moveCV,
   } = useCVStorage();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -164,6 +165,8 @@ function App() {
           duplicateCV(id);
           if (window.innerWidth < 1024) setIsSidebarOpen(false);
         }}
+        onRename={(id, title) => updateCV(id, { title })}
+        onMove={moveCV}
         onRequestDelete={handleRequestDelete}
         onRequestClear={handleRequestClear}
         isOpen={isSidebarOpen}
@@ -260,6 +263,8 @@ function App() {
                     {t('form.docName')}
                   </label>
                   <input
+                    // Remount when the title changes elsewhere (e.g. renamed in the sidebar).
+                    key={activeCV?.title}
                     id="cv-document-title"
                     type="text"
                     defaultValue={activeCV?.title ?? 'Novo Currículo'}
