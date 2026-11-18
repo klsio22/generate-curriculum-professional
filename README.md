@@ -102,6 +102,10 @@ src/
 │   │   ├── backup.ts ............ Save/restore logic and validation
 │   │   ├── BackupMenu.tsx ....... Header menu with plain-language help
 │   │   └── RestoreBackupModal.tsx Add or replace confirmation
+│   ├── history/
+│   │   ├── history.ts ........... AI history entries: limit, restore, storage
+│   │   ├── useCVHistory.ts ...... History stored locally
+│   │   └── HistoryDrawer.tsx .... History panel with before/after and restore
 │   └── ai/
 │       ├── client.ts ............ OpenAI-compatible API client
 │       ├── providers.ts ......... OpenRouter / Gemini / custom presets
@@ -115,6 +119,7 @@ src/
 │       ├── TailorJobModal.tsx ... Job → analysis → result dialog
 │       ├── TailorResultView.tsx . Coverage table and before/after
 │       ├── ResumeComparison.tsx . Before/after per section
+│       ├── compareResumes.ts .... Builds the before/after list, matching items by id
 │       ├── translation.ts ....... Translate a resume (anti-invention merge)
 │       └── TranslateModal.tsx ... Translate dialog with review
 ├── shared/
