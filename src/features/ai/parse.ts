@@ -26,8 +26,8 @@ const str = (value: unknown): string => (typeof value === 'string' ? value.trim(
 const nonEmptyStrings = (value: unknown): string[] =>
   Array.isArray(value) ? value.map(str).filter(Boolean) : [];
 
-const CATEGORIES: KeywordCategory[] = ['hard_skill', 'tool', 'soft_skill', 'domain', 'other'];
-const PRIORITIES: KeywordPriority[] = ['high', 'medium', 'low'];
+const CATEGORIES = new Set<KeywordCategory>(['hard_skill', 'tool', 'soft_skill', 'domain', 'other']);
+const PRIORITIES = new Set<KeywordPriority>(['high', 'medium', 'low']);
 const PRIORITY_ORDER: Record<KeywordPriority, number> = { high: 0, medium: 1, low: 2 };
 
 export const parseJobAnalysis = (raw: unknown): JobAnalysis => {
@@ -40,10 +40,10 @@ export const parseJobAnalysis = (raw: unknown): JobAnalysis => {
     const key = term.toLocaleLowerCase();
     if (!term || seen.has(key)) continue;
     seen.add(key);
-    const category = isRecord(item) && CATEGORIES.includes(item.category as KeywordCategory)
+    const category = isRecord(item) && CATEGORIES.has(item.category as KeywordCategory)
       ? (item.category as KeywordCategory)
       : 'other';
-    const priority = isRecord(item) && PRIORITIES.includes(item.priority as KeywordPriority)
+    const priority = isRecord(item) && PRIORITIES.has(item.priority as KeywordPriority)
       ? (item.priority as KeywordPriority)
       : 'medium';
     keywords.push({ term, category, priority });
