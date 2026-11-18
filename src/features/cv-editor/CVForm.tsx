@@ -132,7 +132,7 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
   return (
     <Card className="shadow-sm">
       <Form layout="vertical" component={false}>
-        <div className="space-y-4">
+        <div className="space-y-8">
           <FormSection title={t('form.personalData')}>
             <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
               {PERSONAL.map((spec) => (
