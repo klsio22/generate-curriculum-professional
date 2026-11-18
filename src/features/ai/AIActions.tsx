@@ -41,7 +41,7 @@ export const AIActions = ({ onTailor, onChat, onTranslate, onHistory, translateT
         block={block}
         icon={<Sparkles size={16} aria-hidden />}
         onClick={onTailor}
-        className={SOFT_PURPLE}
+        className={`${SOFT_PURPLE} border-r-purple-300`}
       >
         {t('ai.tailor.open')}
       </Button>
