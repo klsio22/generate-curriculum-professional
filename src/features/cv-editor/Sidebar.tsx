@@ -7,12 +7,13 @@ import {
   FileText,
   GripVertical,
   Menu,
+  MoreHorizontal,
   Pencil,
   Plus,
   Sparkles,
   Trash2,
-  X,
 } from 'lucide-react';
+import { Button, ConfigProvider, Drawer, Dropdown, Input, Typography, theme, type InputRef, type MenuProps } from 'antd';
 import {
   DndContext,
   KeyboardSensor,
@@ -33,7 +34,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { SavedCV } from '@/types/cv';
-import { ActionMenu } from '@/shared/components/ActionMenu';
+import { BRAND } from '@/app/AntdProvider';
+import { useFocusReturn } from '@/shared/components/useFocusReturn';
 
 interface SidebarProps {
   cvs: SavedCV[];
@@ -72,23 +74,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   toggleSidebar,
 }) => {
   const { t, i18n } = useTranslation();
-  const asideRef = React.useRef<HTMLElement | null>(null);
   const [renamingId, setRenamingId] = React.useState<string | null>(null);
   const [announcement, setAnnouncement] = React.useState('');
   const dateLocale = i18n.language === 'pt-BR' ? 'pt-BR' : 'en-US';
-
-  React.useEffect(() => {
-    function handleOutsideClick(e: MouseEvent) {
-      if (!isOpen) return;
-      const target = e.target as Node | null;
-      if (asideRef.current && target && !asideRef.current.contains(target)) {
-        toggleSidebar();
-      }
-    }
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isOpen, toggleSidebar]);
 
   const sensors = useSensors(
     // A small distance keeps a simple click on the handle from starting a drag.
@@ -122,62 +110,77 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setAnnouncement(t('sidebar.movedTo', { title: cv.title, position: target + 1, total: cvs.length }));
   };
 
+  const menuItemsFor = (cv: SavedCV, index: number): MenuProps['items'] => [
+    { key: 'rename', icon: <Pencil size={16} aria-hidden />, label: t('sidebar.rename'), onClick: () => setRenamingId(cv.id) },
+    { key: 'duplicate', icon: <Copy size={16} aria-hidden />, label: t('sidebar.duplicate'), onClick: () => onDuplicate(cv.id) },
+    {
+      key: 'up',
+      icon: <ArrowUp size={16} aria-hidden />,
+      label: t('sidebar.moveUp'),
+      disabled: index === 0,
+      onClick: () => moveBy(cv, index, -1),
+    },
+    {
+      key: 'down',
+      icon: <ArrowDown size={16} aria-hidden />,
+      label: t('sidebar.moveDown'),
+      disabled: index === cvs.length - 1,
+      onClick: () => moveBy(cv, index, 1),
+    },
+    { type: 'divider' },
+    {
+      key: 'delete',
+      icon: <Trash2 size={16} aria-hidden />,
+      label: t('sidebar.delete'),
+      danger: true,
+      onClick: () => onRequestDelete(cv.id),
+    },
+  ];
+
   return (
     <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <button
-          type="button"
-          aria-label={t('sidebar.closeSidebar')}
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
+      {/* Always on the page (the open panel covers it), so the focus can come back to it when the panel closes. */}
+      <Button
+        type="primary"
+        onClick={toggleSidebar}
+        aria-label={t('sidebar.openSidebar')}
+        aria-expanded={isOpen}
+        title={t('sidebar.openSidebar')}
+        icon={<Menu size={20} aria-hidden />}
+        className="fixed left-0 top-28 z-40 rounded-l-none bg-gray-900 shadow-md hover:bg-gray-800 lg:top-6"
+      />
 
-      {/* Handle button visible when sidebar is closed */}
-      {!isOpen && (
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          aria-label={t('sidebar.openSidebar')}
-          title={t('sidebar.openSidebar')}
-          className="fixed left-0 top-28 lg:top-6 z-40 bg-gray-900 text-white p-2 rounded-r-md shadow-md"
-        >
-          <Menu size={20} aria-hidden />
-        </button>
-      )}
-
-      <aside
-        ref={asideRef}
-        aria-label={t('sidebar.title')}
-        // Off screen when closed: keep it out of the Tab order and away from screen readers.
-        inert={!isOpen}
-        className={`fixed inset-y-0 left-0 bg-gray-900 text-white w-72 transform transition-transform duration-200 ease-in-out z-30 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+      {/* Dark theme only for the list panel. */}
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          // On the dark panel the hover goes lighter, so it stands out from the background.
+          token: { colorPrimary: BRAND.primary, colorPrimaryHover: '#6366f1', colorPrimaryActive: '#4f46e5' },
+          components: { Button: { defaultHoverBg: '#1f2937', defaultHoverColor: '#ffffff', defaultHoverBorderColor: '#6366f1' } },
+        }}
       >
-        <div className="p-4 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">{t('sidebar.title')}</h2>
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              aria-label={t('sidebar.closeSidebar')}
-              title={t('sidebar.closeSidebar')}
-              className="p-2 rounded hover:bg-gray-800"
-            >
-              <X size={18} aria-hidden />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={onCreate}
-            className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded transition-colors mb-4"
-          >
-            <Plus size={20} aria-hidden />
+        <Drawer
+          open={isOpen}
+          onClose={toggleSidebar}
+          placement="left"
+          size={288}
+          title={t('sidebar.title')}
+          closable={{ 'aria-label': t('sidebar.closeSidebar') }}
+          styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column' } }}
+          footer={
+            <div className="flex flex-col items-center gap-1 py-1">
+              <Typography.Text type="secondary" className="text-xs">
+                {t('sidebar.saved', { count: cvs.length })}
+              </Typography.Text>
+              <Button type="link" danger size="small" icon={<Trash2 size={14} aria-hidden />} onClick={onRequestClear}>
+                {t('sidebar.clearData')}
+              </Button>
+            </div>
+          }
+        >
+          <Button type="primary" size="large" block icon={<Plus size={20} aria-hidden />} onClick={onCreate} className="mb-4">
             {t('sidebar.newCV')}
-          </button>
+          </Button>
 
           <p className="sr-only" aria-live="polite">
             {announcement}
@@ -204,47 +207,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setRenamingId(null);
                       if (title !== null && title.trim() && title.trim() !== cv.title) onRename(cv.id, title.trim());
                     }}
-                    menuItems={[
-                      { label: t('sidebar.rename'), icon: <Pencil size={16} aria-hidden />, onSelect: () => setRenamingId(cv.id) },
-                      { label: t('sidebar.duplicate'), icon: <Copy size={16} aria-hidden />, onSelect: () => onDuplicate(cv.id) },
-                      {
-                        label: t('sidebar.moveUp'),
-                        icon: <ArrowUp size={16} aria-hidden />,
-                        onSelect: () => moveBy(cv, index, -1),
-                        disabled: index === 0,
-                      },
-                      {
-                        label: t('sidebar.moveDown'),
-                        icon: <ArrowDown size={16} aria-hidden />,
-                        onSelect: () => moveBy(cv, index, 1),
-                        disabled: index === cvs.length - 1,
-                      },
-                      {
-                        label: t('sidebar.delete'),
-                        icon: <Trash2 size={16} aria-hidden />,
-                        onSelect: () => onRequestDelete(cv.id),
-                        danger: true,
-                      },
-                    ]}
+                    menuItems={menuItemsFor(cv, index)}
                   />
                 ))}
               </ul>
             </SortableContext>
           </DndContext>
-
-          <div className="mt-auto flex flex-col items-center gap-2 border-t border-gray-800 pt-4 text-xs text-gray-400">
-            <span>{t('sidebar.saved', { count: cvs.length })}</span>
-            <button
-              type="button"
-              onClick={onRequestClear}
-              className="inline-flex items-center gap-1 rounded px-2 py-1 text-red-300 hover:bg-gray-800 hover:text-red-200 hover:underline"
-            >
-              <Trash2 size={14} aria-hidden />
-              {t('sidebar.clearData')}
-            </button>
-          </div>
-        </div>
-      </aside>
+        </Drawer>
+      </ConfigProvider>
     </>
   );
 };
@@ -257,7 +227,7 @@ interface SortableResumeItemProps {
   onSelect: () => void;
   /** New title, or null when renaming was cancelled. */
   onRenameDone: (title: string | null) => void;
-  menuItems: React.ComponentProps<typeof ActionMenu>['items'];
+  menuItems: MenuProps['items'];
 }
 
 const SortableResumeItem = ({
@@ -276,6 +246,7 @@ const SortableResumeItem = ({
   const isAI = Boolean(cv.meta?.createdByAI);
   const subtitle = isAI ? cv.meta?.company : undefined;
   const Icon = isAI ? Sparkles : FileText;
+  const { triggerRef: menuTriggerRef, onOpenChange: onMenuOpenChange } = useFocusReturn();
 
   return (
     <li
@@ -285,47 +256,49 @@ const SortableResumeItem = ({
         isActive ? 'border-indigo-500 bg-gray-800' : 'border-transparent hover:bg-gray-800'
       } ${isDragging ? 'z-10 shadow-lg ring-1 ring-indigo-400 bg-gray-800' : ''}`}
     >
-      {/* Drag handle: desktop only (the list is a full-screen overlay on small screens; there the menu moves items). */}
-      <button
+      {/* Drag handle: desktop only (on small screens the list covers the page; there the menu moves items). */}
+      <Button
         ref={setActivatorNodeRef}
-        type="button"
+        type="text"
+        size="small"
         {...attributes}
         {...listeners}
         aria-label={t('sidebar.dragHandle', { title: cv.title })}
         title={t('sidebar.dragHandle', { title: cv.title })}
-        className="mt-0.5 hidden cursor-grab touch-none rounded p-1 text-gray-500 opacity-60 hover:bg-gray-700 hover:text-gray-200 hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing lg:block"
-      >
-        <GripVertical size={16} aria-hidden />
-      </button>
+        icon={<GripVertical size={16} aria-hidden />}
+        className="mt-1 hidden cursor-grab touch-none opacity-60 hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing lg:inline-flex"
+      />
 
       {isRenaming ? (
         <RenameField title={cv.title} onDone={onRenameDone} />
       ) : (
-        <button
-          type="button"
+        <Button
+          type="text"
           onClick={onSelect}
           aria-current={isActive ? 'true' : undefined}
-          className="flex min-w-0 flex-1 items-start gap-2 rounded p-1 text-left"
+          className="h-auto min-w-0 flex-1 items-start justify-start gap-2 whitespace-normal px-1 py-1 text-left"
         >
-          <Icon
-            size={18}
-            aria-hidden
-            className={`mt-0.5 shrink-0 ${iconColor(isAI, isActive)}`}
-          />
+          <Icon size={18} aria-hidden className={`mt-0.5 shrink-0 ${iconColor(isAI, isActive)}`} />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="line-clamp-2 text-sm font-medium leading-snug">{cv.title}</span>
             {isAI && <span className="sr-only">{t('sidebar.aiTailored')}</span>}
             {subtitle && <span className="truncate text-xs text-gray-300">{subtitle}</span>}
             <span className="text-xs text-gray-500">{new Date(cv.updatedAt).toLocaleDateString(dateLocale)}</span>
           </span>
-        </button>
+        </Button>
       )}
 
-      <ActionMenu
-        label={t('sidebar.actionsFor', { title: cv.title })}
-        items={menuItems}
-        triggerClassName="text-gray-400 hover:bg-gray-700 hover:text-white"
-      />
+      <Dropdown trigger={['click']} placement="bottomRight" menu={{ items: menuItems }} autoFocus onOpenChange={onMenuOpenChange}>
+        <Button
+          ref={menuTriggerRef}
+          type="text"
+          size="small"
+          aria-label={t('sidebar.actionsFor', { title: cv.title })}
+          title={t('sidebar.actionsFor', { title: cv.title })}
+          icon={<MoreHorizontal size={18} aria-hidden />}
+          className="mt-1"
+        />
+      </Dropdown>
     </li>
   );
 };
@@ -333,7 +306,7 @@ const SortableResumeItem = ({
 /** Inline field to rename a resume: Enter or leaving the field saves, Escape cancels. */
 const RenameField = ({ title, onDone }: { title: string; onDone: (title: string | null) => void }) => {
   const { t } = useTranslation();
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = React.useRef<InputRef>(null);
   const doneRef = React.useRef(false);
 
   React.useEffect(() => {
@@ -348,9 +321,9 @@ const RenameField = ({ title, onDone }: { title: string; onDone: (title: string 
   };
 
   return (
-    <input
+    <Input
       ref={inputRef}
-      type="text"
+      size="small"
       defaultValue={title}
       aria-label={t('sidebar.renameLabel', { title })}
       onKeyDown={(event) => {
@@ -358,13 +331,14 @@ const RenameField = ({ title, onDone }: { title: string; onDone: (title: string 
           event.preventDefault();
           finish(event.currentTarget.value);
         } else if (event.key === 'Escape') {
+          // Cancel the rename without closing the list.
           event.preventDefault();
           event.stopPropagation();
           finish(null);
         }
       }}
       onBlur={(event) => finish(event.currentTarget.value)}
-      className="min-w-0 flex-1 rounded border border-indigo-400 bg-gray-950 px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      className="min-w-0 flex-1"
     />
   );
 };

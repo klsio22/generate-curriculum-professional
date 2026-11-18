@@ -9,6 +9,11 @@ export const ptBR = {
     aiSettingsConfigured: 'Configurar IA (configurada)',
   },
   form: {
+    removeItem: 'Remover {{item}}',
+    itemExperience: 'Experiência',
+    itemEducation: 'Formação',
+    itemProject: 'Projeto',
+    itemReference: 'Referência',
     personalData: 'Dados Pessoais',
     fullName: 'Nome Completo',
     jobTitle: 'Cargo / Posição',

@@ -8,7 +8,7 @@ import { CVForm } from '@/features/cv-editor/CVForm';
 import { PDFPreview } from '@/features/pdf/PDFPreview';
 import { useCVStorage } from '@/features/cv-editor/useCVStorage';
 import { Sidebar } from '@/features/cv-editor/Sidebar';
-import { Modal } from '@/shared/components/Modal';
+import { App as AntdApp, Card, Form, Input, Tag } from 'antd';
 import { AppHeader } from './AppHeader';
 import { AISettingsDrawer } from '@/features/ai/AISettingsDrawer';
 import { TailorJobModal } from '@/features/ai/TailorJobModal';
@@ -22,7 +22,6 @@ import {
   type ParsedBackup,
 } from '@/features/backup/backup';
 import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
-import { Notice, type NoticeMessage } from '@/shared/components/Notice';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -42,19 +41,16 @@ function App() {
   } = useCVStorage();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showClearModal, setShowClearModal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   // Settings opened from "Tailor to a job": go back there when the panel closes.
   const [returnToTailor, setReturnToTailor] = useState(false);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
-  const [notice, setNotice] = useState<NoticeMessage | null>(null);
+  const { modal, message, notification } = AntdApp.useApp();
   const aiSettings = useAISettings();
 
   const initialValues = activeCV ?? emptyCV;
-  const { register, control, reset, getValues } = useForm<CVData>({
+  const { control, reset, getValues } = useForm<CVData>({
     defaultValues: initialValues,
   });
 
@@ -80,30 +76,38 @@ function App() {
   };
 
   const handleRequestDelete = (id: string) => {
-    setPendingDeleteId(id);
-    setShowDeleteModal(true);
+    modal.confirm({
+      title: t('modal.confirmDelete'),
+      content: t('modal.deleteMessage'),
+      okText: t('modal.delete'),
+      okButtonProps: { danger: true },
+      cancelText: t('modal.cancel'),
+      onOk: () => deleteCV(id),
+    });
   };
 
-  const handleConfirmDelete = () => {
-    if (pendingDeleteId) deleteCV(pendingDeleteId);
-    setPendingDeleteId(null);
-    setShowDeleteModal(false);
-  };
-
-  const handleRequestClear = () => setShowClearModal(true);
-
-  const handleConfirmClear = () => {
-    clearAll();
-    setShowClearModal(false);
+  const handleRequestClear = () => {
+    modal.confirm({
+      title: t('modal.clearData'),
+      content: t('modal.clearMessage'),
+      okText: t('modal.clear'),
+      okButtonProps: { danger: true },
+      cancelText: t('modal.cancel'),
+      onOk: clearAll,
+    });
   };
 
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
 
-  const showNotice = useCallback((kind: NoticeMessage['kind'], message: string) => {
-    setNotice({ kind, message, id: Date.now() });
-  }, []);
-  const closeNotice = useCallback(() => setNotice(null), []);
+  // Success messages close by themselves; errors stay until closed.
+  const showNotice = useCallback(
+    (kind: 'success' | 'error', content: string) => {
+      if (kind === 'success') message.success({ content, duration: 6 });
+      else notification.error({ title: content, duration: 0, placement: 'bottomRight' });
+    },
+    [message, notification],
+  );
 
   const handleSaveBackup = () => {
     const json = JSON.stringify(createBackup(cvs, activeId), null, 2);
@@ -146,7 +150,6 @@ function App() {
     showNotice('success', t('ai.tailor.saved', { title: cv.title }));
   };
 
-  const currentCV = activeCV ?? emptyCV;
 
   return (
     <div className="min-h-screen bg-gray-100 flex font-sans">
@@ -173,30 +176,7 @@ function App() {
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
-      {/* Modals rendered at App level so they are outside sidebar stacking context */}
       <div>
-        <Modal
-          isOpen={showDeleteModal}
-          title={t('modal.confirmDelete')}
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={handleConfirmDelete}
-          confirmLabel={t('modal.delete')}
-          cancelLabel={t('modal.cancel')}
-        >
-          <p>{t('modal.deleteMessage')}</p>
-        </Modal>
-
-        <Modal
-          isOpen={showClearModal}
-          title={t('modal.clearData')}
-          onCancel={() => setShowClearModal(false)}
-          onConfirm={handleConfirmClear}
-          confirmLabel={t('modal.clear')}
-          cancelLabel={t('modal.cancel')}
-        >
-          <p>{t('modal.clearMessage')}</p>
-        </Modal>
-
         <AISettingsDrawer
           isOpen={showAISettings}
           settings={aiSettings.settings}
@@ -235,8 +215,6 @@ function App() {
         />
       </div>
 
-      <Notice notice={notice} onClose={closeNotice} />
-
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <AppHeader
           data={data}
@@ -258,33 +236,26 @@ function App() {
               </h2>
               <div key={activeId}>
                 {/* CV Title Input */}
-                <div className="bg-white p-6 shadow rounded-lg mb-4">
-                  <label htmlFor="cv-document-title" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('form.docName')}
-                  </label>
-                  <input
-                    // Remount when the title changes elsewhere (e.g. renamed in the sidebar).
-                    key={activeCV?.title}
-                    id="cv-document-title"
-                    type="text"
-                    defaultValue={activeCV?.title ?? 'Novo Currículo'}
-                    onBlur={(e) => {
-                      if (activeId) {
-                        updateCV(activeId, { title: e.target.value });
-                      }
-                    }}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
-                    placeholder={t('form.docNamePlaceholder')}
-                  />
-                </div>
+                <Card className="mb-4 shadow-sm">
+                  <Form layout="vertical" component={false}>
+                    <Form.Item label={t('form.docName')} htmlFor="cv-document-title" className="mb-0">
+                      <Input
+                        // Remount when the title changes elsewhere (e.g. renamed in the sidebar).
+                        key={activeCV?.title}
+                        id="cv-document-title"
+                        defaultValue={activeCV?.title ?? 'Novo Currículo'}
+                        onBlur={(e) => {
+                          if (activeId) {
+                            updateCV(activeId, { title: e.target.value });
+                          }
+                        }}
+                        placeholder={t('form.docNamePlaceholder')}
+                      />
+                    </Form.Item>
+                  </Form>
+                </Card>
 
-                <CVForm
-                  defaultValues={currentCV}
-                  onSubmit={() => {}}
-                  register={register}
-                  control={control}
-                  onSave={handleSave}
-                />
+                <CVForm control={control} onSave={handleSave} />
               </div>
             </div>
 
@@ -296,9 +267,7 @@ function App() {
                     {t('header.preview')}
                   </h2>
                 </div>
-                <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                  {t('header.a4Preview')}
-                </span>
+                <Tag>{t('header.a4Preview')}</Tag>
               </div>
 
               {/* PDF Download Button */}

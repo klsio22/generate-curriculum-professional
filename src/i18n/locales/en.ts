@@ -9,6 +9,11 @@ export const en = {
     aiSettingsConfigured: 'AI settings (configured)',
   },
   form: {
+    removeItem: 'Remove {{item}}',
+    itemExperience: 'Experience',
+    itemEducation: 'Education',
+    itemProject: 'Project',
+    itemReference: 'Reference',
     personalData: 'Personal Information',
     fullName: 'Full Name',
     jobTitle: 'Job Title / Position',
