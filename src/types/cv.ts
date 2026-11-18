@@ -42,6 +42,7 @@ export interface CVMeta {
   keywords?: string[];
   sourceCvId?: string;
   createdByAI?: boolean;
+  declaredFacts?: string[];
 }
 
 export interface CVData {
