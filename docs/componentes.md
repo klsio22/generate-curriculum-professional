@@ -17,11 +17,12 @@ Files are grouped by feature:
 |---|---|
 | `src/app/` | `App.tsx`, `AppHeader.tsx`, `AntdProvider.tsx` |
 | `src/features/cv-editor/` | `CVForm.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts`, `components/FormField.tsx`, `components/FormSection.tsx`, `components/RepeatableList.tsx` |
-| `src/features/pdf/` | `CVDocument.tsx`, `PDFPreview.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
+| `src/features/pdf/` | `CVDocument.tsx`, `PDFPreview.tsx`, `DownloadPdfButton.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
 | `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `RestoreBackupModal.tsx` |
 | `src/features/pdf-import/` | `extractPdf.ts`, `parseResume.ts`, `importResumePdf.ts`, `ImportPdfModal.tsx` |
-| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx` |
+| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorButton.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx` |
 | `src/shared/components/` | `StatusAlert.tsx`, `LanguageSelector.tsx`, `useFocusReturn.ts` |
+| `src/shared/hooks/` | `useDebouncedValue.ts`, `useMediaQuery.ts` |
 | `src/types/` | `cv.ts` (resume data types) |
 
 ## App.tsx
@@ -32,27 +33,26 @@ Responsibilities:
 
 - load resume state through `useCVStorage`
 - control the active resume
-- open and close the sidebar on small screens
+- open and close the sidebar; from 1280 px wide (`useMediaQuery`) it pushes the page to the right instead of covering it, and stays open after picking a resume
 - ask for confirmation before delete and clear (`modal.confirm`)
 - save and restore backups (with the restore confirmation)
 - import a resume from PDF: loads `importResumePdf` on demand, shows the review and adds the new resume
 - hold the AI settings and open the AI dialogs
 - show success notices (`message`, close by themselves) and errors (`notification`, stay until closed)
 - connect the form to preview and PDF rendering
+- on small screens (below `md`), show "Tailor to a job" as a soft purple button above "Edit information" and keep "Download resume" in a bar fixed at the bottom of the screen
 - pass the resume data to the preview, which only rebuilds the PDF when the data or the language change
 
 ## AppHeader.tsx
 
-Header component used by the application shell (antd `Button`, `Badge`).
+Top bar of the application shell, fixed at the top (56 px on small screens, 64 px from `md`).
 
 Responsibilities:
 
-- render the title and language selector
-- expose "Tailor to a job" and "AI settings" (with a dot when AI is configured)
-- render the Backup menu
-- expose the PDF download action, with the file name from `pdfMetadata.ts`
-- same actions on desktop and mobile
-- keep the top bar logic out of `App.tsx`
+- left: the button that opens the resume list (☰; while the list is open it shows "close panel" and closes it), the title and the language selector
+- on small screens the title is the short one (`header.shortTitle`), centered between ☰ and the language selector
+- from `md`, on the right, only the two workflow actions: "Tailor to a job" (`TailorButton`, secondary, soft purple) and "Download resume" (`DownloadPdfButton`, primary)
+- "AI settings" and "Backup" are not here: they are in the sidebar footer
 
 ## CVForm.tsx
 
@@ -63,6 +63,7 @@ Responsibilities:
 - edit personal data, objective, skills, languages, soft skills and interpersonal competencies
 - add and remove repeatable blocks for experience, education, projects and references
 - save on blur, and after adding or removing an item
+- in personal data, each link sits on its own row next to its "name shown" field (`[URL | name shown]`), with the address using the full width; the grid aligns fields by their bottom edge (`items-end`), so the inputs stay level even with labels of different sizes
 
 Building blocks (`src/features/cv-editor/components/`):
 
@@ -89,17 +90,19 @@ PDF preview container.
 
 Responsibilities:
 
-- render the document inside `PDFViewer`
+- render the document inside `PDFViewer`, without the browser's PDF toolbar (`showToolbar={false}`, which adds `#toolbar=0`), so the page has a single download action
 - display the resume in a layout similar to final output
 - provide the central preview area on the right column
 
 Building the PDF is expensive and reloads the viewer, so the preview is wrapped in `memo` and keeps the same document element until the resume data or the language change: opening menus, dialogs or notices does not rebuild it. While typing, it waits for a 400 ms pause (`useDebouncedValue`) before building it again.
 
-The header's "Download" button builds the PDF only when clicked (`downloadResumePdf` in `src/features/pdf/downloadPdf.tsx`), instead of keeping a `PDFDownloadLink` that rebuilt it on every change.
+The "Download" button (`DownloadPdfButton`, in the header and in the bottom bar on small screens) builds the PDF only when clicked (`downloadResumePdf` in `src/features/pdf/downloadPdf.tsx`), instead of keeping a `PDFDownloadLink` that rebuilt it on every change.
 
 ## Sidebar.tsx
 
 Side panel for resume management: an antd `Drawer` from the left, with the dark theme (`theme.darkAlgorithm` in a nested `ConfigProvider`).
+
+Below 1280 px it covers the page with a dark, blurred backdrop and has its own ✕ button. From 1280 px (`isPushed`) it has no backdrop and no focus trap, the page moves to the right to make room, and it is closed from the header button (no ✕, to avoid two close buttons side by side).
 
 Responsibilities:
 
@@ -107,8 +110,10 @@ Responsibilities:
 - reorder: drag by the handle on desktop (`@dnd-kit`, also with the keyboard: Space, arrows, Space; Escape cancels; moves are announced to screen readers), or "Move up" / "Move down" in the ⋯ menu on any screen size (on small screens the handle is hidden and the menu is the way to move)
 - ⋯ menu per resume (antd `Dropdown`): rename (inline field: Enter or leaving saves, Escape cancels), duplicate, move up, move down, delete; Escape returns focus to the ⋯ button
 - AI-tailored resumes show a ✨ icon, the job as title and the company on the line below
-- "Delete all resumes" is a small link in the footer, with confirmation
-- all texts come from i18n (`sidebar.*`); the open button stays on the page, so focus returns to it when the panel closes
+- the current resume has a lighter background, a thin purple bar on the left and a bold title
+- the list scrolls on its own with a thin scrollbar (`scrollbar-thin` utility in `src/styles/index.css`), so "New resume" and the footer stay in place; the ⋯ button is 40 px on touch screens
+- footer (16 px padding): "AI settings" (`AISettingsButton`, green dot when configured) and the Backup menu (`footerActions`, given by `App.tsx`), then the count and "Delete all resumes" (with confirmation)
+- all texts come from i18n (`sidebar.*`); the open button is in the header, so focus returns to it when the panel closes
 
 Reordering uses `moveCV(id, toIndex)` from `useCVStorage` (action `MOVE`, tested in `useCVStorage.test.ts`); it does not change `updatedAt`. Each list item has separate buttons (handle, select, menu), with no button inside another.
 
@@ -124,7 +129,7 @@ For antd `Dropdown`: when the menu closes and focus was lost (on `<body>` or sti
 
 See `import-export-json.md`. The menu (antd `Dropdown`) explains backups in plain words; the modal (antd `Modal`) shows the file's content and offers "Add to my resumes" (focused first) or "Replace everything".
 
-The menu also has "Import resume from PDF". Both file actions share the one hidden file picker, which switches its `accept` between `.json` and `.pdf`.
+The menu lives in the sidebar footer and opens upwards, with colors made for the dark panel. It also has "Import resume from PDF". Both file actions share the one hidden file picker, which switches its `accept` between `.json` and `.pdf`.
 
 ## ImportPdfModal.tsx
 
@@ -136,13 +141,14 @@ See `ia-adaptacao-vaga.md`. Settings: provider, key, model, connection test, for
 
 ## LanguageSelector.tsx
 
-UI language switcher (antd `Segmented`, PT / EN).
+UI language switcher (antd `Segmented` with `shape="round"`, PT / EN).
 
 Responsibilities:
 
 - switch between `pt-BR` and `en`
 - persist selection in `localStorage`
 - reflect current language state in the UI
+- show a round flag for each language (Brazil, United States), drawn as inline SVG because flag emoji do not render on Windows; on small screens only the flag is shown, and the language name stays in `aria-label`
 
 ## useCVStorage.ts
 
