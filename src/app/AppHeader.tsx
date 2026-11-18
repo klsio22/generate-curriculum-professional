@@ -12,6 +12,7 @@ interface AppHeaderProps {
   data: CVData;
   activeTitle: string;
   onRestoreFile: (file: File) => void;
+  onImportPdf: (file: File) => void;
   onSaveBackup: () => void;
   onDownloadError: () => void;
   onOpenAISettings: () => void;
@@ -25,6 +26,7 @@ export const AppHeader = ({
   data,
   activeTitle,
   onRestoreFile,
+  onImportPdf,
   onSaveBackup,
   onDownloadError,
   onOpenAISettings,
@@ -83,7 +85,7 @@ export const AppHeader = ({
         <div className="hidden md:flex items-center gap-2">
           {tailorButton('large')}
           {aiSettingsButton('large')}
-          <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} size="large" />
+          <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} onImportPdf={onImportPdf} size="large" />
           {downloadButton('large')}
         </div>
       </div>
@@ -91,7 +93,7 @@ export const AppHeader = ({
       <div className="max-w-7xl mx-auto mt-3 md:hidden flex flex-wrap gap-2 justify-center items-center">
         {tailorButton('middle')}
         {aiSettingsButton('middle')}
-        <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} size="middle" />
+        <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} onImportPdf={onImportPdf} size="middle" />
         {downloadButton('middle')}
       </div>
     </header>
