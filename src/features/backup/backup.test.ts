@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { SavedCV } from '@/types/cv';
+import type { HistoryEntry } from '@/features/history/history';
 import {
   BackupError,
   backupFileName,
   createBackup,
   mergeImportedCVs,
   parseBackupFile,
+  restoredIdMap,
   sanitizeImportedCV,
 } from './backup';
 
@@ -27,11 +29,21 @@ const cv = (id: string, title = `CV ${id}`): SavedCV => ({
 
 describe('parseBackupFile', () => {
   it('reads the current backup format', () => {
-    const file = createBackup([cv('a'), cv('b')], 'b', new Date('2026-11-17T10:00:00Z'));
+    const file = createBackup([cv('a'), cv('b')], 'b', [], new Date('2026-11-17T10:00:00Z'));
     const result = parseBackupFile(JSON.stringify(file));
     expect(result.cvs.map((c) => c.id)).toEqual(['a', 'b']);
     expect(result.activeId).toBe('b');
     expect(result.exportedAt).toBe('2026-11-17T10:00:00.000Z');
+  });
+
+  it('saves and reads the AI history, and reads older backups without it', () => {
+    const content = { jobTitle: 'Dev', objective: 'Obj', skills: 'React', experience: [], education: [] };
+    const entry: HistoryEntry = { id: 'h1', cvId: 'a', kind: 'translate', createdAt: 1, before: content, after: content, changes: [] };
+    const file = createBackup([cv('a')], 'a', [entry, { ...entry, id: 'bad', kind: 'other' } as never]);
+
+    expect(file.version).toBe(2);
+    expect(parseBackupFile(JSON.stringify(file)).history.map((item) => item.id)).toEqual(['h1']);
+    expect(parseBackupFile(JSON.stringify({ version: 1, cvs: [cv('a')] })).history).toEqual([]);
   });
 
   it('reads a plain array and skips invalid resumes', () => {
@@ -113,6 +125,16 @@ describe('mergeImportedCVs', () => {
 
   it('keeps the current list when nothing is restored', () => {
     expect(mergeImportedCVs([cv('a')], [], '(r)')).toEqual([cv('a')]);
+  });
+});
+
+describe('restoredIdMap', () => {
+  it('maps each restored resume to the id it got in the list', () => {
+    const merged = mergeImportedCVs([cv('a')], [cv('a'), cv('b')], '(restored)', () => 'new');
+    expect([...restoredIdMap([cv('a'), cv('b')], merged)]).toEqual([
+      ['a', 'new'],
+      ['b', 'b'],
+    ]);
   });
 });
 

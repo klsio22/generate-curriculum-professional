@@ -3,6 +3,7 @@ import { Alert, Button, Collapse, Descriptions, Form, Input, Modal, Select, Step
 import { useTranslation } from 'react-i18next';
 import { Check, Sparkles } from 'lucide-react';
 import type { CVData, SavedCV } from '@/types/cv';
+import { contentOf, type HistoryRecord } from '@/features/history/history';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
 import { StatusAlert } from '@/shared/components/StatusAlert';
 import { analyzeJob, tailorResume } from './jobTailoring';
@@ -20,7 +21,7 @@ interface TailorJobDialogProps {
   onOpenSettings: () => void;
   cvs: SavedCV[];
   activeId: string | null;
-  onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => void;
+  onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>, record: HistoryRecord) => void;
 }
 
 interface TailorJobModalProps extends TailorJobDialogProps {
@@ -147,8 +148,8 @@ const TailorJobDialog = ({
   };
 
   const handleSave = () => {
-    if (!baseCV || !analysis || !result) return;
-    onSave({
+    if (!baseCV || !resultBase || !analysis || !result) return;
+    const saved = {
       ...result.cv,
       title: newTitle.trim() || baseCV.title,
       meta: {
@@ -157,6 +158,20 @@ const TailorJobDialog = ({
         keywords: analysis.keywords.map((k) => k.term),
         sourceCvId: baseCV.id,
         createdByAI: true,
+      },
+    };
+    onSave(saved, {
+      kind: 'tailor',
+      before: contentOf(resultBase),
+      after: contentOf(saved),
+      changes: result.changes,
+      job: {
+        text: jobText,
+        analysis,
+        coveredBefore: resultBaseCoverage.filter((k) => k.count > 0).length,
+        coveredAfter: resultCoverage.filter((k) => k.count > 0).length,
+        missingKeywords: result.missingKeywords,
+        newTerms,
       },
     });
     onClose();

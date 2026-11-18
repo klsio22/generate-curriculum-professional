@@ -3,6 +3,7 @@ import { Alert, Button, Form, Input, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
 import type { CVData, ResumeLocale, SavedCV } from '@/types/cv';
+import { contentOf, type HistoryRecord } from '@/features/history/history';
 import { StatusAlert } from '@/shared/components/StatusAlert';
 import { contentLocaleOf, otherLocale } from '@/shared/locale';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
@@ -17,7 +18,7 @@ interface TranslateDialogProps {
   isConfigured: boolean;
   onOpenSettings: () => void;
   onClose: () => void;
-  onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => void;
+  onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>, record: HistoryRecord) => void;
 }
 
 interface TranslateModalProps extends Omit<TranslateDialogProps, 'cv'> {
@@ -103,10 +104,18 @@ const TranslateDialog = ({ cv, settings, isConfigured, onOpenSettings, onClose, 
 
   const handleSave = () => {
     if (!result) return;
-    onSave({
+    const saved = {
       ...result.cv,
       title: title.trim() || cv.title,
       meta: { ...cv.meta, sourceCvId: cv.id, createdByAI: true },
+    };
+    onSave(saved, {
+      kind: 'translate',
+      before: contentOf(cv),
+      after: contentOf(saved),
+      changes: [],
+      from,
+      to,
     });
     onClose();
   };
