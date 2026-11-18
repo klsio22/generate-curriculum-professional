@@ -79,6 +79,7 @@ export const en = {
     name: 'Name',
     docName: 'Document Name',
     docNamePlaceholder: 'Ex: Tech Resume, Admin Resume...',
+    resumeLanguage: 'Resume language',
     addReference: 'Add Reference',
   },
   pdf: {

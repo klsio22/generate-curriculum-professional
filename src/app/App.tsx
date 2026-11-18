@@ -7,7 +7,9 @@ import { CVForm } from '@/features/cv-editor/CVForm';
 import { PDFPreview } from '@/features/pdf/PDFPreview';
 import { useCVStorage } from '@/features/cv-editor/useCVStorage';
 import { Sidebar } from '@/features/cv-editor/Sidebar';
-import { App as AntdApp, Card, Form, Input, Tag } from 'antd';
+import { DocumentSettings } from '@/features/cv-editor/DocumentSettings';
+import { resumeLocaleOf } from '@/shared/locale';
+import { App as AntdApp, Tag } from 'antd';
 import { AppHeader } from './AppHeader';
 import { AISettingsDrawer } from '@/features/ai/AISettingsDrawer';
 import { TailorJobModal } from '@/features/ai/TailorJobModal';
@@ -176,6 +178,10 @@ function App() {
     showNotice('success', t('pdfImport.created', { title }));
   };
 
+  const updateActive = (changes: Partial<SavedCV>) => {
+    if (activeId) updateCV(activeId, changes);
+  };
+
   const pdfTitle = activeCV?.title || 'meu_curriculo';
   const handleDownloadError = () => showNotice('error', t('header.downloadError'));
 
@@ -289,23 +295,12 @@ function App() {
                 {t('header.edit')}
               </h2>
               <div key={activeId}>
-                <Card className="mb-4 shadow-sm">
-                  <Form layout="vertical" component={false}>
-                    <Form.Item label={t('form.docName')} htmlFor="cv-document-title" className="mb-0">
-                      <Input
-                        key={activeCV?.title}
-                        id="cv-document-title"
-                        defaultValue={activeCV?.title ?? 'Novo Currículo'}
-                        onBlur={(e) => {
-                          if (activeId) {
-                            updateCV(activeId, { title: e.target.value });
-                          }
-                        }}
-                        placeholder={t('form.docNamePlaceholder')}
-                      />
-                    </Form.Item>
-                  </Form>
-                </Card>
+                <DocumentSettings
+                  title={activeCV?.title ?? 'Novo Currículo'}
+                  locale={resumeLocaleOf(activeCV ?? {}, i18n.language)}
+                  onRename={(title) => updateActive({ title })}
+                  onLocaleChange={(locale) => updateActive({ locale })}
+                />
 
                 <CVForm control={control} onSave={handleSave} />
               </div>

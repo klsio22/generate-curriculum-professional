@@ -1,5 +1,6 @@
 import type { CVData, Education, Experience, Project, Reference } from '@/types/cv';
 import { trimEndChars } from '@/shared/text';
+import { guessTextLocale } from '@/shared/locale';
 import type { PdfContent, PdfLine, PdfLink } from './extractPdf';
 
 type SectionKey =
@@ -698,6 +699,9 @@ export const parseResume = (
   for (const section of sections) {
     if (section.key !== 'contact') readSection(section, toParagraphs(section.lines, columnRight), body, cv, unmatched, newId);
   }
+
+  const locale = guessTextLocale(textLines.map((line) => line.text).join('\n'));
+  if (locale) cv.locale = locale;
 
   return { cv, unmatched };
 };

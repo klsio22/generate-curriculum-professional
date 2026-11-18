@@ -79,6 +79,7 @@ export const ptBR = {
     name: 'Nome',
     docName: 'Nome do documento',
     docNamePlaceholder: 'Ex: Currículo Tech, Currículo Admin...',
+    resumeLanguage: 'Idioma do currículo',
     addReference: 'Adicionar Referência',
   },
   pdf: {

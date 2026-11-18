@@ -46,6 +46,12 @@ describe('parseBackupFile', () => {
     expect(parseBackupFile(JSON.stringify([withMeta])).cvs[0].meta).toEqual(withMeta.meta);
   });
 
+  it('keeps a supported resume language and drops any other', () => {
+    const { cvs } = parseBackupFile(JSON.stringify([{ ...cv('a'), locale: 'en' }, { ...cv('b'), locale: 'fr' }, cv('c')]));
+    expect(cvs.map((item) => item.locale)).toEqual(['en', undefined, undefined]);
+    expect('locale' in cvs[1]).toBe(false);
+  });
+
   it('explains why a file cannot be used', () => {
     const codeOf = (text: string) => {
       try {
