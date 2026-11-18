@@ -116,12 +116,15 @@ src/
 │       ├── useAISettings.ts ..... Provider settings (stored locally)
 │       ├── AISettingsDrawer.tsx . Provider, key and model setup (side panel)
 │       ├── ModelCombobox.tsx .... Model field: search, groups, free filter
+│       ├── AIActions.tsx ........ Tailor button with the AI menu (chat, translate, history)
 │       ├── TailorJobModal.tsx ... Job → analysis → result dialog
 │       ├── TailorResultView.tsx . Coverage table and before/after
 │       ├── ResumeComparison.tsx . Before/after per section
 │       ├── compareResumes.ts .... Builds the before/after list, matching items by id
 │       ├── translation.ts ....... Translate a resume (anti-invention merge)
-│       └── TranslateModal.tsx ... Translate dialog with review
+│       ├── TranslateModal.tsx ... Translate dialog with review
+│       ├── refine.ts ............ Chat answers: guarded patch and declared facts
+│       └── RefineChatDrawer.tsx . Chat panel with proposals to apply
 ├── shared/
 │   ├── locale.ts ................ Resume language: detect, fall back, guess from text
 │   └── components/

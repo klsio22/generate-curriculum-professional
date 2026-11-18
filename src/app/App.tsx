@@ -8,7 +8,7 @@ import { PDFPreview } from '@/features/pdf/PDFPreview';
 import { useCVStorage } from '@/features/cv-editor/useCVStorage';
 import { Sidebar } from '@/features/cv-editor/Sidebar';
 import { DocumentSettings } from '@/features/cv-editor/DocumentSettings';
-import { detectResumeLocale, guessResumeLocale } from '@/shared/locale';
+import { contentLocaleOf, detectResumeLocale, guessResumeLocale, otherLocale } from '@/shared/locale';
 import { App as AntdApp, Tag } from 'antd';
 import { AppHeader } from './AppHeader';
 import { AISettingsDrawer } from '@/features/ai/AISettingsDrawer';
@@ -26,12 +26,15 @@ import {
 } from '@/features/backup/backup';
 import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
 import { useCVHistory } from '@/features/history/useCVHistory';
-import { contentOf, entriesFor, type HistoryEntry, type HistoryRecord } from '@/features/history/history';
+import { contentOf, entriesFor, type HistoryEntry, type HistoryRecord, type ResumeContent } from '@/features/history/history';
 import { HistoryDrawer } from '@/features/history/HistoryDrawer';
 import { ImportPdfModal, type PdfImportState } from '@/features/pdf-import/ImportPdfModal';
 import { BackupMenu } from '@/features/backup/BackupMenu';
 import { AISettingsButton } from '@/features/ai/AISettingsButton';
-import { TailorButton } from '@/features/ai/TailorButton';
+import { AIActions, type AIActionsProps } from '@/features/ai/AIActions';
+import { RefineChatDrawer } from '@/features/ai/RefineChatDrawer';
+import { clearChats, keepChatsFor, removeChatFor } from '@/features/ai/chatHistory';
+import { computeKeywordCoverage } from '@/features/ai/keywords';
 import { DownloadPdfButton } from '@/features/pdf/DownloadPdfButton';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { pdfImportErrorCode } from '@/features/pdf-import/pdfImportError';
@@ -58,6 +61,7 @@ function App() {
   const [returnToTailor, setReturnToTailor] = useState(false);
   const [translateId, setTranslateId] = useState<string | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
+  const [chat, setChat] = useState<{ cvId: string; initial: string } | null>(null);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
   const [pdfImport, setPdfImport] = useState<PdfImportState | null>(null);
@@ -104,6 +108,7 @@ function App() {
       onOk: () => {
         deleteCV(id);
         history.removeFor(id);
+        removeChatFor(id);
       },
     });
   };
@@ -118,6 +123,7 @@ function App() {
       onOk: () => {
         clearAll();
         history.replaceAll([]);
+        clearChats();
       },
     });
   };
@@ -167,6 +173,7 @@ function App() {
     importCVs(pendingRestore.cvs, pendingRestore.activeId);
     const restoredIds = new Set(pendingRestore.cvs.map((cv) => cv.id));
     history.replaceAll(pendingRestore.history.filter((entry) => restoredIds.has(entry.cvId)));
+    keepChatsFor(restoredIds);
     showNotice('success', t('backup.replaced', { count: pendingRestore.cvs.length }));
     setPendingRestore(null);
   };
@@ -224,6 +231,51 @@ function App() {
     updateCV(cv.id, structuredClone(entry.after));
     const date = new Date(entry.createdAt).toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'short' });
     showNotice('success', t('history.restored', { date }));
+  };
+
+  const chatCV = cvs.find((cv) => cv.id === chat?.cvId) ?? null;
+  const chatTailorEntry = chatCV ? entriesFor(history.entries, chatCV.id).find((entry) => entry.kind === 'tailor') : undefined;
+  const chatJob = chatTailorEntry?.job
+    ? {
+        title: [chatTailorEntry.job.analysis.jobTitle, chatTailorEntry.job.analysis.company].filter(Boolean).join(' — '),
+        text: chatTailorEntry.job.text,
+      }
+    : null;
+
+  const chatMissingKeywords = chatCV
+    ? computeKeywordCoverage(
+        chatCV,
+        (chatTailorEntry?.job?.missingKeywords ?? []).map((term) => ({ term, category: 'other', priority: 'high' })),
+      )
+        .filter((keyword) => keyword.count === 0)
+        .map((keyword) => keyword.term)
+    : [];
+
+  const addFacts = (cv: SavedCV | null | undefined, facts: string[]) => {
+    if (!cv) return;
+    const declaredFacts = [...new Set([...(cv.meta?.declaredFacts ?? []), ...facts])];
+    updateCV(cv.id, { meta: { ...cv.meta, declaredFacts } });
+  };
+
+  const handleApplyChat = (next: ResumeContent, request: string, reply: string) => {
+    if (!chatCV) return;
+    history.record(
+      chatCV.id,
+      { kind: 'chat', before: contentOf(chatCV), after: structuredClone(next), changes: reply ? [reply] : [], request },
+      aiSettings.settings.model,
+    );
+    updateCV(chatCV.id, structuredClone(next));
+    showNotice('success', t('chat.appliedNotice', { title: chatCV.title }));
+  };
+
+  const aiActionsProps: AIActionsProps = {
+    onTailor: () => setShowTailor(true),
+    onChat: () => {
+      if (activeId) setChat({ cvId: activeId, initial: '' });
+    },
+    onTranslate: () => setTranslateId(activeId),
+    onHistory: () => setHistoryId(activeId),
+    translateTo: otherLocale(contentLocaleOf(activeCV ?? {}, i18n.language)),
   };
 
   const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>, record: HistoryRecord) => {
@@ -316,6 +368,29 @@ function App() {
           entries={historyId ? entriesFor(history.entries, historyId) : []}
           onClose={() => setHistoryId(null)}
           onRestore={handleRestoreVersion}
+          onAskChat={(skill) => {
+            if (historyId) setChat({ cvId: historyId, initial: t('chat.haveSkillMessage', { skill }) });
+            setHistoryId(null);
+          }}
+        />
+
+        <RefineChatDrawer
+          cv={chatCV}
+          baseCV={cvs.find((cv) => cv.id === chatCV?.meta?.sourceCvId) ?? null}
+          job={chatJob}
+          missingKeywords={chatMissingKeywords}
+          initialMessage={chat?.initial ?? ''}
+          settings={aiSettings.settings}
+          isConfigured={aiSettings.isConfigured}
+          onOpenSettings={() => setShowAISettings(true)}
+          onApply={handleApplyChat}
+          onFacts={(facts) => addFacts(chatCV, facts)}
+          onAddFactsToBase={(facts) => {
+            const base = cvs.find((cv) => cv.id === chatCV?.meta?.sourceCvId);
+            addFacts(base, facts);
+            if (base) showNotice('success', t('chat.factsAdded', { title: base.title }));
+          }}
+          onClose={() => setChat(null)}
         />
 
         <RestoreBackupModal
@@ -336,7 +411,7 @@ function App() {
           data={data}
           activeTitle={pdfTitle}
           onDownloadError={handleDownloadError}
-          onOpenTailor={() => setShowTailor(true)}
+          aiActions={<AIActions {...aiActionsProps} size="large" />}
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
@@ -345,7 +420,7 @@ function App() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <div className="space-y-6">
               <div className="md:hidden">
-                <TailorButton size="large" block onClick={() => setShowTailor(true)} />
+                <AIActions {...aiActionsProps} size="large" block />
               </div>
               <h2 className="text-xl font-semibold text-gray-700">
                 {t('header.edit')}

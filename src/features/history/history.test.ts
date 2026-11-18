@@ -73,7 +73,7 @@ describe('removeEntriesFor', () => {
 describe('sanitizeHistory', () => {
   it('keeps valid entries and drops anything else', () => {
     const valid = entry('1', 'a', 1);
-    const raw = [valid, { ...valid, kind: 'chat' }, { ...valid, before: null }, 'x', { ...valid, id: '2', changes: 'no' }];
+    const raw = [valid, { ...valid, kind: 'other' }, { ...valid, before: null }, 'x', { ...valid, id: '2', changes: 'no' }];
 
     const result = sanitizeHistory(raw);
     expect(result.map((item) => item.id)).toEqual(['1', '2']);

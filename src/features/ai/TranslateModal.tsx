@@ -9,7 +9,7 @@ import { contentLocaleOf, otherLocale } from '@/shared/locale';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
 import { ResumeComparison } from './ResumeComparison';
 import { compareResumes } from './compareResumes';
-import { translateResume, type TranslateResult } from './translation';
+import { titleWithoutLanguage, translateResume, type TranslateResult } from './translation';
 import type { AISettings } from './types';
 
 interface TranslateDialogProps {
@@ -89,7 +89,7 @@ const TranslateDialog = ({ cv, settings, isConfigured, onOpenSettings, onClose, 
     try {
       const next = await translateResume(settings, cv, from, to, { signal: controller.signal });
       setResult(next);
-      setTitle(t('ai.translate.copyTitle', { title: cv.title, language: t(`language.${LOCALE_KEY[to]}`) }));
+      setTitle(t('ai.translate.copyTitle', { title: titleWithoutLanguage(cv.title), language: t(`language.${LOCALE_KEY[to]}`) }));
     } catch (err) {
       if (!controller.signal.aborted) setError(describeAIError(err, t, settings.provider));
     } finally {

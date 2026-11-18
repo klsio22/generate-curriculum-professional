@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CVData } from '@/types/cv';
 import { AIError } from './client';
 import { buildTranslateMessages } from './prompts';
-import { mergeTranslatedCV, prepareTailorBase } from './translation';
+import { mergeTranslatedCV, prepareTailorBase, titleWithoutLanguage } from './translation';
 import type { AISettings } from './types';
 
 const base: CVData = {
@@ -177,5 +177,18 @@ describe('prepareTailorBase', () => {
 
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(result.locale).toBeUndefined();
+  });
+});
+
+describe('titleWithoutLanguage', () => {
+  it('removes the language suffixes so a new one replaces them', () => {
+    expect(titleWithoutLanguage('Klésio Nascimento (Português) (English)')).toBe('Klésio Nascimento');
+    expect(titleWithoutLanguage('Currículo Tech (English)')).toBe('Currículo Tech');
+    expect(titleWithoutLanguage('Resume (Portuguese)')).toBe('Resume');
+  });
+
+  it('keeps other parentheses and titles made only of a suffix', () => {
+    expect(titleWithoutLanguage('Currículo (cópia)')).toBe('Currículo (cópia)');
+    expect(titleWithoutLanguage('(English)')).toBe('(English)');
   });
 });

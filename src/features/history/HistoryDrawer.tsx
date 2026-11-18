@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { App as AntdApp, Alert, Button, Collapse, Drawer, Empty, Tag, type CollapseProps } from 'antd';
-import { History, Languages, RotateCcw, Sparkles } from 'lucide-react';
+import { App as AntdApp, Alert, Button, Collapse, Drawer, Empty, type CollapseProps } from 'antd';
+import { History, Languages, MessageSquare, RotateCcw, Sparkles } from 'lucide-react';
 import type { ResumeLocale, SavedCV } from '@/types/cv';
 import { ResumeComparison } from '@/features/ai/ResumeComparison';
 import { compareResumes } from '@/features/ai/compareResumes';
@@ -11,11 +11,13 @@ interface HistoryDrawerProps {
   entries: HistoryEntry[];
   onClose: () => void;
   onRestore: (entry: HistoryEntry) => void;
+  onAskChat: (skill: string) => void;
 }
 
 const LOCALE_TEXT_KEY: Record<ResumeLocale, string> = { 'pt-BR': 'ai.translate.language_pt', en: 'ai.translate.language_en' };
 
-const KIND_ICON = { tailor: Sparkles, translate: Languages, restore: RotateCcw } as const;
+const KIND_ICON = { tailor: Sparkles, translate: Languages, restore: RotateCcw, chat: MessageSquare } as const;
+const MAX_REQUEST_PREVIEW = 80;
 
 const EntryTitle = ({ entry }: { entry: HistoryEntry }) => {
   const { t } = useTranslation();
@@ -26,10 +28,15 @@ const EntryTitle = ({ entry }: { entry: HistoryEntry }) => {
   if (entry.kind === 'translate' && entry.from && entry.to) {
     return <>{t('history.kind_translate', { from: t(LOCALE_TEXT_KEY[entry.from]), to: t(LOCALE_TEXT_KEY[entry.to]) })}</>;
   }
+  if (entry.kind === 'chat') {
+    const request = entry.request ?? '';
+    const preview = request.length > MAX_REQUEST_PREVIEW ? `${request.slice(0, MAX_REQUEST_PREVIEW)}…` : request;
+    return <>{t('history.kind_chat', { request: preview })}</>;
+  }
   return <>{t('history.kind_restore')}</>;
 };
 
-const JobDetails = ({ job }: { job: NonNullable<HistoryEntry['job']> }) => {
+const JobDetails = ({ job, onAskChat }: { job: NonNullable<HistoryEntry['job']>; onAskChat: (skill: string) => void }) => {
   const { t } = useTranslation();
   return (
     <div className="space-y-3">
@@ -42,9 +49,11 @@ const JobDetails = ({ job }: { job: NonNullable<HistoryEntry['job']> }) => {
       {job.missingKeywords.length > 0 && (
         <section>
           <h4 className="mb-1 font-semibold text-gray-800">{t('history.missing')}</h4>
-          <div className="flex flex-wrap gap-y-2">
-            {job.missingKeywords.map((keyword) => (
-              <Tag key={keyword}>{keyword}</Tag>
+          <div className="flex flex-wrap gap-2">
+            {job.missingKeywords.map((skill) => (
+              <Button key={skill} size="small" type="dashed" onClick={() => onAskChat(skill)}>
+                {t('chat.haveSkill', { skill })}
+              </Button>
             ))}
           </div>
         </section>
@@ -53,11 +62,19 @@ const JobDetails = ({ job }: { job: NonNullable<HistoryEntry['job']> }) => {
   );
 };
 
-const EntryDetails = ({ entry, onRestore }: { entry: HistoryEntry; onRestore: () => void }) => {
+const EntryDetails = ({
+  entry,
+  onRestore,
+  onAskChat,
+}: {
+  entry: HistoryEntry;
+  onRestore: () => void;
+  onAskChat: (skill: string) => void;
+}) => {
   const { t } = useTranslation();
   return (
     <div className="space-y-4">
-      {entry.job && <JobDetails job={entry.job} />}
+      {entry.job && <JobDetails job={entry.job} onAskChat={onAskChat} />}
       {entry.changes.length > 0 && (
         <section>
           <h4 className="mb-1 font-semibold text-gray-800">{t('history.changes')}</h4>
@@ -91,7 +108,7 @@ const EntryDetails = ({ entry, onRestore }: { entry: HistoryEntry; onRestore: ()
   );
 };
 
-export const HistoryDrawer = ({ cv, entries, onClose, onRestore }: HistoryDrawerProps) => {
+export const HistoryDrawer = ({ cv, entries, onClose, onRestore, onAskChat }: HistoryDrawerProps) => {
   const { t, i18n } = useTranslation();
   const { modal } = AntdApp.useApp();
   const formatDate = (time: number) =>
@@ -126,7 +143,7 @@ export const HistoryDrawer = ({ cv, entries, onClose, onRestore }: HistoryDrawer
           </span>
         </span>
       ),
-      children: <EntryDetails entry={entry} onRestore={() => confirmRestore(entry)} />,
+      children: <EntryDetails entry={entry} onRestore={() => confirmRestore(entry)} onAskChat={onAskChat} />,
     };
   });
 

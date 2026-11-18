@@ -38,7 +38,7 @@ The **Local proxy** provider is for an OpenAI-compatible server running on the u
 ## Privacy
 
 - The API key is stored only in this browser (`localStorage`, key `ai-settings`) and is sent only to the chosen provider. **Forget key** removes it. Avoid saving it on shared computers.
-- What is sent to the provider: the job posting and the resume **content** (headline, summary, skills, experience, projects, education, languages).
+- What is sent to the provider: the job posting and the resume **content** (headline, summary, skills, experience, projects, education, languages); in the chat, also the messages and the facts the candidate stated.
 - What is never sent: name, email, phone, address, LinkedIn/GitHub/portfolio links and references (`resumeForPrompt` in `prompts.ts`, covered by a test).
 
 ## Flow
@@ -56,7 +56,7 @@ The **Local proxy** provider is for an OpenAI-compatible server running on the u
 
 ## Translate a resume
 
-"Translate to English / Portuguese" in the resume's ⋯ menu creates a **copy** in the other language; the original never changes. The source language is the language detected in the text, not the chosen resume language, so a resume written in English but set to Portuguese is translated from English (`contentLocaleOf` in `src/shared/locale.ts`). It can also be started from the banner that appears under "Resume language" when the chosen language and the text do not match.
+"Translate to English / Portuguese" in the resume's ⋯ menu creates a **copy** in the other language; the original never changes. The copy is named after the original with the new language in parentheses; a previous language suffix is replaced, not added ("Resume (Português)" → "Resume (English)", `titleWithoutLanguage`). The source language is the language detected in the text, not the chosen resume language, so a resume written in English but set to Portuguese is translated from English (`contentLocaleOf` in `src/shared/locale.ts`). It can also be started from the banner that appears under "Resume language" when the chosen language and the text do not match.
 
 The AI translates the headline, summary, skills, soft and interpersonal skills, languages ("Inglês: avançado" → "English: advanced"), and in each experience, education and project: role, course, project name, dates and description. It keeps technologies, product names, certifications and acronyms as written. The user reviews a before/after of every section and the new name, then saves.
 
@@ -67,13 +67,32 @@ The AI translates the headline, summary, skills, soft and interpersonal skills, 
 - A translated date is used only if its numbers are the same as the original's ("jan 2020" → "Jan 2020" is fine, "Jan 2021" is ignored).
 - An empty field stays empty; a field the AI leaves empty keeps the original text.
 
+## Adjust in a chat
+
+The ▾ next to "Tailor to a job" opens a menu with **Adjust in a chat**, **Translate** and **AI history** for the open resume (`AIActions.tsx`).
+
+The chat (`RefineChatDrawer.tsx`, `refine.ts`) works on the open resume. The candidate asks for changes in their own words ("make the summary shorter", "I studied GraphQL in 2026"). If the resume came from a job tailoring, the job posting goes along as context and the keywords the resume still does not show become "I have …" shortcuts that start the message.
+
+The reply is in the site language by default; if the candidate writes in another language, or asks for one, the AI answers in that language without the site language changing. The resume text always stays in the resume language, and the AI does not use dashes (— or –) to join sentences.
+
+Each answer is a short reply and, when something should change, a **proposal**: a before/after of the sections it touches, with **Apply** and **Discard**. Nothing changes until the candidate applies it. Applying is recorded in the history (entry "Adjusted in the chat"), so it can be undone with "Restore this version". A proposal made before another one was applied can no longer be applied, since the resume changed.
+
+The conversation is saved per resume in `localStorage` (key `cv-chat`, `chatHistory.ts`), so it comes back when the panel is reopened or the page reloads. Each resume keeps its last 40 messages; a new request still sends only the last 12 (starting at a candidate message), so the cost of a long conversation stays bounded. A proposal keeps only the resume content (`contentOf`), not the whole resume. If storage is full, the oldest conversations are dropped first. Deleting a resume or clearing all data deletes its conversation, and "Clear conversation" in the panel deletes it on demand. Conversations are not part of the backup file.
+
+`applyRefinePatch` guards the answer: only the fields in the patch change; contact data, companies, roles, dates and institutions never change; entries cannot be added or removed (the AI tells the candidate to add them in the form) and unknown ids are counted and ignored.
+
+**Declared facts**: when the candidate states something about themselves, the AI returns it as a short fact. Facts are kept in the resume (`meta.declaredFacts`) and sent with the next messages, so the AI can use them without inventing. For a tailored resume, "Also use in the base resume" keeps them in the base resume too, after a confirmation; tailoring from that base then sends them as `<candidate_facts>`, and the prompt allows facts from the base resume or from that list. Only the last 12 messages go with each request.
+
 ## History
 
 "AI history" in the resume's ⋯ menu opens a side panel with what the AI did to that resume, newest first (`src/features/history/`, `HistoryDrawer.tsx`):
 
 - **Tailored to <job>**: date, model, keyword coverage before → after, new terms, keywords the resume could not support, the AI's list of changes, the job posting (collapsed) and a before/after of every section.
 - **Translated from <language> to <language>**: date, model and the before/after.
+- **Adjusted in the chat**: the request, the AI's reply and the before/after.
 - **Version restored**: when a version is brought back.
+
+The keywords that were missing in a tailoring have an "I have …" button that opens the chat with the message started.
 
 **Restore this version** puts that entry's result back into the resume (headline, summary, skills, experience, education, projects, languages and resume language; contact data does not change), after a confirmation. The restore is itself saved as an entry, so it can be undone the same way.
 

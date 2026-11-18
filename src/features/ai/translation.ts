@@ -125,3 +125,20 @@ export const prepareTailorBase = async (
   onTranslate?.();
   return (await translateResume(settings, baseCV, from, outputLanguage, options)).cv;
 };
+
+const LANGUAGE_SUFFIXES = ['Português', 'Portuguese', 'English', 'Inglês'].map((name) => `(${name})`);
+
+const withoutOneSuffix = (title: string): string | null => {
+  const suffix = LANGUAGE_SUFFIXES.find((item) => title.endsWith(item));
+  return suffix ? title.slice(0, -suffix.length).trimEnd() : null;
+};
+
+export const titleWithoutLanguage = (title: string): string => {
+  let base = title.trim();
+  let shorter = withoutOneSuffix(base);
+  while (shorter !== null) {
+    base = shorter;
+    shorter = withoutOneSuffix(base);
+  }
+  return base || title.trim();
+};
