@@ -53,7 +53,7 @@ const TailorJobDialog = ({
   activeId,
   onSave,
 }: TailorJobDialogProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const ids = { base: useId(), job: useId(), lang: useId() };
 
   const [step, setStep] = useState<Step>('input');
@@ -255,20 +255,25 @@ const TailorJobDialog = ({
                 </Form.Item>
               </div>
 
-              <Form.Item label={t('ai.tailor.jobDescription')} htmlFor={ids.job} className="mb-0">
+              <Form.Item
+                label={t('ai.tailor.jobDescription')}
+                htmlFor={ids.job}
+                className="mb-0"
+                extra={
+                  <span className="block text-right">
+                    {t('ai.tailor.charCount', {
+                      count: jobText.length.toLocaleString(i18n.language),
+                      max: MAX_JOB_DESCRIPTION_LENGTH.toLocaleString(i18n.language),
+                    })}
+                  </span>
+                }
+              >
                 <Input.TextArea
                   id={ids.job}
                   autoFocus
                   rows={12}
                   value={jobText}
                   maxLength={MAX_JOB_DESCRIPTION_LENGTH}
-                  showCount={{
-                    formatter: ({ count, maxLength }) =>
-                      t('ai.tailor.charCount', {
-                        count: count.toLocaleString(),
-                        max: (maxLength ?? MAX_JOB_DESCRIPTION_LENGTH).toLocaleString(),
-                      }),
-                  }}
                   onChange={(e) => setJobText(e.target.value)}
                   placeholder={t('ai.tailor.jobPlaceholder')}
                   disabled={busy !== null}
