@@ -198,7 +198,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onSelect={() => onSelect(cv.id)}
                     onRenameDone={(title) => {
                       setRenamingId(null);
-                      if (title !== null && title.trim() && title.trim() !== cv.title) onRename(cv.id, title.trim());
+                      const newTitle = title?.trim();
+                      if (newTitle && newTitle !== cv.title) onRename(cv.id, newTitle);
                     }}
                     menuItems={menuItemsFor(cv, index)}
                   />

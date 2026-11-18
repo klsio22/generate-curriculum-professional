@@ -208,11 +208,11 @@ const TailorJobDialog = ({
           )}
         </div>
 
-        <div role="status" aria-live="polite">
+        <output className="block" aria-live="polite">
           {busy && (
             <StatusAlert tone="busy">{busy === 'analyzing' ? t('ai.tailor.analyzing') : t('ai.tailor.generating')}</StatusAlert>
           )}
-        </div>
+        </output>
 
         {step === 'input' && (
           <Form layout="vertical" component={false}>

@@ -9,7 +9,8 @@ const keysOf = (value: unknown, prefix = ''): string[] =>
 
 describe('translations', () => {
   it('Portuguese and English have the same keys', () => {
-    expect(keysOf(en).sort()).toEqual(keysOf(ptBR).sort());
+    const sorted = (keys: string[]) => [...keys].sort((a, b) => a.localeCompare(b));
+    expect(sorted(keysOf(en))).toEqual(sorted(keysOf(ptBR)));
   });
 
   it('has no empty texts', () => {

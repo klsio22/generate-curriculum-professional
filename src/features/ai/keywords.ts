@@ -19,7 +19,7 @@ export const countTerm = (text: string, term: string): number => {
   const needle = normalizeText(term.trim());
   if (!needle) return 0;
   const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(needle)}(?![\\p{L}\\p{N}#+])`, 'gu');
-  return normalizeText(text).match(pattern)?.length ?? 0;
+  return [...normalizeText(text).matchAll(pattern)].length;
 };
 
 const sectionTexts = (cv: CVData): Record<ResumeSection, string> => ({

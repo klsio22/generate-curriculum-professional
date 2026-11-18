@@ -72,6 +72,12 @@ export const sanitizeImportedCV = (item: unknown): SavedCV | null => {
   } as SavedCV;
 };
 
+const resumeList = (parsed: unknown, record: Record<string, unknown> | null): unknown[] => {
+  if (Array.isArray(parsed)) return parsed;
+  if (Array.isArray(record?.cvs)) return record.cvs;
+  return [];
+};
+
 export const parseBackupFile = (text: string): ParsedBackup => {
   let parsed: unknown;
   try {
@@ -83,7 +89,7 @@ export const parseBackupFile = (text: string): ParsedBackup => {
   const record = !Array.isArray(parsed) && parsed && typeof parsed === 'object'
     ? (parsed as Record<string, unknown>)
     : null;
-  const list: unknown[] = Array.isArray(parsed) ? parsed : Array.isArray(record?.cvs) ? record.cvs : [];
+  const list = resumeList(parsed, record);
 
   const cvs = list.map(sanitizeImportedCV).filter((cv): cv is SavedCV => cv !== null);
   if (cvs.length === 0) throw new BackupError('no_resumes');

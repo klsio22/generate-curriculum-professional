@@ -51,8 +51,8 @@ describe('extractJSON', () => {
   });
 
   it('throws invalid_json when there is no object', () => {
-    expect(() => extractJSON('no json here')).toThrowError(AIError);
-    expect(() => extractJSON('{broken')).toThrowError(AIError);
+    expect(() => extractJSON('no json here')).toThrow(AIError);
+    expect(() => extractJSON('{broken')).toThrow(AIError);
   });
 });
 
@@ -80,8 +80,8 @@ describe('parseJobAnalysis', () => {
   });
 
   it('rejects answers without keywords', () => {
-    expect(() => parseJobAnalysis({ keywords: [] })).toThrowError(AIError);
-    expect(() => parseJobAnalysis(['x'])).toThrowError(AIError);
+    expect(() => parseJobAnalysis({ keywords: [] })).toThrow(AIError);
+    expect(() => parseJobAnalysis(['x'])).toThrow(AIError);
   });
 });
 
@@ -132,6 +132,14 @@ describe('mergeTailoredCV', () => {
   it('keeps all projects when the model returns an empty list', () => {
     const { cv } = mergeTailoredCV(base, { projects: [] });
     expect(cv.projects).toEqual(base.projects);
+  });
+
+  it('never shares the project list with the base resume', () => {
+    for (const raw of [{}, { projects: [] }]) {
+      const { cv } = mergeTailoredCV(base, raw);
+      expect(cv.projects).not.toBe(base.projects);
+      expect(cv.projects?.[0]).not.toBe(base.projects?.[0]);
+    }
   });
 
   it('keeps original text when fields are missing and does not mutate the base', () => {

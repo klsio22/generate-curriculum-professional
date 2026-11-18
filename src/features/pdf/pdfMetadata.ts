@@ -1,4 +1,5 @@
 import type { CVData } from '@/types/cv';
+import { trimChars } from '@/shared/text';
 
 export interface PdfMetadata {
   title: string;
@@ -37,11 +38,13 @@ export const buildPdfMetadata = (data: CVData, language: string, resumeLabel: st
 };
 
 const fileSafe = (text: string) =>
-  text
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/[^A-Za-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+  trimChars(
+    text
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[^A-Za-z0-9]+/g, '_'),
+    '_',
+  );
 
 export const buildPdfFileName = (data: CVData, fallbackTitle: string): string => {
   const parts = [data.fullName, data.meta?.targetJob || data.jobTitle, data.meta?.company]

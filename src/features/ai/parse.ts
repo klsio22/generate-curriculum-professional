@@ -70,46 +70,39 @@ export interface TailorResult {
   discardedItems: number;
 }
 
-export const mergeTailoredCV = (base: CVData, raw: unknown): TailorResult => {
-  if (!isRecord(raw)) throw new AIError('invalid_json');
-
-  const cv: CVData = structuredClone(base);
-  let discardedItems = 0;
-
-  for (const field of ['jobTitle', 'objective', 'skills', 'softSkills', 'interpersonalSkills'] as const) {
-    const value = str(raw[field]);
-    if (value) cv[field] = value;
-  }
-
+const mergeExperience = (base: CVData, raw: Record<string, unknown>) => {
   const aiExperience = Array.isArray(raw.experience) ? raw.experience.filter(isRecord) : [];
   const baseExperienceIds = new Set(base.experience.map((e) => e.id));
-  discardedItems += aiExperience.filter((e) => !baseExperienceIds.has(str(e.id))).length;
-  cv.experience = base.experience.map((original): Experience => {
+  const discarded = aiExperience.filter((e) => !baseExperienceIds.has(str(e.id))).length;
+  const experience = base.experience.map((original): Experience => {
     const rewrite = aiExperience.find((e) => str(e.id) === original.id);
     if (!rewrite) return { ...original };
     const lines = [str(rewrite.description), ...nonEmptyStrings(rewrite.achievements)].filter(Boolean);
     return { ...original, description: lines.length > 0 ? lines.join('\n') : original.description };
   });
+  return { experience, discarded };
+};
 
+const mergeProjects = (base: CVData, raw: Record<string, unknown>) => {
   const baseProjects = base.projects ?? [];
-  if (Array.isArray(raw.projects) && baseProjects.length > 0) {
-    const used = new Set<string>();
-    const projects: Project[] = [];
-    for (const item of raw.projects.filter(isRecord)) {
-      const original = baseProjects.find((p) => p.id === str(item.id));
-      if (!original) {
-        discardedItems += 1;
-        continue;
-      }
-      if (used.has(original.id)) continue;
+  if (!Array.isArray(raw.projects) || baseProjects.length === 0) return { projects: null, discarded: 0 };
+  const used = new Set<string>();
+  const projects: Project[] = [];
+  let discarded = 0;
+  for (const item of raw.projects.filter(isRecord)) {
+    const original = baseProjects.find((p) => p.id === str(item.id));
+    if (!original) discarded += 1;
+    else if (!used.has(original.id)) {
       used.add(original.id);
       projects.push({ ...original, description: str(item.description) || original.description });
     }
-    cv.projects = projects.length > 0 ? projects : baseProjects.map((p) => ({ ...p }));
   }
+  return { projects: projects.length > 0 ? projects : baseProjects.map((p) => ({ ...p })), discarded };
+};
 
+const mergeEducation = (base: CVData, raw: Record<string, unknown>) => {
   const aiEducation = Array.isArray(raw.education) ? raw.education.filter(isRecord) : [];
-  cv.education = base.education.map((original) => {
+  return base.education.map((original) => {
     const rewrite = aiEducation.find((e) => str(e.id) === original.id);
     const originalTopics = (original.topics ?? '').split('\n').map((t) => t.trim()).filter(Boolean);
     if (!rewrite || originalTopics.length === 0) return { ...original };
@@ -119,11 +112,27 @@ export const mergeTailoredCV = (base: CVData, raw: unknown): TailorResult => {
       .filter((t): t is string => Boolean(t));
     return { ...original, topics: topics.length > 0 ? [...new Set(topics)].join('\n') : original.topics };
   });
+};
+
+export const mergeTailoredCV = (base: CVData, raw: unknown): TailorResult => {
+  if (!isRecord(raw)) throw new AIError('invalid_json');
+
+  const cv: CVData = structuredClone(base);
+  for (const field of ['jobTitle', 'objective', 'skills', 'softSkills', 'interpersonalSkills'] as const) {
+    const value = str(raw[field]);
+    if (value) cv[field] = value;
+  }
+
+  const { experience, discarded: discardedExperience } = mergeExperience(base, raw);
+  const { projects, discarded: discardedProjects } = mergeProjects(base, raw);
+  cv.experience = experience;
+  if (projects) cv.projects = projects;
+  cv.education = mergeEducation(base, raw);
 
   return {
     cv,
     missingKeywords: nonEmptyStrings(raw.missingKeywords),
     changes: nonEmptyStrings(raw.changes),
-    discardedItems,
+    discardedItems: discardedExperience + discardedProjects,
   };
 };

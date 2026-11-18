@@ -1,4 +1,5 @@
 import type { AISettings, ChatMessage } from './types';
+import { trimEndChars } from '@/shared/text';
 
 export type AIErrorCode =
   | 'missing_settings'
@@ -40,7 +41,7 @@ export interface ChatOptions {
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 
-const trimSlash = (url: string) => url.trim().replace(/\/+$/, '');
+const trimSlash = (url: string) => trimEndChars(url.trim(), '/');
 
 const buildHeaders = (settings: AISettings): Record<string, string> => {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -192,8 +193,15 @@ const answersOnlyWithText = (model: RawModel) => {
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
+const FREE_TAG = '(free)';
+
+const withoutFreeTag = (name: string) => {
+  const trimmed = name.trim();
+  return trimmed.toLowerCase().endsWith(FREE_TAG) ? trimmed.slice(0, -FREE_TAG.length).trim() : trimmed;
+};
+
 const splitName = (id: string, name: string | undefined) => {
-  const clean = name?.replace(/\s*\(free\)\s*$/i, '').trim();
+  const clean = name === undefined ? undefined : withoutFreeTag(name);
   const separator = clean?.indexOf(': ') ?? -1;
   if (clean && separator > 0) {
     return { vendor: clean.slice(0, separator), label: clean.slice(separator + 2) };

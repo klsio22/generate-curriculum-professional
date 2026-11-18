@@ -269,7 +269,7 @@ const AISettingsDialog = ({
           )}
         </div>
 
-        <div aria-live="polite" role="status">
+        <output className="block" aria-live="polite">
           {status.kind === 'busy' && <StatusAlert tone="busy">{status.message}</StatusAlert>}
           {status.kind === 'success' && <StatusAlert tone="success">{status.message}</StatusAlert>}
           {status.kind === 'error' && (
@@ -277,7 +277,7 @@ const AISettingsDialog = ({
               {status.message}
             </StatusAlert>
           )}
-        </div>
+        </output>
       </Form>
     </Drawer>
   );

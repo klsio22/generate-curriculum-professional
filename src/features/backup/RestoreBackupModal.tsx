@@ -17,9 +17,10 @@ export const RestoreBackupModal = ({ backup, currentCount, onAdd, onReplace, onC
   if (!backup) return null;
 
   const exportedAt = backup.exportedAt ? new Date(backup.exportedAt) : null;
+  const dateLocale = i18n.language === 'pt-BR' ? 'pt-BR' : 'en-US';
   const dateText =
     exportedAt && !Number.isNaN(exportedAt.getTime())
-      ? exportedAt.toLocaleString(i18n.language === 'pt-BR' ? 'pt-BR' : 'en-US', {
+      ? exportedAt.toLocaleString(dateLocale, {
           dateStyle: 'long',
           timeStyle: 'short',
         })

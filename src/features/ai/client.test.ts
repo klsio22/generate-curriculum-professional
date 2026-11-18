@@ -60,7 +60,7 @@ describe('chatCompletion', () => {
     const fetchImpl = mockFetch(okChat('ok'));
     await chatCompletion(gemini, [{ role: 'user', content: 'hi' }], { fetchImpl });
     const headers = fetchImpl.mock.calls[0][1]?.headers as Record<string, string>;
-    expect(Object.keys(headers).sort()).toEqual(['Authorization', 'Content-Type']);
+    expect(Object.keys(headers).sort((a, b) => a.localeCompare(b))).toEqual(['Authorization', 'Content-Type']);
   });
 
   it('joins content returned as an array of parts', async () => {

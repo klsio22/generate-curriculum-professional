@@ -12,7 +12,7 @@ describe('normalizeUrl', () => {
 
   it('returns an empty string for empty input', () => {
     expect(normalizeUrl('')).toBe('');
-    expect(normalizeUrl(undefined)).toBe('');
+    expect(normalizeUrl()).toBe('');
   });
 });
 
