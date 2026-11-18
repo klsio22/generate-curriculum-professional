@@ -4,7 +4,7 @@ import { extractJSON, mergeTailoredCV, parseJobAnalysis, type TailorResult } fro
 import { buildAnalysisMessages, buildTailorMessages, JSON_RETRY_MESSAGE } from './prompts';
 import type { AISettings, ChatMessage, JobAnalysis } from './types';
 
-interface CallOptions {
+export interface CallOptions {
   signal?: AbortSignal;
   fetchImpl?: typeof fetch;
 }

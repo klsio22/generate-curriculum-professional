@@ -6,6 +6,7 @@ import {
   Copy,
   FileText,
   GripVertical,
+  Languages,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -35,6 +36,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { SavedCV } from '@/types/cv';
 import { BRAND } from '@/app/AntdProvider';
 import { useFocusReturn } from '@/shared/components/useFocusReturn';
+import { detectResumeLocale, otherLocale } from '@/shared/locale';
 
 interface SidebarProps {
   cvs: SavedCV[];
@@ -42,6 +44,7 @@ interface SidebarProps {
   onSelect: (id: string) => void;
   onCreate: () => void;
   onDuplicate: (id: string) => void;
+  onTranslate: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onMove: (id: string, toIndex: number) => void;
   onRequestDelete: (id: string) => void;
@@ -65,6 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelect,
   onCreate,
   onDuplicate,
+  onTranslate,
   onRename,
   onMove,
   onRequestDelete,
@@ -112,6 +116,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const menuItemsFor = (cv: SavedCV, index: number): MenuProps['items'] => [
     { key: 'rename', icon: <Pencil size={16} aria-hidden />, label: t('sidebar.rename'), onClick: () => setRenamingId(cv.id) },
     { key: 'duplicate', icon: <Copy size={16} aria-hidden />, label: t('sidebar.duplicate'), onClick: () => onDuplicate(cv.id) },
+    {
+      key: 'translate',
+      icon: <Languages size={16} aria-hidden />,
+      label: t(`sidebar.translateTo_${otherLocale(detectResumeLocale(cv, i18n.language)) === 'pt-BR' ? 'pt' : 'en'}`),
+      onClick: () => onTranslate(cv.id),
+    },
     {
       key: 'up',
       icon: <ArrowUp size={16} aria-hidden />,

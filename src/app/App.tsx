@@ -13,6 +13,7 @@ import { App as AntdApp, Tag } from 'antd';
 import { AppHeader } from './AppHeader';
 import { AISettingsDrawer } from '@/features/ai/AISettingsDrawer';
 import { TailorJobModal } from '@/features/ai/TailorJobModal';
+import { TranslateModal } from '@/features/ai/TranslateModal';
 import { useAISettings } from '@/features/ai/useAISettings';
 import {
   BackupError,
@@ -51,6 +52,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [returnToTailor, setReturnToTailor] = useState(false);
+  const [translateId, setTranslateId] = useState<string | null>(null);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
   const [pdfImport, setPdfImport] = useState<PdfImportState | null>(null);
@@ -194,6 +196,11 @@ function App() {
     setShowAISettings(true);
   };
 
+  const handleSaveTranslated = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
+    addCV(cv);
+    showNotice('success', t('ai.translate.saved', { title: cv.title }));
+  };
+
   const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
     addCV(cv);
     showNotice('success', t('ai.tailor.saved', { title: cv.title }));
@@ -211,6 +218,10 @@ function App() {
         }}
         onCreate={() => {
           createCV();
+          closeSidebarIfOverlay();
+        }}
+        onTranslate={(id) => {
+          setTranslateId(id);
           closeSidebarIfOverlay();
         }}
         onDuplicate={(id: string) => {
@@ -260,6 +271,15 @@ function App() {
           cvs={cvs}
           activeId={activeId}
           onSave={handleSaveTailored}
+        />
+
+        <TranslateModal
+          cv={showAISettings ? null : (cvs.find((cv) => cv.id === translateId) ?? null)}
+          settings={aiSettings.settings}
+          isConfigured={aiSettings.isConfigured}
+          onOpenSettings={() => setShowAISettings(true)}
+          onClose={() => setTranslateId(null)}
+          onSave={handleSaveTranslated}
         />
 
         <RestoreBackupModal
