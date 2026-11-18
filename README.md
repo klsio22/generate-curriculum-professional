@@ -17,7 +17,7 @@
 | **Tailor to a Job (AI)** | Paste a job posting and get a new resume aimed at it, with keyword coverage and a before/after review. Uses your own API key (OpenRouter, Gemini or any OpenAI-compatible API), no back-end. See [docs/ia-adaptacao-vaga.md](docs/ia-adaptacao-vaga.md) |
 | **Backup** | Save all resumes to a file and restore them later, choosing to add or replace. See [docs/import-export-json.md](docs/import-export-json.md) |
 | **PDF Metadata** | Title, author, subject and keywords filled in; file named after the person and the job |
-| **Responsive Design** | Adaptive interface with Tailwind CSS and DaisyUI |
+| **Responsive Design** | Ant Design components with a Tailwind CSS layout, from phone to desktop |
 
 ---
 
@@ -27,7 +27,8 @@
 React 19 .................. Modern UI library with hooks
 TypeScript 5.9 ............ Static typing for robust code
 Vite ...................... Fast and optimized build tool
-Tailwind CSS + DaisyUI .... Utility-first styling and UI components
+Ant Design 6 ............. UI components (buttons, fields, dialogs, menus)
+Tailwind CSS ............. Layout and spacing
 React Hook Form ........... High-performance form state management
 @react-pdf/renderer ....... Browser-based PDF rendering/generation
 react-to-print ............ Native browser printing integration
@@ -81,13 +82,15 @@ src/
 ├── main.tsx ..................... Entry point (the only file at the root)
 ├── app/
 │   ├── App.tsx .................. Application shell: wires features together
-│   └── AppHeader.tsx ............ Top bar (language, import/export, PDF)
+│   ├── AppHeader.tsx ............ Top bar (language, AI, backup, PDF)
+│   └── AntdProvider.tsx ......... Ant Design theme, locale and CSS layer
 ├── features/
 │   ├── cv-editor/
-│   │   ├── CVForm.tsx ........... Resume editing form
-│   │   ├── Sidebar.tsx .......... Resume list and management
+│   │   ├── CVForm.tsx ........... Resume editing form (built from field lists)
+│   │   ├── Sidebar.tsx .......... Resume list: reorder, rename, menu
 │   │   ├── useCVStorage.ts ...... Local persistence (full CRUD)
-│   │   └── defaultCV.ts ......... Initial resume data
+│   │   ├── defaultCV.ts ......... Initial resume data
+│   │   └── components/ .......... FormField, FormSection, RepeatableList
 │   ├── pdf/
 │   │   ├── CVDocument.tsx ....... PDF document / export
 │   │   ├── PDFPreview.tsx ....... A4 preview + PDF viewer
@@ -107,18 +110,19 @@ src/
 │       ├── keywords.ts .......... Keyword coverage counted in code
 │       ├── useAISettings.ts ..... Provider settings (stored locally)
 │       ├── AISettingsDrawer.tsx . Provider, key and model setup (side panel)
+│       ├── ModelCombobox.tsx .... Model field: search, groups, free filter
 │       ├── TailorJobModal.tsx ... Job → analysis → result dialog
 │       └── TailorResultView.tsx . Coverage table and before/after
 ├── shared/
 │   └── components/
-│       ├── Modal.tsx ............ Accessible dialog (focus trap, Escape)
-│       ├── Notice.tsx ........... Success/error notices (live regions)
+│       ├── StatusAlert.tsx ...... Result banner with technical details
+│       ├── useFocusReturn.ts .... Focus back to the menu button after Escape
 │       └── LanguageSelector.tsx . Language switcher
 ├── i18n/
 │   ├── config.ts
 │   └── locales/
 ├── styles/
-│   └── index.css ................ Global styles (Tailwind + daisyUI)
+│   └── index.css ................ Global styles (Tailwind, cascade layers for antd)
 └── types/
     └── cv.ts .................... Resume data types
 ```
