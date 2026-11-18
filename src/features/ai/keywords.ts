@@ -10,16 +10,11 @@ export interface KeywordCoverage {
   sections: ResumeSection[];
 }
 
-/** Lowercase and strip accents so "Comunicação" matches "comunicacao". */
 export const normalizeText = (text: string): string =>
   text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 
-/**
- * Counts whole-term matches. A term is not counted inside a longer word or a
- * longer technology name: "Java" does not match "JavaScript", "C" does not match "C#" or "C++".
- */
 export const countTerm = (text: string, term: string): number => {
   const needle = normalizeText(term.trim());
   if (!needle) return 0;
@@ -55,11 +50,6 @@ export const computeKeywordCoverage = (cv: CVData, keywords: KeywordItem[]): Key
   });
 };
 
-/**
- * Keywords that appear in the tailored resume but nowhere in the base one.
- * They are not necessarily false (the model may have used an equivalent term),
- * but the user should confirm each one before saving.
- */
 export const findNewTerms = (base: CVData, tailored: CVData, keywords: KeywordItem[]): string[] => {
   const before = computeKeywordCoverage(base, keywords);
   const after = computeKeywordCoverage(tailored, keywords);

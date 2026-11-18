@@ -32,7 +32,6 @@ export const RestoreBackupModal = ({ backup, currentCount, onAdd, onReplace, onC
     <Button key="replace" danger onClick={onReplace}>
       {t('backup.replaceAll')}
     </Button>,
-    // The safe choice gets the focus first.
     <Button key="add" type="primary" autoFocus onClick={onAdd}>
       {t('backup.addToMine')}
     </Button>,

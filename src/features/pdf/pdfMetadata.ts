@@ -17,10 +17,6 @@ const lines = (text?: string) =>
     .map((line) => line.replace(/^[-•*]\s*/, '').trim())
     .filter(Boolean);
 
-/**
- * Properties shown in the PDF's "Document properties". Some ATS read them, and
- * they make the file easy to identify. `resumeLabel` is "Currículo" / "Resume".
- */
 export const buildPdfMetadata = (data: CVData, language: string, resumeLabel: string): PdfMetadata => {
   const name = data.fullName.trim();
   const role = (data.meta?.targetJob || data.jobTitle).trim();
@@ -47,7 +43,6 @@ const fileSafe = (text: string) =>
     .replace(/[^A-Za-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
 
-/** e.g. "Ana_Souza_Desenvolvedora_Front-end_Acme.pdf"; falls back to the document title. */
 export const buildPdfFileName = (data: CVData, fallbackTitle: string): string => {
   const parts = [data.fullName, data.meta?.targetJob || data.jobTitle, data.meta?.company]
     .map((part) => fileSafe(part ?? ''))

@@ -3,7 +3,6 @@ import type { TFunction } from 'i18next';
 import { AIError } from './client';
 import { describeAIError } from './errorMessage';
 
-// Returns the key and its values, so the test checks which texts are used.
 const t = ((key: string, values?: Record<string, string>) =>
   values ? `${key}${JSON.stringify(values)}` : key) as unknown as TFunction;
 

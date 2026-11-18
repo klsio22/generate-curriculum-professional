@@ -8,11 +8,9 @@ import { RepeatableList } from './components/RepeatableList';
 
 interface CVFormProps {
   control: Control<CVData>;
-  /** Saves the resume; called when a field loses focus and after adding or removing an item. */
   onSave: () => void;
 }
 
-/** One field in a list; `wide` takes the whole row on larger screens. */
 interface FieldSpec {
   key: string;
   label: string;
@@ -22,7 +20,6 @@ interface FieldSpec {
   wide?: boolean;
 }
 
-/** Personal data field, optionally followed by the name shown for that link. */
 interface PersonalFieldSpec extends FieldSpec {
   key: Path<CVData>;
   display?: { key: Path<CVData>; label: string; placeholder: string };
@@ -85,7 +82,6 @@ const REFERENCES: FieldSpec[] = [
   { key: 'phone', label: 'form.phone' },
 ];
 
-/** Text sections where the section title is the field's label. */
 const TEXT_SECTIONS: { key: Path<CVData>; label: string; placeholder: string; rows: number }[] = [
   { key: 'skills', label: 'form.skills', placeholder: 'form.skillsPlaceholder', rows: 8 },
   { key: 'languages', label: 'form.languages', placeholder: 'form.languagesPlaceholder', rows: 6 },
@@ -107,7 +103,6 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
   const projects = useFieldArray({ control, name: 'projects' });
   const references = useFieldArray({ control, name: 'references' });
 
-  // Let react-hook-form update its state before saving.
   const saveSoon = () => setTimeout(onSave, 0);
 
   const field = (name: Path<CVData>, spec: Omit<FieldSpec, 'key'>, extra: { hideLabel?: boolean; secondary?: boolean } = {}) => (

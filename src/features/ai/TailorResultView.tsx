@@ -22,7 +22,6 @@ interface Comparison {
   after: string;
 }
 
-/** Side-by-side text of one section; open by default when it changed. */
 const BeforeAfter = ({ before, after }: { before: string; after: string }) => {
   const { t } = useTranslation();
   return (

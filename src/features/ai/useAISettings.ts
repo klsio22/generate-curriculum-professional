@@ -21,7 +21,6 @@ const readSettings = (): AISettings => {
   }
 };
 
-/** AI provider settings stored only in this browser (the API key never leaves it except to the provider). */
 export const useAISettings = () => {
   const [settings, setSettings] = useState<AISettings>(readSettings);
 
@@ -35,9 +34,7 @@ export const useAISettings = () => {
     setSettings(clean);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
-    } catch {
-      // Storage may be unavailable (private mode); settings still work for this session.
-    }
+    } catch {}
   }, []);
 
   const forgetKey = useCallback(() => {
@@ -45,9 +42,7 @@ export const useAISettings = () => {
       const next = { ...current, apiKey: '' };
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // ignore
-      }
+      } catch {}
       return next;
     });
   }, []);

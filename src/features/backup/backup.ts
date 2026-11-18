@@ -47,11 +47,6 @@ const TEXT_FIELDS = [
   'interpersonalSkills',
 ] as const;
 
-/**
- * Returns a usable resume, or null when the item clearly is not one.
- * Only the structure is required (id, a title or name, education and experience
- * lists); empty text fields such as address or phone are normal and are kept empty.
- */
 export const sanitizeImportedCV = (item: unknown): SavedCV | null => {
   if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
 
@@ -77,7 +72,6 @@ export const sanitizeImportedCV = (item: unknown): SavedCV | null => {
   } as SavedCV;
 };
 
-/** Reads a backup file. Accepts the current format or a plain array of resumes. */
 export const parseBackupFile = (text: string): ParsedBackup => {
   let parsed: unknown;
   try {
@@ -108,16 +102,11 @@ export const createBackup = (cvs: SavedCV[], activeId: string | null, now = new 
   cvs,
 });
 
-/** "curriculos-backup-2026-11-17.json" (pt) or "resume-backup-2026-11-17.json" (en). */
 export const backupFileName = (language: string, now = new Date()): string => {
   const prefix = language.startsWith('pt') ? 'curriculos-backup' : 'resume-backup';
   return `${prefix}-${now.toISOString().slice(0, 10)}.json`;
 };
 
-/**
- * Adds restored resumes to the current ones without overwriting anything.
- * A restored resume whose id already exists gets a new id and a suffix in the title.
- */
 export const mergeImportedCVs = (
   current: SavedCV[],
   incoming: SavedCV[],

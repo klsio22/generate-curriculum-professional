@@ -41,7 +41,6 @@ function App() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
-  // Settings opened from "Tailor to a job": go back there when the panel closes.
   const [returnToTailor, setReturnToTailor] = useState(false);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
@@ -97,7 +96,6 @@ function App() {
   };
 
 
-  // Success messages close by themselves; errors stay until closed.
   const showNotice = useCallback(
     (kind: 'success' | 'error', content: string) => {
       if (kind === 'success') message.success({ content, duration: 6 });
@@ -226,18 +224,15 @@ function App() {
 
         <main className="flex-1 mx-auto w-full p-4 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Editor Column */}
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-700">
                 {t('header.edit')}
               </h2>
               <div key={activeId}>
-                {/* CV Title Input */}
                 <Card className="mb-4 shadow-sm">
                   <Form layout="vertical" component={false}>
                     <Form.Item label={t('form.docName')} htmlFor="cv-document-title" className="mb-0">
                       <Input
-                        // Remount when the title changes elsewhere (e.g. renamed in the sidebar).
                         key={activeCV?.title}
                         id="cv-document-title"
                         defaultValue={activeCV?.title ?? 'Novo Currículo'}
@@ -256,7 +251,6 @@ function App() {
               </div>
             </div>
 
-            {/* Preview Column */}
             <div className="space-y-6 lg:sticky lg:top-24">
               <div className="flex justify-between items-baseline">
                 <div>
@@ -267,7 +261,6 @@ function App() {
                 <Tag>{t('header.a4Preview')}</Tag>
               </div>
 
-              {/* PDF Download Button */}
               <div className="flex justify-center">
                 <PDFPreview data={data} />
               </div>

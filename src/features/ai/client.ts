@@ -15,7 +15,6 @@ export type AIErrorCode =
   | 'empty_response'
   | 'invalid_json';
 
-/** Error with a stable code the UI translates; `detail` holds the provider's message. */
 export class AIError extends Error {
   readonly code: AIErrorCode;
   readonly status?: number;
@@ -32,7 +31,6 @@ export class AIError extends Error {
 
 export interface ChatOptions {
   signal?: AbortSignal;
-  /** Ask the provider for a JSON object response. */
   json?: boolean;
   temperature?: number;
   maxTokens?: number;
@@ -47,8 +45,6 @@ const trimSlash = (url: string) => url.trim().replace(/\/+$/, '');
 const buildHeaders = (settings: AISettings): Record<string, string> => {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (settings.apiKey.trim()) headers.Authorization = `Bearer ${settings.apiKey.trim()}`;
-  // Only OpenRouter accepts these attribution headers in its CORS policy;
-  // sending them to other providers makes the browser preflight fail.
   if (settings.provider === 'openrouter') {
     headers['HTTP-Referer'] = globalThis.location?.origin ?? '';
     headers['X-Title'] = 'Curriculum Generator';
@@ -60,7 +56,6 @@ const statusToCode = (status: number, detail = ''): AIErrorCode => {
   if (status === 401 || status === 403) return 'invalid_key';
   if (status === 402) return 'no_credits';
   if (status === 429) return 'rate_limit';
-  // OpenRouter: free models are blocked until the account allows prompts to be used by the model host.
   if (status === 404 && /data policy|privacy/i.test(detail)) return 'data_policy';
   if (status === 404) return 'model_not_found';
   if (status >= 500) return 'server';
@@ -73,13 +68,10 @@ const readErrorDetail = async (response: Response): Promise<string | undefined> 
     try {
       const body = JSON.parse(text);
       const candidate = Array.isArray(body) ? body[0] : body;
-      // Most providers send { error: { message } }; some proxies send { error: "Unauthorized" }.
       const message =
         candidate?.error?.message ?? (typeof candidate?.error === 'string' ? candidate.error : candidate?.message);
       if (typeof message === 'string') return message;
-    } catch {
-      // not JSON
-    }
+    } catch {}
     return text.slice(0, 300) || undefined;
   } catch {
     return undefined;
@@ -127,14 +119,12 @@ const extractContent = (body: unknown): string => {
   const choice = (body as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0];
   const content = choice?.message?.content;
   if (typeof content === 'string' && content.trim()) return content;
-  // Some providers return content as an array of parts.
   if (Array.isArray(content)) {
     const text = content
       .map((part) => (typeof part?.text === 'string' ? part.text : ''))
       .join('');
     if (text.trim()) return text;
   }
-  // OpenRouter can return HTTP 200 with an error object in the body.
   const inlineError = (body as { error?: { message?: string; code?: number } })?.error;
   if (inlineError) {
     throw new AIError(inlineError.code ? statusToCode(inlineError.code, inlineError.message) : 'server', {
@@ -145,7 +135,6 @@ const extractContent = (body: unknown): string => {
   throw new AIError('empty_response');
 };
 
-/** Sends a chat completion request and returns the text of the first choice. */
 export const chatCompletion = async (
   settings: AISettings,
   messages: ChatMessage[],
@@ -170,7 +159,6 @@ export const chatCompletion = async (
     );
     return extractContent(body);
   } catch (error) {
-    // Some models reject response_format; retry once without it (the prompt still asks for JSON).
     if (options.json && error instanceof AIError && error.code === 'bad_request') {
       return chatCompletion(settings, messages, { ...options, json: false });
     }
@@ -180,15 +168,10 @@ export const chatCompletion = async (
 
 export interface ModelInfo {
   id: string;
-  /** Readable name when the provider sends one (OpenRouter does). */
   name?: string;
-  /** Short name for the list, without the vendor and "(free)": "Gemma 4 31B". */
   label: string;
-  /** Company that makes the model, used to group the list: "Google". */
   vendor?: string;
-  /** Maximum tokens the model accepts, when known. */
   contextLength?: number;
-  /** True when both prompt and completion cost zero, or the id ends with ":free". */
   free: boolean;
 }
 
@@ -202,7 +185,6 @@ interface RawModel {
 
 const isZeroPrice = (value: unknown) => value !== undefined && Number(value) === 0;
 
-/** Models that generate audio, images or video (e.g. music models) cannot write a resume. */
 const answersOnlyWithText = (model: RawModel) => {
   const outputs = model.architecture?.output_modalities;
   return !Array.isArray(outputs) || outputs.every((output) => output === 'text');
@@ -210,7 +192,6 @@ const answersOnlyWithText = (model: RawModel) => {
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** "Google: Gemma 4 31B (free)" → vendor "Google", label "Gemma 4 31B". */
 const splitName = (id: string, name: string | undefined) => {
   const clean = name?.replace(/\s*\(free\)\s*$/i, '').trim();
   const separator = clean?.indexOf(': ') ?? -1;
@@ -224,7 +205,6 @@ const splitName = (id: string, name: string | undefined) => {
   };
 };
 
-/** Lists the models available for the configured provider, sorted by id. */
 export const listModels = async (
   settings: AISettings,
   options: Pick<ChatOptions, 'signal' | 'fetchImpl' | 'timeoutMs'> = {},
@@ -249,7 +229,6 @@ export const listModels = async (
     .sort((a, b) => a.id.localeCompare(b.id));
 };
 
-/** Makes a tiny real request to confirm that the key and the model work. */
 export const testConnection = async (
   settings: AISettings,
   options: Pick<ChatOptions, 'signal' | 'fetchImpl'> = {},
@@ -257,11 +236,8 @@ export const testConnection = async (
   await chatCompletion(
     settings,
     [{ role: 'user', content: 'Reply with the single word: ok' }],
-    // Local proxies that drive a browser can take a while to answer.
     { ...options, maxTokens: 64, temperature: 0, timeoutMs: 90_000 },
   ).catch((error) => {
-    // Reasoning models may spend the small token budget thinking and return no text;
-    // the request itself succeeded, which is what this test checks.
     if (error instanceof AIError && error.code === 'empty_response') return;
     throw error;
   });

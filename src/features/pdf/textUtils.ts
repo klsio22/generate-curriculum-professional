@@ -1,11 +1,8 @@
-// Text utilities used across PDF rendering
 export const formatDate = (dateStr?: string): string => {
   if (!dateStr) return '';
   return dateStr.trim();
 };
 
-// Wrap text into multiple lines (by character limit) and truncate after maxLines
-// naive chunking by characters to account for long tokens (URLs)
 export const wrapAndTruncate = (
   text?: string,
   lineLimit = 30,

@@ -9,7 +9,6 @@ interface CallOptions {
   fetchImpl?: typeof fetch;
 }
 
-/** Asks for JSON, validates it, and gives the model one more chance when the answer is unusable. */
 export const chatJSON = async <T>(
   settings: AISettings,
   messages: ChatMessage[],

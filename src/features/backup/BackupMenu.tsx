@@ -10,10 +10,6 @@ interface BackupMenuProps {
   size?: ButtonProps['size'];
 }
 
-/**
- * "Backup" button that opens a menu explaining what a backup is, with
- * "Save backup" and "Restore backup" (antd Dropdown: arrows, Enter, Escape).
- */
 export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProps) => {
   const { t } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -49,7 +45,6 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProp
 
   return (
     <>
-      {/* The native file picker has no antd equivalent that a menu item can open. */}
       {/* eslint-disable-next-line no-restricted-syntax */}
       <input
         ref={fileRef}
@@ -73,7 +68,6 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProp
         popupRender={(menu) => (
           <div className="max-w-80" style={panelStyle}>
             <p className="px-4 pb-1 pt-3 text-sm text-gray-600">{t('backup.intro')}</p>
-            {/* The panel already has the shadow. */}
             {isValidElement(menu)
               ? cloneElement(menu as ReactElement<{ style?: CSSProperties }>, { style: { boxShadow: 'none' } })
               : menu}

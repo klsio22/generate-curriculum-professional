@@ -42,7 +42,6 @@ export const buildAnalysisMessages = (jobDescription: string): ChatMessage[] => 
   },
 ];
 
-/** Only the content the model needs. Contact data (name, email, phone, address, links) is never sent. */
 export const resumeForPrompt = (cv: CVData) => ({
   jobTitle: cv.jobTitle,
   objective: cv.objective,

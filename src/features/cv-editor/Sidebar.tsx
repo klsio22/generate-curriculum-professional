@@ -51,13 +51,11 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
-/** Amber for AI-tailored resumes, indigo for the open one, grey for the rest. */
 const iconColor = (isAI: boolean, isActive: boolean) => {
   if (isAI) return 'text-amber-300';
   return isActive ? 'text-indigo-400' : 'text-gray-400';
 };
 
-/** Items only move up and down. */
 const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -79,7 +77,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const dateLocale = i18n.language === 'pt-BR' ? 'pt-BR' : 'en-US';
 
   const sensors = useSensors(
-    // A small distance keeps a simple click on the handle from starting a drag.
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
@@ -89,7 +86,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return { title: cvs[index]?.title ?? '', position: index + 1, total: cvs.length };
   };
 
-  // Screen reader messages while dragging, in the app's language.
   const announcements: Announcements = {
     onDragStart: ({ active }) => t('sidebar.dnd.pickedUp', describe(active.id)),
     onDragOver: ({ active, over }) =>
@@ -139,7 +135,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Always on the page (the open panel covers it), so the focus can come back to it when the panel closes. */}
       <Button
         type="primary"
         onClick={toggleSidebar}
@@ -150,11 +145,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className="fixed left-0 top-28 z-40 rounded-l-none bg-gray-900 shadow-md hover:bg-gray-800 lg:top-6"
       />
 
-      {/* Dark theme only for the list panel. */}
       <ConfigProvider
         theme={{
           algorithm: theme.darkAlgorithm,
-          // On the dark panel the hover goes lighter, so it stands out from the background.
           token: { colorPrimary: BRAND.primary, colorPrimaryHover: '#6366f1', colorPrimaryActive: '#4f46e5' },
           components: { Button: { defaultHoverBg: '#1f2937', defaultHoverColor: '#ffffff', defaultHoverBorderColor: '#6366f1' } },
         }}
@@ -225,7 +218,6 @@ interface SortableResumeItemProps {
   isRenaming: boolean;
   dateLocale: string;
   onSelect: () => void;
-  /** New title, or null when renaming was cancelled. */
   onRenameDone: (title: string | null) => void;
   menuItems: MenuProps['items'];
 }
@@ -256,7 +248,6 @@ const SortableResumeItem = ({
         isActive ? 'border-indigo-500 bg-gray-800' : 'border-transparent hover:bg-gray-800'
       } ${isDragging ? 'z-10 shadow-lg ring-1 ring-indigo-400 bg-gray-800' : ''}`}
     >
-      {/* Drag handle: desktop only (on small screens the list covers the page; there the menu moves items). */}
       <Button
         ref={setActivatorNodeRef}
         type="text"
@@ -303,7 +294,6 @@ const SortableResumeItem = ({
   );
 };
 
-/** Inline field to rename a resume: Enter or leaving the field saves, Escape cancels. */
 const RenameField = ({ title, onDone }: { title: string; onDone: (title: string | null) => void }) => {
   const { t } = useTranslation();
   const inputRef = React.useRef<InputRef>(null);
@@ -331,7 +321,6 @@ const RenameField = ({ title, onDone }: { title: string; onDone: (title: string 
           event.preventDefault();
           finish(event.currentTarget.value);
         } else if (event.key === 'Escape') {
-          // Cancel the rename without closing the list.
           event.preventDefault();
           event.stopPropagation();
           finish(null);

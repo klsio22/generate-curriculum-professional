@@ -14,7 +14,6 @@ const generateNewCV = (index: number = 0): SavedCV => {
   };
 };
 
-// Reducer State & Actions
 type State = {
   cvs: SavedCV[];
   activeId: string | null;
@@ -65,7 +64,6 @@ type Action =
   | MoveAction
   | ResetAction;
 
-/** Moves one resume to another position, keeping the others in order. Pure, for the reducer and tests. */
 export function moveCVInList<T extends { id: string }>(list: T[], id: string, toIndex: number): T[] {
   const from = list.findIndex((item) => item.id === id);
   if (from === -1) return list;
@@ -120,7 +118,6 @@ function reducer(state: State, action: Action): State {
       };
     }
     case 'MOVE': {
-      // Reordering does not count as editing: updatedAt stays the same.
       return { ...state, cvs: moveCVInList(state.cvs, action.payload.id, action.payload.toIndex) };
     }
     case 'SELECT': {
@@ -148,7 +145,6 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-// Initializer function to read from localStorage synchronously
 function initCVState(): State {
   let initialCvs: SavedCV[] = [];
   try {
@@ -220,7 +216,6 @@ export function useCVStorage() {
     dispatch({ type: 'CREATE', payload: newCV });
   }, [state.cvs]);
 
-  /** Adds a ready resume (e.g. one tailored by AI) and selects it. Returns the new id. */
   const addCV = useCallback((cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
     const newCV: SavedCV = { ...cv, id: crypto.randomUUID(), updatedAt: Date.now() };
     dispatch({ type: 'CREATE', payload: newCV });
@@ -228,7 +223,6 @@ export function useCVStorage() {
   }, []);
 
   const deleteCV = useCallback((id: string) => {
-    // Pre-generate a new CV in case deletions make the list empty
     const newCVIfEmpty = generateNewCV();
     dispatch({
       type: 'DELETE',
@@ -262,7 +256,6 @@ export function useCVStorage() {
     });
   }, []);
 
-  /** Puts a resume at a new position in the list (drag and drop or "move up/down"). */
   const moveCV = useCallback((id: string, toIndex: number) => {
     dispatch({ type: 'MOVE', payload: { id, toIndex } });
   }, []);

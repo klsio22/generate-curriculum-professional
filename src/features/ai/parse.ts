@@ -5,9 +5,7 @@ import type { JobAnalysis, KeywordCategory, KeywordItem, KeywordPriority } from 
 const MAX_KEYWORDS = 40;
 const MAX_REQUIREMENTS = 15;
 
-/** Pulls the JSON object out of a model answer, tolerating ```json fences and text around it. */
 export const extractJSON = (text: string): unknown => {
-  // Reasoning models (e.g. DeepSeek through a proxy) may put their thinking before the answer.
   const withoutThinking = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
   const unfenced = withoutThinking.replace(/```(?:json)?/gi, '');
   const start = unfenced.indexOf('{');
@@ -32,7 +30,6 @@ const CATEGORIES: KeywordCategory[] = ['hard_skill', 'tool', 'soft_skill', 'doma
 const PRIORITIES: KeywordPriority[] = ['high', 'medium', 'low'];
 const PRIORITY_ORDER: Record<KeywordPriority, number> = { high: 0, medium: 1, low: 2 };
 
-/** Validates the analysis answer; throws invalid_json when it is not usable. */
 export const parseJobAnalysis = (raw: unknown): JobAnalysis => {
   if (!isRecord(raw) || !Array.isArray(raw.keywords)) throw new AIError('invalid_json');
 
@@ -68,22 +65,11 @@ export const parseJobAnalysis = (raw: unknown): JobAnalysis => {
 
 export interface TailorResult {
   cv: CVData;
-  /** Keywords the model said the resume cannot honestly support. */
   missingKeywords: string[];
-  /** Short explanation of what the model changed. */
   changes: string[];
-  /** Items the model returned that do not exist in the base resume (dropped). */
   discardedItems: number;
 }
 
-/**
- * Applies the model's rewrite on top of the base resume.
- *
- * Facts always come from the base resume: contact data, companies, roles,
- * institutions, dates, links, references, languages and ids. The model can only
- * rewrite text fields, reorder or drop projects, and filter education topics.
- * Anything that refers to an item the base resume does not have is discarded.
- */
 export const mergeTailoredCV = (base: CVData, raw: unknown): TailorResult => {
   if (!isRecord(raw)) throw new AIError('invalid_json');
 
@@ -95,20 +81,16 @@ export const mergeTailoredCV = (base: CVData, raw: unknown): TailorResult => {
     if (value) cv[field] = value;
   }
 
-  // Experience: keep every job, in the base order; only text can change.
   const aiExperience = Array.isArray(raw.experience) ? raw.experience.filter(isRecord) : [];
   const baseExperienceIds = new Set(base.experience.map((e) => e.id));
   discardedItems += aiExperience.filter((e) => !baseExperienceIds.has(str(e.id))).length;
   cv.experience = base.experience.map((original): Experience => {
     const rewrite = aiExperience.find((e) => str(e.id) === original.id);
     if (!rewrite) return { ...original };
-    // The form and the PDF show only `description` (one item per line), so any
-    // separate achievements the model returns are folded into it.
     const lines = [str(rewrite.description), ...nonEmptyStrings(rewrite.achievements)].filter(Boolean);
     return { ...original, description: lines.length > 0 ? lines.join('\n') : original.description };
   });
 
-  // Projects: the model may reorder by relevance and leave out unrelated ones.
   const baseProjects = base.projects ?? [];
   if (Array.isArray(raw.projects) && baseProjects.length > 0) {
     const used = new Set<string>();
@@ -123,11 +105,9 @@ export const mergeTailoredCV = (base: CVData, raw: unknown): TailorResult => {
       used.add(original.id);
       projects.push({ ...original, description: str(item.description) || original.description });
     }
-    // An empty or broken list would erase every project; keep the originals instead.
     cv.projects = projects.length > 0 ? projects : baseProjects.map((p) => ({ ...p }));
   }
 
-  // Education: only the topic list can be narrowed to lines that already exist.
   const aiEducation = Array.isArray(raw.education) ? raw.education.filter(isRecord) : [];
   cv.education = base.education.map((original) => {
     const rewrite = aiEducation.find((e) => str(e.id) === original.id);

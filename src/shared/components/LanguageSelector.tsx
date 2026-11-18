@@ -6,7 +6,6 @@ const LANGUAGES = [
   { value: 'en', short: 'EN', nameKey: 'language.en' },
 ] as const;
 
-/** PT / EN switch; the choice is kept for the next visit. */
 export const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
 
@@ -16,7 +15,6 @@ export const LanguageSelector = () => {
       aria-label={t('language.label')}
       value={i18n.language === 'en' ? 'en' : 'pt-BR'}
       onChange={(language) => {
-        // The texts are already loaded, so there is nothing to wait for.
         void i18n.changeLanguage(language);
         localStorage.setItem('language', language);
       }}

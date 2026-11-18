@@ -39,13 +39,11 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
         descriptionLines.forEach((line, lineIndex) => {
             const trimmedLineText = line.trim();
 
-            // Skip empty lines and reset subheading context
             if (!trimmedLineText) {
                 isInsideSubheading = false;
                 return;
             }
 
-            // Line ending with ':' is treated as a subheading
             if (trimmedLineText.endsWith(':')) {
                 renderedElements.push(
                     <Text key={`${elementKeyPrefix}-subheading-${lineIndex}`} style={styles.subHeading}>
@@ -53,17 +51,13 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                     </Text>
                 );
                 isInsideSubheading = true;
-            }
-            // Lines after a subheading are indented as bullet items
-            else if (isInsideSubheading) {
+            } else if (isInsideSubheading) {
                 renderedElements.push(
                     <Text key={`${elementKeyPrefix}-subitem-${lineIndex}`} style={styles.bulletItem}>
                         {trimmedLineText}
                     </Text>
                 );
-            }
-            // Regular lines (without preceding subheading)
-            else {
+            } else {
                 renderedElements.push(
                     <Text key={`${elementKeyPrefix}-paragraph-${lineIndex}`} style={styles.bulletItem}>
                         {trimmedLineText}
@@ -78,9 +72,7 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
     return (
         <Document {...metadata}>
             <Page size="A4" style={styles.page}>
-                {/* MAIN CONTENT */}
                 <View style={styles.mainContent}>
-                    {/* Header */}
                     <View style={styles.header}>
                         <Text style={styles.fullName}>{data.fullName}</Text>
                         {data.jobTitle && (
@@ -133,7 +125,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     </View>
 
-                    {/* Objective */}
                     {data.objective && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.profile')}</Text>
@@ -141,7 +132,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     )}
 
-                    {/* Experience */}
                     {data.experience && data.experience.length > 0 && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.experience')}</Text>
@@ -166,7 +156,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     )}
 
-                    {/* Education */}
                     {data.education && data.education.length > 0 && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.education')}</Text>
@@ -198,7 +187,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                     )}
 
                     
-                    {/* Projects (Academic & Technical consolidated) */}
                     {data.projects && data.projects.length > 0 && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.projects')}</Text>
@@ -232,7 +220,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     )}
 
-                    {/* All Skills */}
                     {skillsList.length > 0 && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.skills')}</Text>
@@ -244,7 +231,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     )}
 
-                    {/* Languages */}
                     {langsList.length > 0 && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.languages')}</Text>
@@ -256,7 +242,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     )}
 
-                    {/* Soft Skills */}
                     {softList.length > 0 && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.softSkills')}</Text>
@@ -268,7 +253,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     )}
 
-                    {/* Interpersonal Competencies Demonstrated */}
                     {data.interpersonalSkills && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.interpersonalSkills')}</Text>
@@ -278,7 +262,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         </View>
                     )}
 
-                    {/* References */}
                     {data.references && data.references.length > 0 && (
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.references')}</Text>

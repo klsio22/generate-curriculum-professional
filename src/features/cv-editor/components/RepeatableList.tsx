@@ -4,9 +4,7 @@ import { Button, Card } from 'antd';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface RepeatableListProps {
-  /** Items from react-hook-form's useFieldArray (only the stable `id` is used). */
   items: { id: string }[];
-  /** Name of one item, numbered in each card: "Experience 1". */
   itemName: string;
   addLabel: string;
   onAdd: () => void;
@@ -14,7 +12,6 @@ interface RepeatableListProps {
   renderItem: (index: number) => ReactNode;
 }
 
-/** Cards for experience, education, projects and references, with add and remove buttons. */
 export const RepeatableList = ({ items, itemName, addLabel, onAdd, onRemove, renderItem }: RepeatableListProps) => {
   const { t } = useTranslation();
   return (

@@ -19,7 +19,6 @@ interface TailorJobDialogProps {
   onOpenSettings: () => void;
   cvs: SavedCV[];
   activeId: string | null;
-  /** Called with the new resume; the parent stores and selects it. */
   onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => void;
 }
 
@@ -42,7 +41,6 @@ const resolveLanguage = (choice: OutputLanguage, analysis: JobAnalysis): string 
   return analysis.language;
 };
 
-/** Mounted only while open, so each opening starts fresh. */
 export const TailorJobModal = ({ isOpen, ...props }: TailorJobModalProps) =>
   isOpen ? <TailorJobDialog {...props} /> : null;
 
@@ -72,7 +70,6 @@ const TailorJobDialog = ({
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  // Move focus to the step heading so screen readers announce the new step.
   useEffect(() => {
     if (step !== 'input') headingRef.current?.focus();
   }, [step]);
@@ -120,7 +117,6 @@ const TailorJobDialog = ({
     return run('generating', async (signal) => {
       const next = await tailorResume(settings, baseCV, analysis, resolveLanguage(language, analysis), { signal });
       setResult(next);
-      // Short title (the job); the company shows under it in the sidebar.
       setNewTitle(analysis.jobTitle.trim() || `${baseCV.title} — ${t('ai.tailor.aiSuffix')}`);
       setStep('result');
     });
@@ -133,7 +129,6 @@ const TailorJobDialog = ({
 
   const handleSave = () => {
     if (!baseCV || !analysis || !result) return;
-    // addCV gives the copy a new id, so the base resume is never overwritten.
     onSave({
       ...result.cv,
       title: newTitle.trim() || baseCV.title,

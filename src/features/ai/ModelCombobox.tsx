@@ -10,9 +10,7 @@ interface ModelComboboxProps {
   id: string;
   value: string;
   onChange: (model: string) => void;
-  /** Loads the provider's models; called when the panel opens and again when `sourceKey` changes. */
   loadModels: (signal: AbortSignal) => Promise<ModelInfo[]>;
-  /** Changes when the provider, address or key change, so the list is loaded again. */
   sourceKey: string;
   provider: AIProviderId;
   placeholder?: string;
@@ -27,7 +25,6 @@ type LoadState =
 
 const LIST_HEIGHT = 320;
 
-/** Groups by vendor (alphabetical), keeping the id order inside each group. */
 const groupByVendor = (models: ModelInfo[]) => {
   const groups = new Map<string, ModelInfo[]>();
   for (const model of models) {
@@ -44,11 +41,6 @@ const matches = (model: ModelInfo, terms: string[]) => {
   return terms.every((term) => text.includes(term));
 };
 
-/**
- * One field to type or pick the model (antd AutoComplete): the list is grouped
- * by company, typing filters it, and any name can still be typed. When the list
- * opens it shows every model, not only the ones matching the current value.
- */
 export const ModelCombobox = ({
   id,
   value,
@@ -63,7 +55,6 @@ export const ModelCombobox = ({
   const abortRef = useRef<AbortController | null>(null);
   const [state, setState] = useState<LoadState>({ kind: 'idle' });
   const [open, setOpen] = useState(false);
-  /** Text typed since the list opened; null shows the whole list. */
   const [query, setQuery] = useState<string | null>(null);
   const [freeOnly, setFreeOnly] = useState(false);
 
@@ -87,12 +78,9 @@ export const ModelCombobox = ({
     );
   }, [loadModels, sourceKey, t, provider]);
 
-  // Load once when the panel opens, so the selected model's name and the free filter show
-  // right away. Errors stay quiet here and are shown when the list is opened.
   useEffect(() => {
     queueMicrotask(load);
     return () => abortRef.current?.abort();
-    // only on mount: later loads happen when the list opens
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -101,7 +89,6 @@ export const ModelCombobox = ({
     return models.filter((model) => (!freeOnly || model.free) && matches(model, terms));
   }, [models, query, freeOnly]);
 
-  /** Rich row shown only in the list; the field itself shows the plain model id. */
   const optionContent = (model: ModelInfo) => {
     const isSelected = model.id === value;
     const context = contextText(model);
@@ -127,7 +114,6 @@ export const ModelCombobox = ({
   const renderOption = (model: ModelInfo) => ({
     value: model.id,
     label: model.id,
-    // Tooltip with the full details.
     title: [model.vendor, model.label, contextText(model)].filter(Boolean).join(' · '),
     model,
   });
@@ -177,12 +163,10 @@ export const ModelCombobox = ({
           const model = (option.data as { model?: ModelInfo }).model;
           return model ? optionContent(model) : option.label;
         }}
-        // Enter picks the first match of what was typed.
         defaultActiveFirstOption
         placeholder={placeholder}
         aria-describedby={describedBy}
         className="w-full"
-        // The list is filtered here (by name, id and company), not by antd.
         showSearch={{ filterOption: false, onSearch: (text) => setQuery(text) }}
         onChange={(text) => onChange(text)}
         onSelect={() => setQuery(null)}

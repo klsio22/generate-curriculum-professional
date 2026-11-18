@@ -4,7 +4,7 @@ export interface Education {
   institution: string;
   startDate: string;
   endDate: string;
-  topics?: string; // multiline list of topics/courses seen at university
+  topics?: string;
 }
 
 export interface Experience {
@@ -14,7 +14,7 @@ export interface Experience {
   startDate: string;
   endDate: string;
   description: string;
-  achievements?: string[]; // Lista de conquistas/bullet points
+  achievements?: string[];
 }
 
 export interface Reference {
@@ -34,20 +34,17 @@ export interface Project {
   endDate?: string;
 }
 
-/** Information about how a resume was generated (set when it is tailored to a job). */
 export interface CVMeta {
   targetJob?: string;
   company?: string;
-  /** Job keywords, used for PDF metadata and keyword coverage. */
   keywords?: string[];
-  /** Id of the resume this one was generated from. */
   sourceCvId?: string;
   createdByAI?: boolean;
 }
 
 export interface CVData {
   fullName: string;
-  jobTitle: string; // Cargo/posição
+  jobTitle: string;
   address: string;
   phone: string;
   email: string;
@@ -60,11 +57,11 @@ export interface CVData {
   objective: string;
   education: Education[];
   experience: Experience[];
-  projects?: Project[]; // Projetos feitos e participados
+  projects?: Project[];
   skills: string;
-  languages?: string; // multiline list of languages
-  softSkills?: string; // multiline list of soft skills
-  interpersonalSkills?: string; // multiline field for demonstrated interpersonal competencies
+  languages?: string;
+  softSkills?: string;
+  interpersonalSkills?: string;
   
   references?: Reference[];
 

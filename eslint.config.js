@@ -19,10 +19,11 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      'no-empty': ['error', { allowEmptyCatch: true }],
+    },
   },
   {
-    // Screens use Ant Design components (Button, Input, Select, Form.Item...) instead of raw form elements.
-    // The PDF feature is excluded: it renders with @react-pdf, not the DOM.
     files: ['src/app/**/*.tsx', 'src/features/**/*.tsx', 'src/shared/**/*.tsx'],
     ignores: ['src/features/pdf/**'],
     rules: {

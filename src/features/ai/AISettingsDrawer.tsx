@@ -27,7 +27,6 @@ type Status =
   | { kind: 'error'; message: string; detail?: string };
 
 
-/** Mounted only while open, so every opening starts from the saved settings. */
 export const AISettingsDrawer = ({ isOpen, ...props }: AISettingsDrawerProps) =>
   isOpen ? <AISettingsDialog {...props} /> : null;
 
@@ -55,7 +54,6 @@ const AISettingsDialog = ({
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const abortRef = useRef<AbortController | null>(null);
 
-  // Cancel any request still running when the dialog closes.
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const preset = AI_PROVIDERS[draft.provider];
@@ -178,7 +176,6 @@ const AISettingsDialog = ({
             </span>
           }
         >
-          {/* A real toggle button: the eye icon of Input.Password cannot be reached with the keyboard. */}
           <Space.Compact className="w-full">
             <Input
               id={ids.apiKey}

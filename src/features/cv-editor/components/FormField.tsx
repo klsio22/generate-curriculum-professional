@@ -7,23 +7,15 @@ export interface FormFieldProps {
   name: Path<CVData>;
   label: string;
   placeholder?: string;
-  /** Multi-line text; the field grows with the content from this many rows. */
   rows?: number;
   type?: 'text' | 'email';
-  /** The section title already names the field: keep the label for screen readers only. */
   hideLabel?: boolean;
-  /** Smaller label, for a field that complements the one above (e.g. the name shown for a link). */
   secondary?: boolean;
-  /** Called when the field loses focus, to save the resume. */
   onSave: () => void;
 }
 
 const fieldId = (name: string) => name.replaceAll('.', '-');
 
-/**
- * Label + antd input bound to react-hook-form with a Controller (antd inputs
- * do not expose the native element the way `register` expects).
- */
 export const FormField = ({ control, name, label, placeholder, rows, type = 'text', hideLabel, secondary, onSave }: FormFieldProps) => {
   const id = fieldId(name);
   return (
