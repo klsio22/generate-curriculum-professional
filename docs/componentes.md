@@ -19,6 +19,7 @@ Files are grouped by feature:
 | `src/features/cv-editor/` | `CVForm.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts`, `components/FormField.tsx`, `components/FormSection.tsx`, `components/RepeatableList.tsx` |
 | `src/features/pdf/` | `CVDocument.tsx`, `PDFPreview.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
 | `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `RestoreBackupModal.tsx` |
+| `src/features/pdf-import/` | `extractPdf.ts`, `parseResume.ts`, `importResumePdf.ts`, `ImportPdfModal.tsx` |
 | `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx` |
 | `src/shared/components/` | `StatusAlert.tsx`, `LanguageSelector.tsx`, `useFocusReturn.ts` |
 | `src/types/` | `cv.ts` (resume data types) |
@@ -34,6 +35,7 @@ Responsibilities:
 - open and close the sidebar on small screens
 - ask for confirmation before delete and clear (`modal.confirm`)
 - save and restore backups (with the restore confirmation)
+- import a resume from PDF: loads `importResumePdf` on demand, shows the review and adds the new resume
 - hold the AI settings and open the AI dialogs
 - show success notices (`message`, close by themselves) and errors (`notification`, stay until closed)
 - connect the form to preview and PDF rendering
@@ -121,6 +123,12 @@ For antd `Dropdown`: when the menu closes and focus was lost (on `<body>` or sti
 ## BackupMenu.tsx / RestoreBackupModal.tsx
 
 See `import-export-json.md`. The menu (antd `Dropdown`) explains backups in plain words; the modal (antd `Modal`) shows the file's content and offers "Add to my resumes" (focused first) or "Replace everything".
+
+The menu also has "Import resume from PDF". Both file actions share the one hidden file picker, which switches its `accept` between `.json` and `.pdf`.
+
+## ImportPdfModal.tsx
+
+See `importar-pdf.md`. While the PDF is read it shows a progress message; then the resume name (editable), what was found in each field (antd `Descriptions`) and, collapsed, the text that did not go into any field. "Create resume" adds a new resume; nothing existing changes.
 
 ## AISettingsDrawer.tsx / ModelCombobox.tsx / TailorJobModal.tsx / TailorResultView.tsx
 

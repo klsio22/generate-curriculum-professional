@@ -16,6 +16,7 @@
 | **Multiple Resumes** | Create, duplicate, rename and reorder resumes (drag on desktop, move up/down from the ⋯ menu on any screen) |
 | **Tailor to a Job (AI)** | Paste a job posting and get a new resume aimed at it, with keyword coverage and a before/after review. Uses your own API key (OpenRouter, Gemini or any OpenAI-compatible API), no back-end. See [docs/ia-adaptacao-vaga.md](docs/ia-adaptacao-vaga.md) |
 | **Backup** | Save all resumes to a file and restore them later, choosing to add or replace. See [docs/import-export-json.md](docs/import-export-json.md) |
+| **Import from PDF** | Read an existing resume in PDF and create a new resume with its data, after a review. Runs in the browser, no AI. See [docs/importar-pdf.md](docs/importar-pdf.md) |
 | **PDF Metadata** | Title, author, subject and keywords filled in; file named after the person and the job |
 | **Responsive Design** | Ant Design components with a Tailwind CSS layout, from phone to desktop |
 
