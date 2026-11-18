@@ -145,3 +145,95 @@ describe('parseResume details', () => {
     expect(unmatched).toEqual([]);
   });
 });
+
+describe('parseResume with the layout of a LinkedIn PDF', () => {
+  const line = (text: string, page: number, x: number, y: number, fontSize: number, right: number): PdfLine => ({
+    text, page, x, y, fontSize, right, bold: false, italic: false,
+  });
+  const lines: PdfLine[] = [
+    line('Contato', 1, 22, 738, 13, 67),
+    line('Curitiba', 1, 22, 718, 10.5, 60),
+    line('ana.lima@mail.com', 1, 22, 706, 10.5, 127),
+    line('www.linkedin.com/in/ana-', 1, 22, 681, 11, 150),
+    line('lima-123 (LinkedIn)', 1, 22, 667, 11, 140),
+    line('Principais competências', 1, 22, 618, 13, 162),
+    line('React', 1, 22, 599, 10.5, 50),
+    line('Node.js', 1, 22, 581, 10.5, 60),
+    line('Ana Lima', 1, 224, 726, 26, 330),
+    line('Desenvolvedora Front-end | React • TypeScript', 1, 224, 705, 12, 460),
+    line('Curitiba, Paraná, Brasil', 1, 224, 675, 12, 340),
+    line('Resumo', 1, 224, 638, 15.8, 282),
+    line('Desenvolvedora com quatro anos de experiência em aplicações web e', 1, 224, 612, 12, 586),
+    line('mobile.', 1, 224, 594, 12, 262),
+    line('Experiência', 1, 224, 560, 15.8, 306),
+    line('Empresa Alfa', 1, 224, 530, 12, 290),
+    line('3 anos 9 meses', 1, 224, 515, 10.5, 300),
+    line('Desenvolvedora Front-end Pleno', 1, 224, 499, 11.5, 380),
+    line('março de 2024 - Present (1 ano 9 meses)', 1, 224, 484, 10.5, 410),
+    line('Curitiba, Paraná, Brasil', 1, 224, 469, 10.5, 330),
+    line('Criei a biblioteca de componentes usada por todos os times do produto e', 1, 224, 448, 10.5, 589),
+    line('documentei os padrões de acessibilidade.', 1, 224, 430, 10.5, 420),
+    line('Reduzi o tempo de carregamento das páginas principais do produto, com', 1, 224, 30, 10.5, 585),
+    line('Page 1 of 2', 1, 384, 14, 9, 430),
+    line('ganho de 40% nas métricas de Core Web Vitals.', 2, 224, 738, 10.5, 440),
+    line('Desenvolvedora Front-end', 2, 224, 700, 11.5, 350),
+    line('março de 2023 - fevereiro de 2024 (1 ano)', 2, 224, 685, 10.5, 420),
+    line('Mantive o design system.', 2, 224, 664, 10.5, 360),
+    line('Empresa Beta', 2, 224, 626, 12, 290),
+    line('Desenvolvedora Júnior', 2, 224, 610, 11.5, 340),
+    line('janeiro de 2021 - fevereiro de 2023 (2 anos 2 meses)', 2, 224, 595, 10.5, 470),
+    line('Remoto', 2, 224, 580, 10.5, 260),
+    line('Mantive telas em React e TypeScript.', 2, 224, 559, 10.5, 400),
+    line('Formação acadêmica', 2, 224, 516, 15.8, 375),
+    line('Universidade Federal do Paraná', 2, 224, 490, 12, 400),
+    line('Bacharelado, Ciência da Computação · (2016 - 2020)', 2, 224, 473, 10.5, 470),
+    line('Page 2 of 2', 2, 384, 14, 9, 430),
+  ];
+  const linkedinUrl = 'https://www.linkedin.com/in/ana-lima-123?trk=public_profile';
+  const links: PdfLink[] = [
+    { url: 'mailto:ana.lima@mail.com', text: 'ana.lima@mail.com' },
+    { url: linkedinUrl, text: 'www.linkedin.com/in/ana-' },
+    { url: linkedinUrl, text: 'lima-123 (LinkedIn)' },
+  ];
+
+  it('reads the header from the main column, after the sidebar', () => {
+    const { cv } = parse(lines, links);
+    expect(cv.fullName).toBe('Ana Lima');
+    expect(cv.jobTitle).toBe('Desenvolvedora Front-end | React • TypeScript');
+    expect(cv.address).toBe('Curitiba, Paraná, Brasil');
+    expect(cv.email).toBe('ana.lima@mail.com');
+    expect(cv.linkedin).toBe('https://www.linkedin.com/in/ana-lima-123');
+    expect(cv.linkedinName).toBe('');
+    expect(cv.objective).toBe('Desenvolvedora com quatro anos de experiência em aplicações web e mobile.');
+    expect(cv.skills).toBe('React\nNode.js');
+  });
+
+  it('keeps company and role together, also with two roles in one company', () => {
+    const { cv, unmatched } = parse(lines, links);
+    expect(cv.experience.map(({ role, company, startDate, endDate }) => [role, company, startDate, endDate])).toEqual([
+      ['Desenvolvedora Front-end Pleno', 'Empresa Alfa', 'março de 2024', ''],
+      ['Desenvolvedora Front-end', 'Empresa Alfa', 'março de 2023', 'fevereiro de 2024'],
+      ['Desenvolvedora Júnior', 'Empresa Beta', 'janeiro de 2021', 'fevereiro de 2023'],
+    ]);
+    expect(cv.experience[0].description).toBe(
+      'Criei a biblioteca de componentes usada por todos os times do produto e documentei os padrões de acessibilidade.\n' +
+        'Reduzi o tempo de carregamento das páginas principais do produto, com ganho de 40% nas métricas de Core Web Vitals.',
+    );
+    expect(cv.experience[2].description).toBe('Mantive telas em React e TypeScript.');
+    expect(unmatched).toEqual([]);
+  });
+
+  it('reads the course and dates written on one line', () => {
+    const { cv } = parse(lines, links);
+    expect(cv.education).toEqual([
+      {
+        id: expect.any(String),
+        institution: 'Universidade Federal do Paraná',
+        course: 'Bacharelado, Ciência da Computação',
+        startDate: '2016',
+        endDate: '2020',
+        topics: '',
+      },
+    ]);
+  });
+});
