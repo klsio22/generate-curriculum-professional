@@ -9,6 +9,7 @@ Below is the purpose of the main libraries used by the application.
 - `react-hook-form`: high-performance form state handling.
 - `react-i18next` and `i18next`: UI and PDF text internationalization.
 - `@react-pdf/renderer`: PDF rendering and generation.
+- `pdfjs-dist`: reads the text of a PDF to import a resume (`src/features/pdf-import/`). Loaded only when the user imports a file, in its own chunk with its worker.
 - `antd` (Ant Design 6): UI components (buttons, fields, dialogs, menus, alerts). Setup in `src/app/AntdProvider.tsx`; see `componentes.md`.
 - `@ant-design/cssinjs`: `StyleProvider` that puts antd styles in a CSS cascade layer, so Tailwind utilities still apply on top.
 - `lucide-react`: UI icons.

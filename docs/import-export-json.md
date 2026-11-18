@@ -9,6 +9,8 @@ The menu explains this in plain words, so users do not need to know what JSON is
 
 Code: `src/features/backup/` (`backup.ts` for the logic, `BackupMenu.tsx` and `RestoreBackupModal.tsx` for the UI).
 
+The same menu has **Import resume from PDF**, for when there is no backup but there is a resume in PDF. See `importar-pdf.md`.
+
 ## Backup file
 
 File name: `curriculos-backup-YYYY-MM-DD.json` (Portuguese UI) or `resume-backup-YYYY-MM-DD.json` (English UI).

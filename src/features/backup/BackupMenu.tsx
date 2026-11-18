@@ -1,18 +1,27 @@
 import { cloneElement, isValidElement, useRef, type CSSProperties, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Dropdown, theme, type ButtonProps, type MenuProps } from 'antd';
-import { ArchiveRestore, ChevronDown, Download, HardDrive, Upload } from 'lucide-react';
+import { ArchiveRestore, ChevronDown, Download, FileText, HardDrive, Upload } from 'lucide-react';
 import { useFocusReturn } from '@/shared/components/useFocusReturn';
 
 interface BackupMenuProps {
   onSaveBackup: () => void;
   onRestoreFile: (file: File) => void;
+  onImportPdf: (file: File) => void;
   size?: ButtonProps['size'];
 }
 
-export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProps) => {
+type FileAction = 'restore' | 'importPdf';
+
+const ACCEPT: Record<FileAction, string> = {
+  restore: 'application/json,.json',
+  importPdf: 'application/pdf,.pdf',
+};
+
+export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf, size }: BackupMenuProps) => {
   const { t } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
+  const fileActionRef = useRef<FileAction>('restore');
   const { token } = theme.useToken();
   const { triggerRef: menuTriggerRef, onOpenChange: onMenuOpenChange } = useFocusReturn();
   const panelStyle: CSSProperties = {
@@ -28,6 +37,13 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProp
     </span>
   );
 
+  const pickFile = (action: FileAction) => {
+    fileActionRef.current = action;
+    if (!fileRef.current) return;
+    fileRef.current.accept = ACCEPT[action];
+    fileRef.current.click();
+  };
+
   const items: MenuProps['items'] = [
     {
       key: 'save',
@@ -39,7 +55,13 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProp
       key: 'restore',
       icon: <Upload size={18} className="text-indigo-700" aria-hidden />,
       label: itemLabel(t('backup.restore'), t('backup.restoreHelp')),
-      onClick: () => fileRef.current?.click(),
+      onClick: () => pickFile('restore'),
+    },
+    {
+      key: 'importPdf',
+      icon: <FileText size={18} className="text-amber-700" aria-hidden />,
+      label: itemLabel(t('pdfImport.menu'), t('pdfImport.menuHelp')),
+      onClick: () => pickFile('importPdf'),
     },
   ];
 
@@ -49,14 +71,16 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProp
       <input
         ref={fileRef}
         type="file"
-        accept="application/json,.json"
+        accept={ACCEPT.restore}
         className="hidden"
         tabIndex={-1}
         aria-hidden
         onChange={(event) => {
           const file = event.target.files?.[0];
           event.target.value = '';
-          if (file) onRestoreFile(file);
+          if (!file) return;
+          if (fileActionRef.current === 'importPdf') onImportPdf(file);
+          else onRestoreFile(file);
         }}
       />
       <Dropdown

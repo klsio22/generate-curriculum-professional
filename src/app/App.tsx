@@ -21,6 +21,8 @@ import {
   type ParsedBackup,
 } from '@/features/backup/backup';
 import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
+import { ImportPdfModal, type PdfImportState } from '@/features/pdf-import/ImportPdfModal';
+import { pdfImportErrorCode } from '@/features/pdf-import/pdfImportError';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -44,6 +46,8 @@ function App() {
   const [returnToTailor, setReturnToTailor] = useState(false);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
+  const [pdfImport, setPdfImport] = useState<PdfImportState | null>(null);
+  const pdfImportRunRef = useRef(0);
   const { modal, message, notification } = AntdApp.useApp();
   const aiSettings = useAISettings();
 
@@ -140,6 +144,31 @@ function App() {
     setPendingRestore(null);
   };
 
+  const handleImportPdf = async (file: File) => {
+    const run = ++pdfImportRunRef.current;
+    setPdfImport({ fileName: file.name, result: null });
+    try {
+      const { importResumePdf } = await import('@/features/pdf-import/importResumePdf');
+      const result = await importResumePdf(file);
+      if (run === pdfImportRunRef.current) setPdfImport({ fileName: file.name, result });
+    } catch (error) {
+      if (run !== pdfImportRunRef.current) return;
+      setPdfImport(null);
+      showNotice('error', t(`pdfImport.errors.${pdfImportErrorCode(error)}`));
+    }
+  };
+
+  const handleCancelPdfImport = () => {
+    pdfImportRunRef.current++;
+    setPdfImport(null);
+  };
+
+  const handleCreateFromPdf = (cv: CVData, title: string) => {
+    addCV({ ...cv, title });
+    setPdfImport(null);
+    showNotice('success', t('pdfImport.created', { title }));
+  };
+
   const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
     addCV(cv);
     showNotice('success', t('ai.tailor.saved', { title: cv.title }));
@@ -208,6 +237,8 @@ function App() {
           onReplace={handleRestoreReplace}
           onCancel={() => setPendingRestore(null)}
         />
+
+        <ImportPdfModal state={pdfImport} onCreate={handleCreateFromPdf} onCancel={handleCancelPdfImport} />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
@@ -215,6 +246,7 @@ function App() {
           data={data}
           activeTitle={activeCV?.title || 'meu_curriculo'}
           onRestoreFile={handleRestoreFile}
+          onImportPdf={handleImportPdf}
           onSaveBackup={handleSaveBackup}
           onDownloadError={() => showNotice('error', t('header.downloadError'))}
           onOpenAISettings={() => setShowAISettings(true)}
