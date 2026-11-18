@@ -13,7 +13,7 @@
 | **Smart Editor** | Form with real-time updates and local persistence (localStorage) |
 | **ABNT A4 Preview** | Accurate resume preview in Brazilian A4 format |
 | **PDF Export** | Professional PDF generation ready for printing or sharing |
-| **Multiple Resumes** | Create, duplicate, and manage multiple resume versions |
+| **Multiple Resumes** | Create, duplicate, rename and reorder resumes (drag on desktop, move up/down from the ⋯ menu on any screen) |
 | **Tailor to a Job (AI)** | Paste a job posting and get a new resume aimed at it, with keyword coverage and a before/after review. Uses your own API key (OpenRouter, Gemini or any OpenAI-compatible API), no back-end. See [docs/ia-adaptacao-vaga.md](docs/ia-adaptacao-vaga.md) |
 | **Backup** | Save all resumes to a file and restore them later, choosing to add or replace. See [docs/import-export-json.md](docs/import-export-json.md) |
 | **PDF Metadata** | Title, author, subject and keywords filled in; file named after the person and the job |
@@ -106,7 +106,7 @@ src/
 │       ├── jobTailoring.ts ...... Analyze job + tailor resume
 │       ├── keywords.ts .......... Keyword coverage counted in code
 │       ├── useAISettings.ts ..... Provider settings (stored locally)
-│       ├── AISettingsModal.tsx .. Provider, key and model setup
+│       ├── AISettingsDrawer.tsx . Provider, key and model setup (side panel)
 │       ├── TailorJobModal.tsx ... Job → analysis → result dialog
 │       └── TailorResultView.tsx . Coverage table and before/after
 ├── shared/

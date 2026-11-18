@@ -12,13 +12,28 @@ The browser calls the AI provider directly with the user's own API key. There is
 |---|---|---|
 | OpenRouter (recommended) | `https://openrouter.ai/api/v1` | <https://openrouter.ai/keys> |
 | Google Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | <https://aistudio.google.com/apikey> |
+| Local proxy (DeepSeek, Qwen...) | editable, default `http://localhost:3000/v1` | optional, set by the proxy |
 | Custom | any OpenAI-compatible URL, e.g. Ollama at `http://localhost:11434/v1` | depends on the server |
 
 OpenRouter gives access to models from Google, Anthropic, OpenAI and others with one key, and the model can be changed without code changes.
 
-Setup: **AI settings** in the header → choose the provider, paste the key, type a model (or **Load models** to pick from the provider's list) → **Test connection** → **Save**.
+Setup: **AI settings** in the header opens a side panel → choose the provider, paste the key, pick the model → **Test connection** → **Save**.
+
+The **Model** field is a combobox (`ModelCombobox.tsx`): it loads the provider's models when the dialog opens, and clicking it opens a list grouped by company, with the short name, the id, the context size and a **Free** badge (hidden while the free-only filter is on). Typing filters the list; a name that is not in the list can still be typed. Arrows move, Enter picks, Escape closes only the list. The list floats over the panel, so the panel does not need to scroll. Models that generate audio, images or video (e.g. music models) are left out, since they cannot write a resume.
+
+The key field shows the provider's key format as a placeholder (`sk-or-v1-...`, `AIza...`). It warns when the key does not have that format (OpenRouter keys start with `sk-or-`, Google AI Studio keys with `AIza`) and suggests the right provider (`checkKeyFormat` in `providers.ts`). OpenRouter lists its models without a key, so the model list loading does not mean the key is valid; **Test connection** checks the key and the model.
 
 Both providers accept requests from the browser (CORS). The client only sends the `HTTP-Referer` and `X-Title` headers to OpenRouter, because other providers reject unknown headers in the browser preflight.
+
+## Local proxy
+
+The **Local proxy** provider is for an OpenAI-compatible server running on the user's computer that forwards requests to a chat account, such as [DeepsProxy](https://github.com/pedrofariasx/deepsproxy) for DeepSeek (port 3000 by default) or a proxy for Qwen.
+
+- The API address is editable (port and `/v1`); the key is only needed if the proxy has one (`API_KEY` in DeepsProxy).
+- The model list reads the proxy's `/v1/models` (DeepsProxy: `deepseek-v4-flash`, `deepseek-v4-pro` and their `-thinking` versions).
+- The proxy must allow CORS (DeepsProxy does). If the app cannot reach it, the error says to check that the proxy is running and the address is right.
+- These proxies drive a browser, so answers are slower: the connection test waits up to 90 seconds. `<think>` blocks from reasoning models are ignored when reading the JSON answer.
+- Use it with the app running locally (`npm run dev`). From the deployed HTTPS site, Chrome may block requests to `localhost` (Private Network Access).
 
 ## Privacy
 
@@ -58,7 +73,7 @@ Most ATS rank resumes by the visible text, so the metadata helps a little; what 
 
 ## Errors
 
-Provider errors are mapped to messages the user can act on (`client.ts` → `ai.errors.*`): invalid key, no credits, rate limit, model not found, provider down, no connection, timeout. If the model answers with something that is not the expected JSON, the request is retried once; some models reject `response_format`, so the client retries without it.
+Errors are shown in a banner with a practical next step in the user's language; the provider's own text (often in English) and the HTTP status stay under a collapsed **Technical details** (`describeAIError` in `errorMessage.ts`, `StatusAlert`). Provider errors are mapped to messages the user can act on (`client.ts` → `ai.errors.*`): invalid key (the message says the problem is the key, not the model), no credits, rate limit, model not found, free model blocked by the OpenRouter privacy settings, provider down, no connection, timeout. If the model answers with something that is not the expected JSON, the request is retried once; some models reject `response_format`, so the client retries without it.
 
 ## Limitations
 
