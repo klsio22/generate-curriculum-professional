@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Modal } from '@/shared/components/Modal';
 import type { SavedCV } from '@/types/cv';
-import { aiErrorMessage } from './errorMessage';
+import { describeAIError, type AIErrorDescription } from './errorMessage';
+import { StatusAlert } from '@/shared/components/StatusAlert';
 import { analyzeJob, tailorResume } from './jobTailoring';
 import { computeKeywordCoverage, findNewTerms } from './keywords';
 import type { TailorResult } from './parse';
@@ -11,8 +12,7 @@ import { MAX_JOB_DESCRIPTION_LENGTH } from './prompts';
 import { TailorResultView } from './TailorResultView';
 import type { AISettings, JobAnalysis, KeywordPriority } from './types';
 
-interface TailorJobModalProps {
-  isOpen: boolean;
+interface TailorJobDialogProps {
   onClose: () => void;
   settings: AISettings;
   isConfigured: boolean;
@@ -21,6 +21,10 @@ interface TailorJobModalProps {
   activeId: string | null;
   /** Called with the new resume; the parent stores and selects it. */
   onSave: (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => void;
+}
+
+interface TailorJobModalProps extends TailorJobDialogProps {
+  isOpen: boolean;
 }
 
 type Step = 'input' | 'analysis' | 'result';
@@ -44,8 +48,8 @@ const resolveLanguage = (choice: OutputLanguage, analysis: JobAnalysis): string 
 };
 
 /** Mounted only while open, so each opening starts fresh. */
-export const TailorJobModal = (props: TailorJobModalProps) =>
-  props.isOpen ? <TailorJobDialog {...props} /> : null;
+export const TailorJobModal = ({ isOpen, ...props }: TailorJobModalProps) =>
+  isOpen ? <TailorJobDialog {...props} /> : null;
 
 const TailorJobDialog = ({
   onClose,
@@ -55,7 +59,7 @@ const TailorJobDialog = ({
   cvs,
   activeId,
   onSave,
-}: TailorJobModalProps) => {
+}: TailorJobDialogProps) => {
   const { t } = useTranslation();
   const ids = { base: useId(), job: useId(), count: useId(), lang: useId() };
 
@@ -67,7 +71,7 @@ const TailorJobDialog = ({
   const [result, setResult] = useState<TailorResult | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [busy, setBusy] = useState<null | 'analyzing' | 'generating'>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AIErrorDescription | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -102,7 +106,7 @@ const TailorJobDialog = ({
     try {
       await action(controller.signal);
     } catch (err) {
-      if (!controller.signal.aborted) setError(aiErrorMessage(err, t));
+      if (!controller.signal.aborted) setError(describeAIError(err, t, settings.provider));
     } finally {
       if (abortRef.current === controller) setBusy(null);
     }
@@ -121,8 +125,8 @@ const TailorJobDialog = ({
     return run('generating', async (signal) => {
       const next = await tailorResume(settings, baseCV, analysis, resolveLanguage(language, analysis), { signal });
       setResult(next);
-      const target = [analysis.jobTitle, analysis.company].filter(Boolean).join(' @ ');
-      setNewTitle(`${baseCV.title} — ${target || t('ai.tailor.aiSuffix')}`);
+      // Short title (the job); the company shows under it in the sidebar.
+      setNewTitle(analysis.jobTitle.trim() || `${baseCV.title} — ${t('ai.tailor.aiSuffix')}`);
       setStep('result');
     });
   };
@@ -213,11 +217,13 @@ const TailorJobDialog = ({
           {t('ai.tailor.stepOf', { current: stepIndex, total: STEPS.length })}: {stepLabel}
         </p>
 
-        {error && (
-          <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-red-800">
-            {error}
-          </p>
-        )}
+        <div role="alert">
+          {error && (
+            <StatusAlert tone="error" detail={error.detail}>
+              {error.message}
+            </StatusAlert>
+          )}
+        </div>
 
         <div role="status" aria-live="polite">
           {busy && (

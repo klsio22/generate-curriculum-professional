@@ -10,7 +10,7 @@ import { useCVStorage } from '@/features/cv-editor/useCVStorage';
 import { Sidebar } from '@/features/cv-editor/Sidebar';
 import { Modal } from '@/shared/components/Modal';
 import { AppHeader } from './AppHeader';
-import { AISettingsModal } from '@/features/ai/AISettingsModal';
+import { AISettingsDrawer } from '@/features/ai/AISettingsDrawer';
 import { TailorJobModal } from '@/features/ai/TailorJobModal';
 import { useAISettings } from '@/features/ai/useAISettings';
 import {
@@ -45,6 +45,8 @@ function App() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
+  // Settings opened from "Tailor to a job": go back there when the panel closes.
+  const [returnToTailor, setReturnToTailor] = useState(false);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
   const [notice, setNotice] = useState<NoticeMessage | null>(null);
@@ -192,12 +194,18 @@ function App() {
           <p>{t('modal.clearMessage')}</p>
         </Modal>
 
-        <AISettingsModal
+        <AISettingsDrawer
           isOpen={showAISettings}
           settings={aiSettings.settings}
           onSave={aiSettings.saveSettings}
           onForgetKey={aiSettings.forgetKey}
-          onClose={() => setShowAISettings(false)}
+          onClose={() => {
+            setShowAISettings(false);
+            if (returnToTailor) {
+              setReturnToTailor(false);
+              setShowTailor(true);
+            }
+          }}
         />
 
         <TailorJobModal
@@ -207,6 +215,7 @@ function App() {
           isConfigured={aiSettings.isConfigured}
           onOpenSettings={() => {
             setShowTailor(false);
+            setReturnToTailor(true);
             setShowAISettings(true);
           }}
           cvs={cvs}

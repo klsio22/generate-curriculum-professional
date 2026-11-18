@@ -6,6 +6,7 @@ export type AIErrorCode =
   | 'no_credits'
   | 'rate_limit'
   | 'model_not_found'
+  | 'data_policy'
   | 'bad_request'
   | 'server'
   | 'network'
@@ -55,10 +56,12 @@ const buildHeaders = (settings: AISettings): Record<string, string> => {
   return headers;
 };
 
-const statusToCode = (status: number): AIErrorCode => {
+const statusToCode = (status: number, detail = ''): AIErrorCode => {
   if (status === 401 || status === 403) return 'invalid_key';
   if (status === 402) return 'no_credits';
   if (status === 429) return 'rate_limit';
+  // OpenRouter: free models are blocked until the account allows prompts to be used by the model host.
+  if (status === 404 && /data policy|privacy/i.test(detail)) return 'data_policy';
   if (status === 404) return 'model_not_found';
   if (status >= 500) return 'server';
   return 'bad_request';
@@ -70,7 +73,9 @@ const readErrorDetail = async (response: Response): Promise<string | undefined> 
     try {
       const body = JSON.parse(text);
       const candidate = Array.isArray(body) ? body[0] : body;
-      const message = candidate?.error?.message ?? candidate?.message;
+      // Most providers send { error: { message } }; some proxies send { error: "Unauthorized" }.
+      const message =
+        candidate?.error?.message ?? (typeof candidate?.error === 'string' ? candidate.error : candidate?.message);
       if (typeof message === 'string') return message;
     } catch {
       // not JSON
@@ -107,10 +112,8 @@ const request = async (
   }
 
   if (!response.ok) {
-    throw new AIError(statusToCode(response.status), {
-      status: response.status,
-      detail: await readErrorDetail(response),
-    });
+    const detail = await readErrorDetail(response);
+    throw new AIError(statusToCode(response.status, detail), { status: response.status, detail });
   }
 
   try {
@@ -134,7 +137,7 @@ const extractContent = (body: unknown): string => {
   // OpenRouter can return HTTP 200 with an error object in the body.
   const inlineError = (body as { error?: { message?: string; code?: number } })?.error;
   if (inlineError) {
-    throw new AIError(inlineError.code ? statusToCode(inlineError.code) : 'server', {
+    throw new AIError(inlineError.code ? statusToCode(inlineError.code, inlineError.message) : 'server', {
       status: inlineError.code,
       detail: inlineError.message,
     });
@@ -175,18 +178,75 @@ export const chatCompletion = async (
   }
 };
 
-/** Lists model ids available for the configured provider. */
+export interface ModelInfo {
+  id: string;
+  /** Readable name when the provider sends one (OpenRouter does). */
+  name?: string;
+  /** Short name for the list, without the vendor and "(free)": "Gemma 4 31B". */
+  label: string;
+  /** Company that makes the model, used to group the list: "Google". */
+  vendor?: string;
+  /** Maximum tokens the model accepts, when known. */
+  contextLength?: number;
+  /** True when both prompt and completion cost zero, or the id ends with ":free". */
+  free: boolean;
+}
+
+interface RawModel {
+  id?: unknown;
+  name?: unknown;
+  context_length?: unknown;
+  pricing?: { prompt?: unknown; completion?: unknown };
+  architecture?: { output_modalities?: unknown };
+}
+
+const isZeroPrice = (value: unknown) => value !== undefined && Number(value) === 0;
+
+/** Models that generate audio, images or video (e.g. music models) cannot write a resume. */
+const answersOnlyWithText = (model: RawModel) => {
+  const outputs = model.architecture?.output_modalities;
+  return !Array.isArray(outputs) || outputs.every((output) => output === 'text');
+};
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
+/** "Google: Gemma 4 31B (free)" → vendor "Google", label "Gemma 4 31B". */
+const splitName = (id: string, name: string | undefined) => {
+  const clean = name?.replace(/\s*\(free\)\s*$/i, '').trim();
+  const separator = clean?.indexOf(': ') ?? -1;
+  if (clean && separator > 0) {
+    return { vendor: clean.slice(0, separator), label: clean.slice(separator + 2) };
+  }
+  const slash = id.indexOf('/');
+  return {
+    vendor: slash > 0 ? capitalize(id.slice(0, slash)) : undefined,
+    label: clean || (slash > 0 ? id.slice(slash + 1) : id),
+  };
+};
+
+/** Lists the models available for the configured provider, sorted by id. */
 export const listModels = async (
   settings: AISettings,
   options: Pick<ChatOptions, 'signal' | 'fetchImpl' | 'timeoutMs'> = {},
-): Promise<string[]> => {
+): Promise<ModelInfo[]> => {
   const body = await request(settings, '/models', { method: 'GET' }, options);
-  const data = (body as { data?: { id?: unknown }[] })?.data;
+  const data = (body as { data?: RawModel[] })?.data;
   if (!Array.isArray(data)) return [];
   return data
-    .map((model) => (typeof model?.id === 'string' ? model.id.replace(/^models\//, '') : ''))
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b));
+    .filter((model) => typeof model?.id === 'string' && model.id !== '' && answersOnlyWithText(model))
+    .map((model): ModelInfo => {
+      const id = (model.id as string).replace(/^models\//, '');
+      const name = typeof model.name === 'string' && model.name.trim() ? model.name.trim() : undefined;
+      return {
+        id,
+        name,
+        ...splitName(id, name),
+        contextLength:
+          typeof model.context_length === 'number' && model.context_length > 0 ? model.context_length : undefined,
+        free: id.endsWith(':free') || (isZeroPrice(model.pricing?.prompt) && isZeroPrice(model.pricing?.completion)),
+      };
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
 };
 
 /** Makes a tiny real request to confirm that the key and the model work. */
@@ -197,7 +257,8 @@ export const testConnection = async (
   await chatCompletion(
     settings,
     [{ role: 'user', content: 'Reply with the single word: ok' }],
-    { ...options, maxTokens: 64, temperature: 0, timeoutMs: 30_000 },
+    // Local proxies that drive a browser can take a while to answer.
+    { ...options, maxTokens: 64, temperature: 0, timeoutMs: 90_000 },
   ).catch((error) => {
     // Reasoning models may spend the small token budget thinking and return no text;
     // the request itself succeeded, which is what this test checks.

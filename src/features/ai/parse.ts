@@ -7,7 +7,9 @@ const MAX_REQUIREMENTS = 15;
 
 /** Pulls the JSON object out of a model answer, tolerating ```json fences and text around it. */
 export const extractJSON = (text: string): unknown => {
-  const unfenced = text.replace(/```(?:json)?/gi, '');
+  // Reasoning models (e.g. DeepSeek through a proxy) may put their thinking before the answer.
+  const withoutThinking = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  const unfenced = withoutThinking.replace(/```(?:json)?/gi, '');
   const start = unfenced.indexOf('{');
   const end = unfenced.lastIndexOf('}');
   if (start === -1 || end <= start) throw new AIError('invalid_json');

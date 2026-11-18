@@ -119,8 +119,43 @@ describe('listModels', () => {
     const fetchImpl = mockFetch(
       jsonResponse({ data: [{ id: 'models/gemini-b' }, { id: 'models/gemini-a' }, { foo: 1 }] }),
     );
-    await expect(listModels(gemini, { fetchImpl })).resolves.toEqual(['gemini-a', 'gemini-b']);
+    const models = await listModels(gemini, { fetchImpl });
+    expect(models.map((m) => m.id)).toEqual(['gemini-a', 'gemini-b']);
     expect(fetchImpl.mock.calls[0][0]).toBe(`${gemini.baseUrl}/models`);
+  });
+
+  it('keeps the name, context size and whether the model is free', async () => {
+    const fetchImpl = mockFetch(
+      jsonResponse({
+        data: [
+          { id: 'a/paid', name: 'A: Paid', context_length: 128000, pricing: { prompt: '0.000001', completion: '0.000002' } },
+          { id: 'b/zero', name: 'B: Zero', pricing: { prompt: '0', completion: '0' } },
+          { id: 'c/model:free' },
+        ],
+      }),
+    );
+    await expect(listModels(openrouter, { fetchImpl })).resolves.toEqual([
+      { id: 'a/paid', name: 'A: Paid', label: 'Paid', vendor: 'A', contextLength: 128000, free: false },
+      { id: 'b/zero', name: 'B: Zero', label: 'Zero', vendor: 'B', contextLength: undefined, free: true },
+      { id: 'c/model:free', name: undefined, label: 'model:free', vendor: 'C', contextLength: undefined, free: true },
+    ]);
+  });
+
+  it('splits vendor and short name, and skips models that do not answer with text', async () => {
+    const fetchImpl = mockFetch(
+      jsonResponse({
+        data: [
+          { id: 'google/gemma-4-31b-it:free', name: 'Google: Gemma 4 31B (free)', architecture: { output_modalities: ['text'] } },
+          { id: 'google/lyria-3', name: 'Google: Lyria 3', architecture: { output_modalities: ['audio', 'text'] } },
+          { id: 'deepseek-v4-flash' },
+        ],
+      }),
+    );
+    const models = await listModels(openrouter, { fetchImpl });
+    expect(models.map((m) => [m.id, m.vendor, m.label])).toEqual([
+      ['deepseek-v4-flash', undefined, 'deepseek-v4-flash'],
+      ['google/gemma-4-31b-it:free', 'Google', 'Gemma 4 31B'],
+    ]);
   });
 });
 
@@ -128,6 +163,20 @@ describe('testConnection', () => {
   it('accepts a successful request with empty text (reasoning models)', async () => {
     const fetchImpl = mockFetch(okChat(''));
     await expect(testConnection(openrouter, { fetchImpl })).resolves.toBeUndefined();
+  });
+
+  it('explains when OpenRouter blocks free models by the privacy settings', async () => {
+    const fetchImpl = mockFetch(
+      jsonResponse({ error: { message: 'No endpoints found matching your data policy (Free model publication)' } }, 404),
+    );
+    await expectAIError(testConnection(openrouter, { fetchImpl }), 'data_policy');
+  });
+
+  it('reads errors sent as a plain string (local proxies)', async () => {
+    const fetchImpl = mockFetch(jsonResponse({ error: 'Unauthorized' }, 401));
+    const error = await testConnection(openrouter, { fetchImpl }).catch((e) => e);
+    expect(error).toBeInstanceOf(AIError);
+    expect(error.detail).toBe('Unauthorized');
   });
 
   it('fails with the mapped error when the key is wrong', async () => {

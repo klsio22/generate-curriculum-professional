@@ -1,4 +1,4 @@
-export type AIProviderId = 'openrouter' | 'gemini' | 'custom';
+export type AIProviderId = 'openrouter' | 'gemini' | 'proxy' | 'custom';
 
 export interface AIProviderPreset {
   id: AIProviderId;
@@ -9,6 +9,14 @@ export interface AIProviderPreset {
   modelExample: string;
   /** Where the user can create an API key. Empty for custom providers. */
   keyUrl: string;
+  /** How the provider's keys start, shown as a hint. Empty for custom providers. */
+  keyPrefix: string;
+  /** The user can change the base URL (local servers, other ports). */
+  editableBaseUrl: boolean;
+  /** Local servers may work without a key. */
+  keyRequired: boolean;
+  /** Runs on the user's computer: connection errors suggest checking that it is running. */
+  local: boolean;
 }
 
 export interface AISettings {

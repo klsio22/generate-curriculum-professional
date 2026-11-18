@@ -46,6 +46,10 @@ describe('extractJSON', () => {
     expect(extractJSON('Sure!\n```json\n{"a": 1}\n```\nDone')).toEqual({ a: 1 });
   });
 
+  it('ignores a <think> block before the answer (reasoning models)', () => {
+    expect(extractJSON('<think>The {schema} says...</think>\n{"a": 1}')).toEqual({ a: 1 });
+  });
+
   it('throws invalid_json when there is no object', () => {
     expect(() => extractJSON('no json here')).toThrowError(AIError);
     expect(() => extractJSON('{broken')).toThrowError(AIError);
