@@ -12,7 +12,7 @@ import styles from './pdfStyles';
 import type { CVData } from '@/types/cv';
 import { formatDate, normalizeUrl } from './textUtils';
 import { buildPdfMetadata } from './pdfMetadata';
-import { resumeLocaleOf } from '@/shared/locale';
+import { detectResumeLocale } from '@/shared/locale';
 import type { ReactNode } from 'react';
 
 export interface PDFPreviewProps {
@@ -21,7 +21,7 @@ export interface PDFPreviewProps {
 
 export const CVDocument = ({ data }: PDFPreviewProps) => {
     const { i18n } = useTranslation();
-    const locale = resumeLocaleOf(data, i18n.language);
+    const locale = detectResumeLocale(data, i18n.language);
     const t = i18n.getFixedT(locale);
     const metadata = buildPdfMetadata(data, locale, t('pdf.resume'));
     const skillsList =

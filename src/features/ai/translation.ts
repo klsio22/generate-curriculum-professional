@@ -4,7 +4,7 @@ import { chatJSON, type CallOptions } from './jobTailoring';
 import { isRecord, str } from './parse';
 import { buildTranslateMessages } from './prompts';
 import type { AISettings } from './types';
-import { detectResumeLocale, isResumeLocale } from '@/shared/locale';
+import { contentLocaleOf, isResumeLocale } from '@/shared/locale';
 
 export interface TranslateResult {
   cv: CVData;
@@ -120,7 +120,7 @@ export const prepareTailorBase = async (
   onTranslate?: () => void,
 ): Promise<CVData> => {
   if (!isResumeLocale(outputLanguage)) return { ...baseCV };
-  const from = detectResumeLocale(baseCV, fallbackLanguage);
+  const from = contentLocaleOf(baseCV, fallbackLanguage);
   if (from === outputLanguage) return { ...baseCV, locale: from };
   onTranslate?.();
   return (await translateResume(settings, baseCV, from, outputLanguage, options)).cv;

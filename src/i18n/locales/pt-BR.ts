@@ -80,6 +80,10 @@ export const ptBR = {
     docName: 'Nome do documento',
     docNamePlaceholder: 'Ex: Currículo Tech, Currículo Admin...',
     resumeLanguage: 'Idioma do currículo',
+    localeMismatch:
+      "O texto deste currículo está em {{content}}, mas o idioma escolhido é {{chosen}}. O idioma muda só os títulos do PDF, não o texto.",
+    translateContent: 'Traduzir o texto para {{language}}',
+    keepLocale: 'Manter {{language}}',
     addReference: 'Adicionar Referência',
   },
   pdf: {

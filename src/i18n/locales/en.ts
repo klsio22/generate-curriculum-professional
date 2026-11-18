@@ -80,6 +80,10 @@ export const en = {
     docName: 'Document Name',
     docNamePlaceholder: 'Ex: Tech Resume, Admin Resume...',
     resumeLanguage: 'Resume language',
+    localeMismatch:
+      "This resume's text is in {{content}}, but the chosen language is {{chosen}}. The language only changes the PDF titles, not the text.",
+    translateContent: 'Translate the text to {{language}}',
+    keepLocale: 'Keep {{language}}',
     addReference: 'Add Reference',
   },
   pdf: {

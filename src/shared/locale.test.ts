@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  contentLocaleOf,
   detectResumeLocale,
   guessTextLocale,
   isResumeLocale,
   otherLocale,
-  resumeLocaleOf,
   toResumeLocale,
 } from './locale';
 
@@ -21,12 +21,6 @@ describe('resume locale', () => {
     expect(toResumeLocale('PT-br')).toBe('pt-BR');
     expect(toResumeLocale('en-US')).toBe('en');
     expect(toResumeLocale('es')).toBe('en');
-  });
-
-  it('uses the resume locale and falls back to the interface language', () => {
-    expect(resumeLocaleOf({ locale: 'en' }, 'pt-BR')).toBe('en');
-    expect(resumeLocaleOf({}, 'pt-BR')).toBe('pt-BR');
-    expect(resumeLocaleOf({}, 'en')).toBe('en');
   });
 });
 
@@ -66,6 +60,12 @@ describe('detectResumeLocale', () => {
 
   it('falls back to the interface language when the text says nothing', () => {
     expect(detectResumeLocale({ objective: 'React', experience: [], education: [] }, 'pt-BR')).toBe('pt-BR');
+  });
+
+  it('takes the language of the text as the content language, even when another one was chosen', () => {
+    expect(contentLocaleOf({ ...english, locale: 'pt-BR' }, 'pt-BR')).toBe('en');
+    expect(contentLocaleOf({ objective: 'React', experience: [], education: [], locale: 'en' }, 'pt-BR')).toBe('en');
+    expect(contentLocaleOf({ objective: 'React', experience: [], education: [] }, 'pt-BR')).toBe('pt-BR');
   });
 
   it('switches between the two locales', () => {

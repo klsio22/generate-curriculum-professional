@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
 import type { CVData, ResumeLocale, SavedCV } from '@/types/cv';
 import { StatusAlert } from '@/shared/components/StatusAlert';
-import { detectResumeLocale, otherLocale } from '@/shared/locale';
+import { contentLocaleOf, otherLocale } from '@/shared/locale';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
 import { ResumeComparison, type Comparison } from './ResumeComparison';
 import { translateResume, type TranslateResult } from './translation';
@@ -100,7 +100,7 @@ export const TranslateModal = ({ cv, ...props }: TranslateModalProps) =>
 
 const TranslateDialog = ({ cv, settings, isConfigured, onOpenSettings, onClose, onSave }: TranslateDialogProps) => {
   const { t, i18n } = useTranslation();
-  const from = detectResumeLocale(cv, i18n.language);
+  const from = contentLocaleOf(cv, i18n.language);
   const to = otherLocale(from);
   const [result, setResult] = useState<TranslateResult | null>(null);
   const [title, setTitle] = useState('');

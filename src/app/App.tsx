@@ -8,7 +8,7 @@ import { PDFPreview } from '@/features/pdf/PDFPreview';
 import { useCVStorage } from '@/features/cv-editor/useCVStorage';
 import { Sidebar } from '@/features/cv-editor/Sidebar';
 import { DocumentSettings } from '@/features/cv-editor/DocumentSettings';
-import { resumeLocaleOf } from '@/shared/locale';
+import { detectResumeLocale, guessResumeLocale } from '@/shared/locale';
 import { App as AntdApp, Tag } from 'antd';
 import { AppHeader } from './AppHeader';
 import { AISettingsDrawer } from '@/features/ai/AISettingsDrawer';
@@ -317,9 +317,11 @@ function App() {
               <div key={activeId}>
                 <DocumentSettings
                   title={activeCV?.title ?? 'Novo Currículo'}
-                  locale={resumeLocaleOf(activeCV ?? {}, i18n.language)}
+                  locale={detectResumeLocale(activeCV ?? {}, i18n.language)}
+                  contentLocale={activeCV ? guessResumeLocale(activeCV) : null}
                   onRename={(title) => updateActive({ title })}
                   onLocaleChange={(locale) => updateActive({ locale })}
+                  onTranslate={() => setTranslateId(activeId)}
                 />
 
                 <CVForm control={control} onSave={handleSave} />

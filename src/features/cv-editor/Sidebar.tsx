@@ -36,7 +36,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { SavedCV } from '@/types/cv';
 import { BRAND } from '@/app/AntdProvider';
 import { useFocusReturn } from '@/shared/components/useFocusReturn';
-import { detectResumeLocale, otherLocale } from '@/shared/locale';
+import { contentLocaleOf, otherLocale } from '@/shared/locale';
 
 interface SidebarProps {
   cvs: SavedCV[];
@@ -119,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       key: 'translate',
       icon: <Languages size={16} aria-hidden />,
-      label: t(`sidebar.translateTo_${otherLocale(detectResumeLocale(cv, i18n.language)) === 'pt-BR' ? 'pt' : 'en'}`),
+      label: t(`sidebar.translateTo_${otherLocale(contentLocaleOf(cv, i18n.language)) === 'pt-BR' ? 'pt' : 'en'}`),
       onClick: () => onTranslate(cv.id),
     },
     {
