@@ -6,7 +6,7 @@ import {
   type Path,
 } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { CVData } from '@/types/cv';
+import type { CVData } from '../types';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface CVFormProps {

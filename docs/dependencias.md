@@ -11,7 +11,6 @@ Below is the purpose of the main libraries used by the application.
 - `@react-pdf/renderer`: PDF rendering and generation.
 - `react-to-print`: browser print support/export flow integration.
 - `lucide-react`: UI icons.
-- `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`: drag and drop to reorder resumes in the sidebar (mouse, touch and keyboard, with screen reader announcements).
 
 ## Build and Tooling
 
@@ -31,7 +30,7 @@ The form uses `react-hook-form` and `useFieldArray` to handle repeatable section
 
 ### PDF
 
-PDF generation depends on `@react-pdf/renderer` and styles defined in `src/features/pdf/pdfStyles.ts`.
+PDF generation depends on `@react-pdf/renderer` and styles defined in `src/styles/pdfStyles.ts`.
 
 ### Languages
 

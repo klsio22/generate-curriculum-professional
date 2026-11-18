@@ -1,55 +1,84 @@
-# Backup (save and restore)
+# JSON Import and Export
 
-Resumes live only in the browser's `localStorage`. If the browser data is cleared, they are gone. The **Backup** menu in the header lets the user keep a copy in a file and bring it back later, on the same or another browser.
+This feature adds a portable JSON backup flow for all saved resumes.
 
-The menu explains this in plain words, so users do not need to know what JSON is:
+## Goal
 
-- **Save backup**: downloads a file with all resumes.
-- **Restore backup**: opens a backup file and asks what to do before changing anything.
+The application now allows users to:
 
-Code: `src/features/backup/` (`backup.ts` for the logic, `BackupMenu.tsx` and `RestoreBackupModal.tsx` for the UI).
+- export all saved resumes to a `.json` file
+- import the same file later into the application
+- keep `localStorage` as the primary persistence layer after import
 
-## Backup file
+## Export flow
 
-File name: `curriculos-backup-YYYY-MM-DD.json` (Portuguese UI) or `resume-backup-YYYY-MM-DD.json` (English UI).
+When the user clicks Export JSON in the header, the application creates a file with this shape:
 
 ```json
 {
   "version": 1,
-  "exportedAt": "2026-11-17T12:00:00.000Z",
+  "exportedAt": "2026-04-06T12:00:00.000Z",
   "activeId": "resume-id",
   "cvs": []
 }
 ```
 
-- `version`: schema version for future migrations
-- `exportedAt`: when the backup was made (shown when restoring)
-- `activeId`: the resume that was selected
-- `cvs`: every saved resume, including the optional `meta` of AI-tailored resumes
+The payload includes:
 
-A plain array of resumes is also accepted.
+- `version`: simple schema versioning for future migrations
+- `exportedAt`: timestamp of the backup generation
+- `activeId`: the currently selected resume
+- `cvs`: the complete list of saved resumes
 
-## Restoring
+## Import flow
 
-1. The file is read and validated (`parseBackupFile`).
-2. A dialog shows how many resumes the file has, their titles and the backup date.
-3. The user chooses:
-   - **Add to my resumes** (default, focused first): keeps the current resumes and adds the ones from the file. A restored resume whose id already exists gets a new id and the suffix "(restaurado)" / "(restored)" (`mergeImportedCVs`).
-   - **Replace everything**: deletes the current resumes and keeps only the file's. The dialog says how many resumes will be deleted.
-4. The result is announced in a notice (`role="status"`); errors use `role="alert"`. There are no `alert()` popups.
+The import button opens a local file picker and accepts either:
 
-## Validation
+- an array of resumes, or
+- an object with `cvs` and optional `activeId`
 
-A resume is accepted when it has:
+During import, the application:
 
-- a non-empty `id`
-- a `title` or a `fullName` (the name becomes the title when the title is missing)
-- `education` and `experience` lists
+1. parses the JSON file
+2. validates the minimum resume fields
+3. restores the saved list into application state
+4. updates `localStorage` automatically through the existing storage hook
 
-Empty text fields (address, phone, links...) are normal and are kept empty. Missing optional lists (projects, references) become empty lists.
+If the backup contains a valid `activeId`, the app restores that resume as active. Otherwise it falls back to the first imported resume.
 
-If no resume in the file passes, the user sees why: the file is not JSON, or it is not a backup from this app.
+## Validation rules
+
+The import is intentionally strict on the essential fields:
+
+- `id`
+- `title`
+- `fullName`
+- `jobTitle`
+- `address`
+- `phone`
+- `email`
+- `linkedin`
+- `objective`
+- `skills`
+- `education`
+- `experience`
+
+Optional fields such as projects, references, languages, soft skills, and social links are normalized when missing.
 
 ## Storage behavior
 
-After restoring, the list is written back to `localStorage` by `useCVStorage` and editing continues to autosave as before.
+Importing does not replace the persistence model. After the state is restored:
+
+- the resume list is written back to `localStorage`
+- the selected resume id is saved separately
+- normal editing continues to autosave as before
+
+## UI placement
+
+The actions are exposed in the header for both desktop and mobile:
+
+- Import JSON
+- Export JSON
+- Download Resume
+
+This keeps the feature visible without duplicating logic across the application.

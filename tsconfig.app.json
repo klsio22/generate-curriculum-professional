@@ -24,12 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-
-    /* Path alias (mirrors resolve.alias in vite.config.ts) */
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src"]
 }

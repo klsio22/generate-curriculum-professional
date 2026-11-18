@@ -1,4 +1,4 @@
-import type { CVData } from '@/types/cv';
+import type { CVData } from '../types';
 
 export const defaultCV: CVData = {
   fullName: 'Catarina Dantas',
