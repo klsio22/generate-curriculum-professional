@@ -23,6 +23,8 @@ Below is the purpose of the main libraries used by the application.
 - `tailwindcss` and `@tailwindcss/vite`: utility-first styling, used for layout around the antd components.
 - `globals`, `@types/react`, `@types/react-dom`, `@types/node`: environment and type support.
 
+The build (`vite.config.ts`) splits vendor code into chunks: `react`, `pdf` (`@react-pdf/renderer`, heavy, which is why the chunk size warning limit is raised), `ui` and `antd`. Libraries change less often than the app code, so browsers keep those chunks cached between releases.
+
 ## Dependencies by Area
 
 ### Form

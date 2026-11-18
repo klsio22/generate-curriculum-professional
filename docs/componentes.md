@@ -7,7 +7,7 @@ This document describes the responsibility of each component and core module.
 Screens are built with [Ant Design 6](https://ant.design/components/overview) (`antd`): `Button`, `Input`, `Select`, `AutoComplete`, `Checkbox`, `Form.Item`, `Modal`, `Drawer`, `Dropdown`, `Alert`, `Tag`, `Steps`, `Table`, `Collapse`, `Descriptions`, `Segmented`, `Card`, plus `App.useApp()` for `message`, `notification` and `modal.confirm`. Tailwind is kept for layout (grids, spacing, the header, the PDF preview area).
 
 - **Setup** (`src/app/AntdProvider.tsx`): theme with the app's indigo as primary color, darker on hover so buttons stay crisp; antd locale follows the i18n language (pt-BR / en); `StyleProvider layer` puts antd styles in `@layer antd`, and `src/styles/index.css` orders the layers `theme, base, antd, components, utilities`, so Tailwind utility classes can still adjust antd components.
-- **Rule**: raw `<button>`, `<input>`, `<select>`, `<textarea>` and `<label>` are not allowed in `src/app`, `src/features` (except `pdf`) and `src/shared` (`no-restricted-syntax` in `eslint.config.js`). The only exception is the hidden file picker of the backup menu, with a comment.
+- **Rule**: raw `<button>`, `<input>`, `<select>`, `<textarea>` and `<label>` are not allowed in `src/app`, `src/features` (except `pdf`) and `src/shared` (`no-restricted-syntax` in `eslint.config.js`). The only exception is the hidden file picker of the backup menu (the native file picker has no antd equivalent that a menu item can open), allowed with `eslint-disable-next-line`.
 - **Labels**: fields use `Form.Item label` + `htmlFor`, inside `<Form layout="vertical" component={false}>` when there is no real form.
 - **Keyboard**: antd `Modal` and `Drawer` keep focus inside, close on Escape and return focus. For `Dropdown` menus, `useFocusReturn` gives focus back to the menu button after Escape.
 
@@ -79,6 +79,8 @@ Responsibilities:
 - format external links and multi-line text blocks
 - apply PDF styles from `pdfStyles.ts`
 
+In multi-line text blocks, a line ending with `:` becomes a subheading and the lines after it are indented items until the next empty line; other lines are plain paragraphs.
+
 ## PDFPreview.tsx
 
 PDF preview container.
@@ -89,11 +91,11 @@ Responsibilities:
 - display the resume in a layout similar to final output
 - provide the central preview area on the right column
 
-## Sidebar.tsx
-
 Building the PDF is expensive and reloads the viewer, so the preview is wrapped in `memo` and keeps the same document element until the resume data or the language change: opening menus, dialogs or notices does not rebuild it. While typing, it waits for a 400 ms pause (`useDebouncedValue`) before building it again.
 
 The header's "Download" button builds the PDF only when clicked (`downloadResumePdf` in `src/features/pdf/downloadPdf.tsx`), instead of keeping a `PDFDownloadLink` that rebuilt it on every change.
+
+## Sidebar.tsx
 
 Side panel for resume management: an antd `Drawer` from the left, with the dark theme (`theme.darkAlgorithm` in a nested `ConfigProvider`).
 
