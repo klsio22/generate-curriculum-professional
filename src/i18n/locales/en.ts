@@ -23,6 +23,8 @@ export const en = {
     email: 'Email',
     phone: 'Phone',
     address: 'Address',
+    linkUrl: 'Link (address)',
+    linkDisplayName: 'Display name',
     linkedin: 'LinkedIn',
     linkedinPlaceholder: 'Ex: linkedin.com/in/your-profile',
     linkedinName: 'Display name (LinkedIn)',

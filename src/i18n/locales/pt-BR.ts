@@ -23,6 +23,8 @@ export const ptBR = {
     email: 'Email',
     phone: 'Telefone',
     address: 'Endereço',
+    linkUrl: 'Link (endereço)',
+    linkDisplayName: 'Nome a exibir',
     linkedin: 'LinkedIn',
     linkedinPlaceholder: 'Ex: linkedin.com/in/seu-perfil',
     linkedinName: 'Nome a exibir (LinkedIn)',

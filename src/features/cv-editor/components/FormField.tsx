@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Controller, type Control, type Path } from 'react-hook-form';
 import { Form, Input } from 'antd';
 import type { CVData } from '@/types/cv';
@@ -10,13 +11,13 @@ export interface FormFieldProps {
   rows?: number;
   type?: 'text' | 'email';
   hideLabel?: boolean;
-  secondary?: boolean;
+  prefix?: ReactNode;
   onSave: () => void;
 }
 
 const fieldId = (name: string) => name.replaceAll('.', '-');
 
-export const FormField = ({ control, name, label, placeholder, rows, type = 'text', hideLabel, secondary, onSave }: FormFieldProps) => {
+export const FormField = ({ control, name, label, placeholder, rows, type = 'text', hideLabel, prefix, onSave }: FormFieldProps) => {
   const id = fieldId(name);
   return (
     <Controller
@@ -39,13 +40,13 @@ export const FormField = ({ control, name, label, placeholder, rows, type = 'tex
         const input = rows ? (
           <Input.TextArea {...common} autoSize={{ minRows: rows }} />
         ) : (
-          <Input {...common} type={type} />
+          <Input {...common} type={type} prefix={prefix} />
         );
         return (
           <Form.Item
             label={hideLabel ? undefined : label}
             htmlFor={id}
-            className={secondary ? 'mb-0 [&_label]:text-xs [&_label]:text-gray-500' : 'mb-0'}
+            className="mb-0"
           >
             {input}
           </Form.Item>

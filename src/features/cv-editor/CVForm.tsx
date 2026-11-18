@@ -1,7 +1,9 @@
-import { Fragment } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { useFieldArray, type Control, type Path } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Card, Form } from 'antd';
+import { Globe } from 'lucide-react';
+import { GithubIcon, LinkedinIcon } from '@/shared/components/BrandIcons';
 import type { CVData } from '@/types/cv';
 import { FormField } from './components/FormField';
 import { FormSection } from './components/FormSection';
@@ -23,7 +25,11 @@ interface FieldSpec {
 
 interface PersonalFieldSpec extends FieldSpec {
   key: Path<CVData>;
-  display?: { key: Path<CVData>; label: string; placeholder: string };
+}
+
+interface LinkFieldSpec extends PersonalFieldSpec {
+  icon: ComponentType<{ size?: number; className?: string }>;
+  display: { key: Path<CVData>; label: string; placeholder: string };
 }
 
 const PERSONAL: PersonalFieldSpec[] = [
@@ -32,25 +38,33 @@ const PERSONAL: PersonalFieldSpec[] = [
   { key: 'email', label: 'form.email', type: 'email' },
   { key: 'phone', label: 'form.phone' },
   { key: 'address', label: 'form.address', wide: true },
+];
+
+const LINKS: LinkFieldSpec[] = [
   {
     key: 'linkedin',
     label: 'form.linkedin',
     placeholder: 'form.linkedinPlaceholder',
+    icon: LinkedinIcon,
     display: { key: 'linkedinName', label: 'form.linkedinName', placeholder: 'form.linkedinNamePlaceholder' },
   },
   {
     key: 'github',
     label: 'form.github',
     placeholder: 'form.githubPlaceholder',
+    icon: GithubIcon,
     display: { key: 'githubName', label: 'form.githubName', placeholder: 'form.githubNamePlaceholder' },
   },
   {
     key: 'portfolio',
     label: 'form.portfolio',
     placeholder: 'form.portfolioPlaceholder',
+    icon: Globe,
     display: { key: 'portfolioName', label: 'form.portfolioName', placeholder: 'form.portfolioNamePlaceholder' },
   },
 ];
+
+const LINK_ROW = 'grid grid-cols-[1.6fr_1fr] items-end gap-3';
 
 const EXPERIENCE: FieldSpec[] = [
   { key: 'company', label: 'form.company' },
@@ -106,7 +120,7 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
 
   const saveSoon = () => setTimeout(onSave, 0);
 
-  const field = (name: Path<CVData>, spec: Omit<FieldSpec, 'key'>, extra: { hideLabel?: boolean; secondary?: boolean } = {}) => (
+  const field = (name: Path<CVData>, spec: Omit<FieldSpec, 'key'>, extra: { hideLabel?: boolean; prefix?: ReactNode } = {}) => (
     <FormField
       control={control}
       name={name}
@@ -132,14 +146,25 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
   return (
     <Card className="shadow-sm">
       <Form layout="vertical" component={false}>
-        <div className="space-y-8">
+        <div className="[&>section+section]:mt-6 [&>section+section]:border-t [&>section+section]:border-zinc-100 [&>section+section]:pt-6">
           <FormSection title={t('form.personalData')}>
             <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
               {PERSONAL.map((spec) => (
-                <Fragment key={spec.key}>
-                  <div className={spec.wide ? 'md:col-span-2' : undefined}>{field(spec.key, spec)}</div>
-                  {spec.display && <div>{field(spec.display.key, spec.display, { secondary: true })}</div>}
-                </Fragment>
+                <div key={spec.key} className={spec.wide ? 'md:col-span-2' : undefined}>
+                  {field(spec.key, spec)}
+                </div>
+              ))}
+            </div>
+            <div className="mt-1 space-y-2">
+              <div className={`${LINK_ROW} text-sm text-gray-700`} aria-hidden>
+                <span>{t('form.linkUrl')}</span>
+                <span>{t('form.linkDisplayName')}</span>
+              </div>
+              {LINKS.map(({ icon: Icon, ...spec }) => (
+                <div key={spec.key} className={LINK_ROW}>
+                  {field(spec.key, spec, { hideLabel: true, prefix: <Icon size={16} className="text-gray-400" aria-hidden /> })}
+                  {field(spec.display.key, spec.display, { hideLabel: true })}
+                </div>
               ))}
             </div>
           </FormSection>
