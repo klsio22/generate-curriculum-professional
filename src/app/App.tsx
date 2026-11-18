@@ -22,6 +22,11 @@ import {
 } from '@/features/backup/backup';
 import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
 import { ImportPdfModal, type PdfImportState } from '@/features/pdf-import/ImportPdfModal';
+import { BackupMenu } from '@/features/backup/BackupMenu';
+import { AISettingsButton } from '@/features/ai/AISettingsButton';
+import { TailorButton } from '@/features/ai/TailorButton';
+import { DownloadPdfButton } from '@/features/pdf/DownloadPdfButton';
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { pdfImportErrorCode } from '@/features/pdf-import/pdfImportError';
 
 function App() {
@@ -50,6 +55,8 @@ function App() {
   const pdfImportRunRef = useRef(0);
   const { modal, message, notification } = AntdApp.useApp();
   const aiSettings = useAISettings();
+  const isPushLayout = useMediaQuery('(min-width: 1280px)');
+  const isSidebarPushed = isPushLayout && isSidebarOpen;
 
   const initialValues = activeCV ?? emptyCV;
   const { control, reset, getValues } = useForm<CVData>({
@@ -169,6 +176,18 @@ function App() {
     showNotice('success', t('pdfImport.created', { title }));
   };
 
+  const pdfTitle = activeCV?.title || 'meu_curriculo';
+  const handleDownloadError = () => showNotice('error', t('header.downloadError'));
+
+  const closeSidebarIfOverlay = () => {
+    if (!isPushLayout) setIsSidebarOpen(false);
+  };
+
+  const handleOpenAISettings = () => {
+    closeSidebarIfOverlay();
+    setShowAISettings(true);
+  };
+
   const handleSaveTailored = (cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
     addCV(cv);
     showNotice('success', t('ai.tailor.saved', { title: cv.title }));
@@ -182,22 +201,29 @@ function App() {
         activeId={activeId}
         onSelect={(id) => {
           setActiveId(id);
-          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+          closeSidebarIfOverlay();
         }}
         onCreate={() => {
           createCV();
-          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+          closeSidebarIfOverlay();
         }}
         onDuplicate={(id: string) => {
           duplicateCV(id);
-          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+          closeSidebarIfOverlay();
         }}
         onRename={(id, title) => updateCV(id, { title })}
         onMove={moveCV}
         onRequestDelete={handleRequestDelete}
         onRequestClear={handleRequestClear}
         isOpen={isSidebarOpen}
-        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        isPushed={isPushLayout}
+        onClose={() => setIsSidebarOpen(false)}
+        footerActions={
+          <>
+            <AISettingsButton isConfigured={aiSettings.isConfigured} onClick={handleOpenAISettings} />
+            <BackupMenu onSaveBackup={handleSaveBackup} onRestoreFile={handleRestoreFile} onImportPdf={handleImportPdf} />
+          </>
+        }
       />
 
       <div>
@@ -241,22 +267,24 @@ function App() {
         <ImportPdfModal state={pdfImport} onCreate={handleCreateFromPdf} onCancel={handleCancelPdfImport} />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-300 ${isSidebarPushed ? 'pl-72' : ''}`}
+      >
         <AppHeader
           data={data}
-          activeTitle={activeCV?.title || 'meu_curriculo'}
-          onRestoreFile={handleRestoreFile}
-          onImportPdf={handleImportPdf}
-          onSaveBackup={handleSaveBackup}
-          onDownloadError={() => showNotice('error', t('header.downloadError'))}
-          onOpenAISettings={() => setShowAISettings(true)}
+          activeTitle={pdfTitle}
+          onDownloadError={handleDownloadError}
           onOpenTailor={() => setShowTailor(true)}
-          isAIConfigured={aiSettings.isConfigured}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
         <main className="flex-1 mx-auto w-full p-4 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <div className="space-y-6">
+              <div className="md:hidden">
+                <TailorButton size="large" block onClick={() => setShowTailor(true)} />
+              </div>
               <h2 className="text-xl font-semibold text-gray-700">
                 {t('header.edit')}
               </h2>
@@ -299,6 +327,16 @@ function App() {
             </div>
           </div>
         </main>
+
+        <div className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
+          <DownloadPdfButton
+            data={data}
+            activeTitle={pdfTitle}
+            onError={handleDownloadError}
+            size="large"
+            block
+          />
+        </div>
       </div>
     </div>
   );
