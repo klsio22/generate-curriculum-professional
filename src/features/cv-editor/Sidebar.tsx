@@ -53,7 +53,7 @@ interface SidebarProps {
 
 const iconColor = (isAI: boolean, isActive: boolean) => {
   if (isAI) return 'text-amber-300';
-  return isActive ? 'text-indigo-400' : 'text-gray-400';
+  return isActive ? 'text-purple-300' : 'text-gray-400';
 };
 
 const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
@@ -159,6 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           size={288}
           title={t('sidebar.title')}
           closable={{ 'aria-label': t('sidebar.closeSidebar') }}
+          classNames={{ body: 'scrollbar-thin' }}
           styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column' } }}
           footer={
             <div className="flex flex-col items-center gap-1 py-1">
@@ -187,7 +188,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             accessibility={{ announcements, screenReaderInstructions: { draggable: t('sidebar.dnd.instructions') } }}
           >
             <SortableContext items={cvs.map((cv) => cv.id)} strategy={verticalListSortingStrategy}>
-              <ul aria-label={t('sidebar.listLabel')} className="-mx-1 flex-1 space-y-2 overflow-y-auto px-1 pb-2">
+              <ul
+                aria-label={t('sidebar.listLabel')}
+                className="scrollbar-thin -mx-1 min-h-0 flex-1 space-y-2 overflow-y-auto px-1 pb-2"
+              >
                 {cvs.map((cv, index) => (
                   <SortableResumeItem
                     key={cv.id}
@@ -245,9 +249,9 @@ const SortableResumeItem = ({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`group relative flex items-start gap-1 rounded border-l-4 py-2 pl-1 pr-1 transition-colors ${
-        isActive ? 'border-indigo-500 bg-gray-800' : 'border-transparent hover:bg-gray-800'
-      } ${isDragging ? 'z-10 shadow-lg ring-1 ring-indigo-400 bg-gray-800' : ''}`}
+      className={`group relative flex items-start gap-1 rounded border-l-2 py-2 pl-1 pr-1 transition-colors ${
+        isActive ? 'border-purple-400 bg-white/10' : 'border-transparent hover:bg-white/5'
+      } ${isDragging ? 'z-10 bg-zinc-800 shadow-lg ring-1 ring-purple-400' : ''}`}
     >
       <Button
         ref={setActivatorNodeRef}
@@ -272,7 +276,9 @@ const SortableResumeItem = ({
         >
           <Icon size={18} aria-hidden className={`mt-0.5 shrink-0 ${iconColor(isAI, isActive)}`} />
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="line-clamp-2 text-sm font-medium leading-snug">{cv.title}</span>
+            <span className={`line-clamp-2 text-sm leading-snug ${isActive ? 'font-semibold text-white' : 'font-medium'}`}>
+              {cv.title}
+            </span>
             {isAI && <span className="sr-only">{t('sidebar.aiTailored')}</span>}
             {subtitle && <span className="truncate text-xs text-gray-300">{subtitle}</span>}
             <span className="text-xs text-gray-500">{new Date(cv.updatedAt).toLocaleDateString(dateLocale)}</span>
@@ -284,11 +290,10 @@ const SortableResumeItem = ({
         <Button
           ref={menuTriggerRef}
           type="text"
-          size="small"
           aria-label={t('sidebar.actionsFor', { title: cv.title })}
           title={t('sidebar.actionsFor', { title: cv.title })}
           icon={<MoreHorizontal size={18} aria-hidden />}
-          className="mt-1"
+          className="h-10 w-10 shrink-0 lg:h-8 lg:w-8"
         />
       </Dropdown>
     </li>
