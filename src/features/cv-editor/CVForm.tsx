@@ -1,26 +1,18 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType } from 'react';
 import { useFieldArray, type Control, type Path } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Card, Form } from 'antd';
 import { Globe } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '@/shared/components/BrandIcons';
 import type { CVData } from '@/types/cv';
-import { FormField } from './components/FormField';
 import { FormSection } from './components/FormSection';
+import { ItemGrid } from './components/ItemGrid';
 import { RepeatableList } from './components/RepeatableList';
+import { SpecField, type FieldContext, type FieldSpec } from './components/SpecField';
 
 interface CVFormProps {
   control: Control<CVData>;
   onSave: () => void;
-}
-
-interface FieldSpec {
-  key: string;
-  label: string;
-  placeholder?: string;
-  rows?: number;
-  type?: 'email';
-  wide?: boolean;
 }
 
 interface PersonalFieldSpec extends FieldSpec {
@@ -120,28 +112,7 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
 
   const saveSoon = () => setTimeout(onSave, 0);
 
-  const field = (name: Path<CVData>, spec: Omit<FieldSpec, 'key'>, extra: { hideLabel?: boolean; prefix?: ReactNode } = {}) => (
-    <FormField
-      control={control}
-      name={name}
-      label={t(spec.label)}
-      placeholder={spec.placeholder ? t(spec.placeholder) : undefined}
-      rows={spec.rows}
-      type={spec.type}
-      onSave={onSave}
-      {...extra}
-    />
-  );
-
-  const itemGrid = (section: string, index: number, specs: FieldSpec[], columns = 'md:grid-cols-2') => (
-    <div className={`grid grid-cols-1 gap-4 ${columns}`}>
-      {specs.map((spec) => (
-        <div key={spec.key} className={spec.wide ? 'md:col-span-2' : undefined}>
-          {field(`${section}.${index}.${spec.key}` as Path<CVData>, spec)}
-        </div>
-      ))}
-    </div>
-  );
+  const fieldContext: FieldContext = { control, onSave };
 
   return (
     <Card className="shadow-sm">
@@ -151,7 +122,7 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
             <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
               {PERSONAL.map((spec) => (
                 <div key={spec.key} className={spec.wide ? 'md:col-span-2' : undefined}>
-                  {field(spec.key, spec)}
+                  <SpecField {...fieldContext} name={spec.key} spec={spec} />
                 </div>
               ))}
             </div>
@@ -162,15 +133,26 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
               </div>
               {LINKS.map(({ icon: Icon, ...spec }) => (
                 <div key={spec.key} className={LINK_ROW}>
-                  {field(spec.key, spec, { hideLabel: true, prefix: <Icon size={16} className="text-gray-400" aria-hidden /> })}
-                  {field(spec.display.key, spec.display, { hideLabel: true })}
+                  <SpecField
+                    {...fieldContext}
+                    name={spec.key}
+                    spec={spec}
+                    hideLabel
+                    prefix={<Icon size={16} className="text-gray-400" aria-hidden />}
+                  />
+                  <SpecField {...fieldContext} name={spec.display.key} spec={spec.display} hideLabel />
                 </div>
               ))}
             </div>
           </FormSection>
 
           <FormSection title={t('form.objective')}>
-            {field('objective', { label: 'form.objective', placeholder: 'form.objectivePlaceholder', rows: 6 }, { hideLabel: true })}
+            <SpecField
+              {...fieldContext}
+              name="objective"
+              spec={{ label: 'form.objective', placeholder: 'form.objectivePlaceholder', rows: 6 }}
+              hideLabel
+            />
           </FormSection>
 
           <FormSection title={t('form.experience')}>
@@ -186,7 +168,7 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
                 experience.remove(index);
                 saveSoon();
               }}
-              renderItem={(index) => itemGrid('experience', index, EXPERIENCE)}
+              renderItem={(index) => <ItemGrid {...fieldContext} section="experience" index={index} specs={EXPERIENCE} />}
             />
           </FormSection>
 
@@ -203,7 +185,7 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
                 education.remove(index);
                 saveSoon();
               }}
-              renderItem={(index) => itemGrid('education', index, EDUCATION)}
+              renderItem={(index) => <ItemGrid {...fieldContext} section="education" index={index} specs={EDUCATION} />}
             />
           </FormSection>
 
@@ -220,13 +202,13 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
                 projects.remove(index);
                 saveSoon();
               }}
-              renderItem={(index) => itemGrid('projects', index, PROJECTS)}
+              renderItem={(index) => <ItemGrid {...fieldContext} section="projects" index={index} specs={PROJECTS} />}
             />
           </FormSection>
 
           {TEXT_SECTIONS.map((section) => (
             <FormSection key={section.key} title={t(section.label)}>
-              {field(section.key, section, { hideLabel: true })}
+              <SpecField {...fieldContext} name={section.key} spec={section} hideLabel />
             </FormSection>
           ))}
 
@@ -243,7 +225,7 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
                 references.remove(index);
                 saveSoon();
               }}
-              renderItem={(index) => itemGrid('references', index, REFERENCES, 'md:grid-cols-3')}
+              renderItem={(index) => <ItemGrid {...fieldContext} section="references" index={index} specs={REFERENCES} columns="md:grid-cols-3" />}
             />
           </FormSection>
         </div>
