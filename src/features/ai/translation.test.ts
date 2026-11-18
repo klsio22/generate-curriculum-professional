@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { CVData } from '@/types/cv';
 import { AIError } from './client';
 import { buildTranslateMessages } from './prompts';
-import { mergeTranslatedCV } from './translation';
+import { mergeTranslatedCV, prepareTailorBase } from './translation';
+import type { AISettings } from './types';
 
 const base: CVData = {
   fullName: 'Ana Souza',
@@ -140,5 +141,41 @@ describe('buildTranslateMessages', () => {
       expect(user.content).not.toContain(secret);
     }
     expect(user.content).toContain('Ciência da Computação');
+  });
+});
+
+describe('prepareTailorBase', () => {
+  const settings: AISettings = { provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'k', model: 'm' };
+  const answer = () =>
+    new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(translated) } }] }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  it('keeps the base resume when it is already in the output language', async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    const result = await prepareTailorBase(settings, base, 'pt-BR', 'en', { fetchImpl });
+
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(result).toEqual({ ...base, locale: 'pt-BR' });
+  });
+
+  it('translates the base resume first when the output language is different', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(answer());
+    const onTranslate = vi.fn();
+    const result = await prepareTailorBase(settings, base, 'en', 'pt-BR', { fetchImpl }, onTranslate);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(onTranslate).toHaveBeenCalledTimes(1);
+    expect(result.locale).toBe('en');
+    expect(result.experience[0].role).toBe('Developer');
+    expect(result.experience[0].company).toBe('Empresa Alfa');
+  });
+
+  it('does not translate to languages the app cannot set as resume language', async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    const result = await prepareTailorBase(settings, base, 'es', 'pt-BR', { fetchImpl });
+
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(result.locale).toBeUndefined();
   });
 });

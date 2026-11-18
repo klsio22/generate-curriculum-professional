@@ -208,6 +208,7 @@ export const ptBR = {
       analyze: 'Analisar vaga',
       analyzing: 'Analisando a vaga...',
       generate: 'Gerar currículo adaptado',
+      translatingBase: 'Traduzindo o currículo base para o idioma escolhido...',
       generating: 'Montando o currículo adaptado... isso pode levar até um minuto.',
       cancel: 'Cancelar',
       back: 'Voltar',

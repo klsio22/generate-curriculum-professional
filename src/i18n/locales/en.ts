@@ -208,6 +208,7 @@ export const en = {
       analyze: 'Analyze job',
       analyzing: 'Analyzing the job...',
       generate: 'Generate tailored resume',
+      translatingBase: 'Translating the base resume to the chosen language...',
       generating: 'Building the tailored resume... this can take up to a minute.',
       cancel: 'Cancel',
       back: 'Back',
