@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDialogFocus } from './useDialogFocus';
 
 type ModalSize = 'md' | 'lg' | 'xl';
 
@@ -24,9 +25,6 @@ const SIZE_CLASS: Record<ModalSize, string> = {
   xl: 'max-w-4xl',
 };
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   title,
@@ -42,49 +40,7 @@ export const Modal: React.FC<ModalProps> = ({
   const { t } = useTranslation();
   const titleId = React.useId();
   const panelRef = React.useRef<HTMLDivElement>(null);
-  const onCancelRef = React.useRef(onCancel);
-
-  React.useEffect(() => {
-    onCancelRef.current = onCancel;
-  }, [onCancel]);
-
-  // Move focus into the dialog, keep Tab inside it, close on Escape and
-  // give focus back to the element that opened it.
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const panel = panelRef.current;
-    const focusables = () => Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
-
-    const autoFocus = panel?.querySelector<HTMLElement>('[data-autofocus]');
-    (autoFocus ?? focusables()[0] ?? panel)?.focus();
-
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onCancelRef.current?.();
-        return;
-      }
-      if (e.key !== 'Tab') return;
-      const items = focusables();
-      if (items.length === 0) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      previouslyFocused?.focus?.();
-    };
-  }, [isOpen]);
+  useDialogFocus(panelRef, isOpen, onCancel);
 
   if (!isOpen) return null;
 
