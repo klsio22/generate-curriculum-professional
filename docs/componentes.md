@@ -16,12 +16,13 @@ Files are grouped by feature:
 | Folder | Files |
 |---|---|
 | `src/app/` | `App.tsx`, `AppHeader.tsx`, `AntdProvider.tsx` |
-| `src/features/cv-editor/` | `CVForm.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts`, `components/FormField.tsx`, `components/FormSection.tsx`, `components/RepeatableList.tsx` |
+| `src/features/cv-editor/` | `CVForm.tsx`, `DocumentSettings.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts`, `components/FormField.tsx`, `components/FormSection.tsx`, `components/RepeatableList.tsx` |
 | `src/features/pdf/` | `CVDocument.tsx`, `PDFPreview.tsx`, `DownloadPdfButton.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
 | `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `RestoreBackupModal.tsx` |
 | `src/features/pdf-import/` | `extractPdf.ts`, `parseResume.ts`, `importResumePdf.ts`, `ImportPdfModal.tsx` |
-| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorButton.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx` |
-| `src/shared/components/` | `StatusAlert.tsx`, `LanguageSelector.tsx`, `useFocusReturn.ts` |
+| `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `TailorButton.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx`, `ResumeComparison.tsx`, `translation.ts`, `TranslateModal.tsx` |
+| `src/shared/` | `locale.ts` (resume language), `text.ts` |
+| `src/shared/components/` | `StatusAlert.tsx`, `LanguageSelector.tsx`, `LocaleFlag.tsx`, `useFocusReturn.ts` |
 | `src/shared/hooks/` | `useDebouncedValue.ts`, `useMediaQuery.ts` |
 | `src/types/` | `cv.ts` (resume data types) |
 
@@ -81,6 +82,7 @@ Responsibilities:
 - render conditional sections based on filled data
 - format external links and multi-line text blocks
 - apply PDF styles from `pdfStyles.ts`
+- write section titles, labels and metadata in the resume's language (`locale`), not the interface language; a resume without `locale` follows the interface (`resumeLocaleOf` in `src/shared/locale.ts`, `i18n.getFixedT`)
 
 In multi-line text blocks, a line ending with `:` becomes a subheading and the lines after it are indented items until the next empty line; other lines are plain paragraphs.
 
@@ -98,6 +100,10 @@ Building the PDF is expensive and reloads the viewer, so the preview is wrapped 
 
 The "Download" button (`DownloadPdfButton`, in the header and in the bottom bar on small screens) builds the PDF only when clicked (`downloadResumePdf` in `src/features/pdf/downloadPdf.tsx`), instead of keeping a `PDFDownloadLink` that rebuilt it on every change.
 
+## DocumentSettings.tsx
+
+Card above the form with the document name and the **resume language** (antd `Select` with a flag). The language sets the PDF's section titles and metadata; changing it does not translate the content (use "Translate" in the resume menu for that).
+
 ## Sidebar.tsx
 
 Side panel for resume management: an antd `Drawer` from the left, with the dark theme (`theme.darkAlgorithm` in a nested `ConfigProvider`).
@@ -108,7 +114,7 @@ Responsibilities:
 
 - list saved resumes in the user's order, select the active one, create a new one
 - reorder: drag by the handle on desktop (`@dnd-kit`, also with the keyboard: Space, arrows, Space; Escape cancels; moves are announced to screen readers), or "Move up" / "Move down" in the ⋯ menu on any screen size (on small screens the handle is hidden and the menu is the way to move)
-- ⋯ menu per resume (antd `Dropdown`): rename (inline field: Enter or leaving saves, Escape cancels), duplicate, move up, move down, delete; Escape returns focus to the ⋯ button
+- ⋯ menu per resume (antd `Dropdown`): rename (inline field: Enter or leaving saves, Escape cancels), duplicate, translate to the other language (the label says which one, from `detectResumeLocale`), move up, move down, delete; Escape returns focus to the ⋯ button
 - AI-tailored resumes show a ✨ icon, the job as title and the company on the line below
 - the current resume has a lighter background, a thin purple bar on the left and a bold title
 - the list scrolls on its own with a thin scrollbar (`scrollbar-thin` utility in `src/styles/index.css`), so "New resume" and the footer stay in place; the ⋯ button is 40 px on touch screens
@@ -137,7 +143,9 @@ See `importar-pdf.md`. While the PDF is read it shows a progress message; then t
 
 ## AISettingsDrawer.tsx / ModelCombobox.tsx / TailorJobModal.tsx / TailorResultView.tsx
 
-See `ia-adaptacao-vaga.md`. Settings: provider, key, model, connection test, forget key. The settings open in an antd `Drawer` from the right; when opened from "Tailor to a job", closing or saving goes back there. The key field keeps its own show/hide button (`aria-pressed`) because the eye icon of `Input.Password` cannot be reached with the keyboard. `ModelCombobox` is an antd `AutoComplete`: options grouped by company, rich rows drawn with `optionRender` (the field itself shows the plain id), filtering done in code by name, id and company, Enter picks the first match, Escape closes only the list. Tailoring (antd `Modal`): `Steps` for job → analysis → result, `Descriptions`, keyword `Tag`s, coverage `Table` and before/after `Collapse`.
+See `ia-adaptacao-vaga.md`. Settings: provider, key, model, connection test, forget key. The settings open in an antd `Drawer` from the right; when opened from "Tailor to a job", closing or saving goes back there. The key field keeps its own show/hide button (`aria-pressed`) because the eye icon of `Input.Password` cannot be reached with the keyboard. `ModelCombobox` is an antd `AutoComplete`: options grouped by company, rich rows drawn with `optionRender` (the field itself shows the plain id), filtering done in code by name, id and company, Enter picks the first match, Escape closes only the list. Tailoring (antd `Modal`): `Steps` for job → analysis → result, `Descriptions`, keyword `Tag`s, coverage `Table` and before/after `Collapse` (`ResumeComparison`, shared with the translation dialog).
+
+`TranslateModal.tsx`: intro (what is translated, what stays, that a copy is created) → translating (cancel) → before/after of every section and the new name → "Save as new resume". If AI is not configured, it offers the settings and comes back when they close.
 
 ## LanguageSelector.tsx
 
@@ -148,7 +156,7 @@ Responsibilities:
 - switch between `pt-BR` and `en`
 - persist selection in `localStorage`
 - reflect current language state in the UI
-- show a round flag for each language (Brazil, United States), drawn as inline SVG because flag emoji do not render on Windows; on small screens only the flag is shown, and the language name stays in `aria-label`
+- show a round flag for each language (Brazil, United States, `LocaleFlag`), drawn as inline SVG because flag emoji do not render on Windows; on small screens only the flag is shown, and the language name stays in `aria-label`
 
 ## useCVStorage.ts
 

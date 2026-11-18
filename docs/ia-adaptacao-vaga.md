@@ -45,14 +45,27 @@ The **Local proxy** provider is for an OpenAI-compatible server running on the u
 
 1. **Job**: choose the base resume, paste the posting (up to 15,000 characters) and the output language (default: same as the posting).
 2. **Analysis** (first AI call): role, company, seniority, main requirements and up to 30 keywords with priority (high / medium / low). Each keyword shows whether the base resume already mentions it.
-3. **Result** (second AI call): the tailored resume, reviewed before saving:
+3. **Result** (second AI call): the tailored resume, reviewed before saving. When the output language is Portuguese or English and the base resume is in the other one, the base resume is first translated (see below) and the tailoring works on the translated copy, so roles, courses, languages and dates do not stay in the old language (`prepareTailorBase` in `translation.ts`). The result then shows:
    - keyword coverage before → after, per keyword and per section
    - a warning for terms that were **not** in the base resume ("keep them only if they are true")
    - the number of invented items that were discarded
    - keywords the job asks for that the resume cannot support (add them to the base resume if they are true, then generate again)
    - the AI's own list of changes
    - a side-by-side comparison of every section
-4. **Save as new resume**: the copy is added to the list and opened for editing, with `meta` (target job, company, keywords, source resume).
+4. **Save as new resume**: the copy is added to the list and opened for editing, with `meta` (target job, company, keywords, source resume) and the resume language (`locale`), which sets the PDF's section titles.
+
+## Translate a resume
+
+"Translate to English / Portuguese" in the resume's ⋯ menu creates a **copy** in the other language; the original never changes. The source language is the resume's `locale`, or, for older resumes, a guess from the text (`detectResumeLocale` in `src/shared/locale.ts`).
+
+The AI translates the headline, summary, skills, soft and interpersonal skills, languages ("Inglês: avançado" → "English: advanced"), and in each experience, education and project: role, course, project name, dates and description. It keeps technologies, product names, certifications and acronyms as written. The user reviews a before/after of every section and the new name, then saves.
+
+`mergeTranslatedCV` (`translation.ts`) applies the answer on top of the original:
+
+- Contact data, links, companies, institutions, references and ids always come from the original; they are not even sent.
+- An item with an id the original does not have is discarded and counted; an item that comes back without translation keeps the original text and is counted, with a warning in the review.
+- A translated date is used only if its numbers are the same as the original's ("jan 2020" → "Jan 2020" is fine, "Jan 2021" is ignored).
+- An empty field stays empty; a field the AI leaves empty keeps the original text.
 
 ## Honesty guarantees (in code, not only in the prompt)
 

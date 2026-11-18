@@ -87,6 +87,7 @@ src/
 ├── features/
 │   ├── cv-editor/
 │   │   ├── CVForm.tsx ........... Resume editing form (built from field lists)
+│   │   ├── DocumentSettings.tsx . Document name and resume language
 │   │   ├── Sidebar.tsx .......... Resume list: reorder, rename, menu
 │   │   ├── useCVStorage.ts ...... Local persistence (full CRUD)
 │   │   ├── defaultCV.ts ......... Initial resume data
@@ -112,12 +113,17 @@ src/
 │       ├── AISettingsDrawer.tsx . Provider, key and model setup (side panel)
 │       ├── ModelCombobox.tsx .... Model field: search, groups, free filter
 │       ├── TailorJobModal.tsx ... Job → analysis → result dialog
-│       └── TailorResultView.tsx . Coverage table and before/after
+│       ├── TailorResultView.tsx . Coverage table and before/after
+│       ├── ResumeComparison.tsx . Before/after per section
+│       ├── translation.ts ....... Translate a resume (anti-invention merge)
+│       └── TranslateModal.tsx ... Translate dialog with review
 ├── shared/
+│   ├── locale.ts ................ Resume language: detect, fall back, guess from text
 │   └── components/
 │       ├── StatusAlert.tsx ...... Result banner with technical details
 │       ├── useFocusReturn.ts .... Focus back to the menu button after Escape
-│       └── LanguageSelector.tsx . Language switcher
+│       ├── LanguageSelector.tsx . Language switcher
+│       └── LocaleFlag.tsx ....... Round flag for PT / EN
 ├── i18n/
 │   ├── config.ts
 │   └── locales/

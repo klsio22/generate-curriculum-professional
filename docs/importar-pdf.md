@@ -23,6 +23,8 @@ The extraction and the reader are loaded only when the user imports a file (`imp
 
 The layout is known, so every field comes back: contact, links with display names, profile, experiences, education, projects (technologies, dates and link), skills, languages, soft skills, interpersonal competencies and references. A test generates the PDF with `CVDocument` in Portuguese and English, reads it back and compares each field (`roundTrip.test.tsx`).
 
+The new resume's language (`locale`) is guessed from the text with common Portuguese and English words (`guessTextLocale` in `src/shared/locale.ts`); the user can change it in "Resume language".
+
 ## LinkedIn PDFs
 
 "Save to PDF" on a LinkedIn profile is covered: sidebar (contact, top skills) and main column (name, headline, location, summary, experience, education). Tests use the same geometry with made-up data (`parseResume.test.ts`).
