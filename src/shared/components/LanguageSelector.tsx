@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Segmented } from 'antd';
-import { LocaleFlag } from './LocaleFlag';
+import { Button, Dropdown, type MenuProps } from 'antd';
+import { ChevronDown, Globe } from 'lucide-react';
+import { useFocusReturn } from './useFocusReturn';
 
 const LANGUAGES = [
   { value: 'pt-BR', short: 'PT', nameKey: 'language.pt' },
@@ -9,26 +10,42 @@ const LANGUAGES = [
 
 export const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
+  const { triggerRef, onOpenChange } = useFocusReturn();
+  const current = i18n.language === 'en' ? LANGUAGES[1] : LANGUAGES[0];
+  const label = `${t('language.label')}: ${t(current.nameKey)}`;
+
+  const items: MenuProps['items'] = LANGUAGES.map((language) => ({
+    key: language.value,
+    label: <span lang={language.value}>{t(language.nameKey)}</span>,
+  }));
 
   return (
-    <Segmented
-      shape="round"
-      aria-label={t('language.label')}
-      value={i18n.language === 'en' ? 'en' : 'pt-BR'}
-      onChange={(language) => {
-        void i18n.changeLanguage(language);
-        localStorage.setItem('language', language);
+    <Dropdown
+      trigger={['click']}
+      placement="bottomRight"
+      autoFocus
+      onOpenChange={onOpenChange}
+      menu={{
+        items,
+        selectable: true,
+        selectedKeys: [current.value],
+        onClick: ({ key }) => {
+          void i18n.changeLanguage(key);
+          localStorage.setItem('language', key);
+        },
       }}
-      options={LANGUAGES.map(({ value, short, nameKey }) => ({
-        value,
-        title: t(nameKey),
-        label: (
-          <span lang={value} aria-label={t(nameKey)} className="inline-flex items-center gap-1.5 align-middle font-medium">
-            <LocaleFlag locale={value} />
-            <span className="hidden md:inline">{short}</span>
-          </span>
-        ),
-      }))}
-    />
+    >
+      <Button
+        ref={triggerRef}
+        type="text"
+        icon={<Globe size={16} aria-hidden />}
+        aria-label={label}
+        title={label}
+        className="gap-1 px-2 text-gray-600"
+      >
+        <span aria-hidden>{current.short}</span>
+        <ChevronDown size={12} aria-hidden />
+      </Button>
+    </Dropdown>
   );
 };

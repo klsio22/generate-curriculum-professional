@@ -438,7 +438,7 @@ export const ptBR = {
     technicalDetails: 'Detalhes técnicos',
   },
   language: {
-    label: 'Idioma',
+    label: 'Idioma do site',
     pt: 'Português',
     en: 'English',
   },

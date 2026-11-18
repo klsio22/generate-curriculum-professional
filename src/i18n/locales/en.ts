@@ -438,7 +438,7 @@ export const en = {
     technicalDetails: 'Technical details',
   },
   language: {
-    label: 'Language',
+    label: 'Site language',
     pt: 'Português',
     en: 'English',
   },
