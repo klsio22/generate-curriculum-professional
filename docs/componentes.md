@@ -16,9 +16,9 @@ Files are grouped by feature:
 | Folder | Files |
 |---|---|
 | `src/app/` | `App.tsx`, `AppHeader.tsx`, `AntdProvider.tsx` |
-| `src/features/cv-editor/` | `CVForm.tsx`, `DocumentSettings.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts`, `components/FormField.tsx`, `components/FormSection.tsx`, `components/RepeatableList.tsx` |
-| `src/features/pdf/` | `CVDocument.tsx`, `PDFPreview.tsx`, `DownloadPdfButton.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
-| `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `RestoreBackupModal.tsx` |
+| `src/features/cv-editor/` | `CVForm.tsx`, `DocumentSettings.tsx`, `Sidebar.tsx`, `useCVStorage.ts`, `defaultCV.ts`, `components/FormField.tsx`, `components/SpecField.tsx`, `components/ItemGrid.tsx`, `components/FormSection.tsx`, `components/RepeatableList.tsx` |
+| `src/features/pdf/` | `CVDocument.tsx`, `Description.tsx`, `PDFPreview.tsx`, `DownloadPdfButton.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
+| `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `MenuItemLabel.tsx`, `RestoreBackupModal.tsx` |
 | `src/features/history/` | `history.ts`, `useCVHistory.ts`, `HistoryDrawer.tsx` |
 | `src/features/pdf-import/` | `extractPdf.ts`, `parseResume.ts`, `importResumePdf.ts`, `ImportPdfModal.tsx` |
 | `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `AIActions.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx`, `ResumeComparison.tsx`, `compareResumes.ts`, `translation.ts`, `TranslateModal.tsx`, `refine.ts`, `RefineChatDrawer.tsx` |
@@ -71,6 +71,8 @@ Responsibilities:
 
 Building blocks (`src/features/cv-editor/components/`):
 
+- `SpecField`: turns one entry of the field lists (label and placeholder keys, rows, type) into a translated `FormField`; receives `control` and `onSave` by props.
+- `ItemGrid`: the grid of `SpecField`s for one repeatable item (`experience.0.company`...), two columns by default; `wide` fields take the full row.
 - `FormField`: label + antd `Input` / `Input.TextArea` (grows with the text), bound to react-hook-form with a `Controller` (antd inputs do not expose the native element the way `register` expects). Saves on blur. `hideLabel` keeps the label for screen readers when the section title or a column header already names the field; `prefix` puts an icon inside a single-line field.
 - `FormSection`: section title.
 - `RepeatableList`: one `Card` per item ("Experience 1", "Experience 2"...) with a remove button that says what it removes, and a dashed "Add" button.
@@ -87,7 +89,7 @@ Responsibilities:
 - apply PDF styles from `pdfStyles.ts`
 - write section titles, labels and metadata in the resume's language, not the interface language: the chosen `locale`, else the language detected in the text, else the interface language (`detectResumeLocale` in `src/shared/locale.ts`, `i18n.getFixedT`)
 
-In multi-line text blocks, a line ending with `:` becomes a subheading and the lines after it are indented items until the next empty line; other lines are plain paragraphs.
+In multi-line text blocks (experience and project descriptions, interpersonal skills), a line ending with `:` becomes a bold subheading and the lines after it, until the next empty line, become indented items with a `•` marker and a hanging indent (a wrapped line aligns with the text, not the marker); a marker the user typed at the start of an item (`•`, `-`, `*`) is removed so it is not doubled. Other lines are plain paragraphs, as typed. The rule lives in `parseDescription` (`textUtils.ts`, pure and tested), which returns `subheading` / `item` / `paragraph` blocks; `Description.tsx` only draws them.
 
 ## PDFPreview.tsx
 
@@ -149,6 +151,8 @@ See the "History" section of `ia-adaptacao-vaga.md`. An antd `Drawer` from the r
 See `import-export-json.md`. The menu (antd `Dropdown`) explains backups in plain words; the modal (antd `Modal`) shows the file's content and offers "Add to my resumes" (focused first) or "Replace everything".
 
 The menu lives in the sidebar footer and opens upwards, with colors made for the dark panel. It also has "Import resume from PDF". Both file actions share the one hidden file picker, which switches its `accept` between `.json` and `.pdf`.
+
+Each menu item shows a title and a short help line (`MenuItemLabel.tsx`, colored with the antd theme token for descriptions).
 
 ## ImportPdfModal.tsx
 
