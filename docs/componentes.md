@@ -63,12 +63,14 @@ Responsibilities:
 
 - edit personal data, objective, skills, languages, soft skills and interpersonal competencies
 - add and remove repeatable blocks for experience, education, projects and references
+- sections are separated by a subtle line (`border-zinc-100`) with 24 px above and below
 - save on blur, and after adding or removing an item
-- in personal data, each link sits on its own row next to its "name shown" field (`[URL | name shown]`), with the address using the full width; the grid aligns fields by their bottom edge (`items-end`), so the inputs stay level even with labels of different sizes
+- personal data: name, headline, email, phone and address in a two-column grid aligned by the bottom edge (`items-end`); the address takes the full row
+- links (`LINKS`): one block with a single header "Link | Display name" and one row per network, `[URL | display name]` at `1.6fr 1fr`, with the network icon inside the URL field; each field keeps its full label for screen readers (`hideLabel`)
 
 Building blocks (`src/features/cv-editor/components/`):
 
-- `FormField`: label + antd `Input` / `Input.TextArea` (grows with the text), bound to react-hook-form with a `Controller` (antd inputs do not expose the native element the way `register` expects). Saves on blur. `hideLabel` keeps the label for screen readers when the section title already names the field; `secondary` is the smaller label of "name shown for this link".
+- `FormField`: label + antd `Input` / `Input.TextArea` (grows with the text), bound to react-hook-form with a `Controller` (antd inputs do not expose the native element the way `register` expects). Saves on blur. `hideLabel` keeps the label for screen readers when the section title or a column header already names the field; `prefix` puts an icon inside a single-line field.
 - `FormSection`: section title.
 - `RepeatableList`: one `Card` per item ("Experience 1", "Experience 2"...) with a remove button that says what it removes, and a dashed "Add" button.
 
@@ -82,7 +84,7 @@ Responsibilities:
 - render conditional sections based on filled data
 - format external links and multi-line text blocks
 - apply PDF styles from `pdfStyles.ts`
-- write section titles, labels and metadata in the resume's language (`locale`), not the interface language; a resume without `locale` follows the interface (`resumeLocaleOf` in `src/shared/locale.ts`, `i18n.getFixedT`)
+- write section titles, labels and metadata in the resume's language, not the interface language: the chosen `locale`, else the language detected in the text, else the interface language (`detectResumeLocale` in `src/shared/locale.ts`, `i18n.getFixedT`)
 
 In multi-line text blocks, a line ending with `:` becomes a subheading and the lines after it are indented items until the next empty line; other lines are plain paragraphs.
 
@@ -102,7 +104,9 @@ The "Download" button (`DownloadPdfButton`, in the header and in the bottom bar 
 
 ## DocumentSettings.tsx
 
-Card above the form with the document name and the **resume language** (antd `Select` with a flag). The language sets the PDF's section titles and metadata; changing it does not translate the content (use "Translate" in the resume menu for that).
+Card above the form with the document name and the **resume language** (antd `Select` with a flag), in a `1fr 180px` grid so both fields fill the column at the same height. The language sets the PDF's section titles and metadata; changing it does not translate the text.
+
+A resume without a chosen language uses the language detected in its text, then the interface language (`detectResumeLocale`). When the chosen language differs from the text's (`guessResumeLocale`), a compact info banner says that only the PDF titles change and, right below the text, offers "Translate the text to …" (opens the translate dialog) or "Keep …" (sets the language back to the text's).
 
 ## Sidebar.tsx
 
@@ -114,7 +118,7 @@ Responsibilities:
 
 - list saved resumes in the user's order, select the active one, create a new one
 - reorder: drag by the handle on desktop (`@dnd-kit`, also with the keyboard: Space, arrows, Space; Escape cancels; moves are announced to screen readers), or "Move up" / "Move down" in the ⋯ menu on any screen size (on small screens the handle is hidden and the menu is the way to move)
-- ⋯ menu per resume (antd `Dropdown`): rename (inline field: Enter or leaving saves, Escape cancels), duplicate, translate to the other language (the label says which one, from `detectResumeLocale`), move up, move down, delete; Escape returns focus to the ⋯ button
+- ⋯ menu per resume (antd `Dropdown`): rename (inline field: Enter or leaving saves, Escape cancels), duplicate, translate to the other language (the label says which one, from the language of the text, `contentLocaleOf`), move up, move down, delete; Escape returns focus to the ⋯ button
 - AI-tailored resumes show a ✨ icon, the job as title and the company on the line below
 - the current resume has a lighter background, a thin purple bar on the left and a bold title
 - the list scrolls on its own with a thin scrollbar (`scrollbar-thin` utility in `src/styles/index.css`), so "New resume" and the footer stay in place; the ⋯ button is 40 px on touch screens

@@ -56,7 +56,7 @@ The **Local proxy** provider is for an OpenAI-compatible server running on the u
 
 ## Translate a resume
 
-"Translate to English / Portuguese" in the resume's ⋯ menu creates a **copy** in the other language; the original never changes. The source language is the resume's `locale`, or, for older resumes, a guess from the text (`detectResumeLocale` in `src/shared/locale.ts`).
+"Translate to English / Portuguese" in the resume's ⋯ menu creates a **copy** in the other language; the original never changes. The source language is the language detected in the text, not the chosen resume language, so a resume written in English but set to Portuguese is translated from English (`contentLocaleOf` in `src/shared/locale.ts`). It can also be started from the banner that appears under "Resume language" when the chosen language and the text do not match.
 
 The AI translates the headline, summary, skills, soft and interpersonal skills, languages ("Inglês: avançado" → "English: advanced"), and in each experience, education and project: role, course, project name, dates and description. It keeps technologies, product names, certifications and acronyms as written. The user reviews a before/after of every section and the new name, then saves.
 
