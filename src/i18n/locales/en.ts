@@ -300,6 +300,7 @@ export const en = {
     technicalDetails: 'Technical details',
   },
   language: {
+    label: 'Language',
     pt: 'Português',
     en: 'English',
   },

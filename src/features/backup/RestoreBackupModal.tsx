@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Modal } from '@/shared/components/Modal';
+import { Alert, Button, Modal } from 'antd';
 import type { ParsedBackup } from './backup';
 
 interface RestoreBackupModalProps {
@@ -25,55 +25,54 @@ export const RestoreBackupModal = ({ backup, currentCount, onAdd, onReplace, onC
         })
       : null;
 
-  const footer = (
-    <>
-      <button type="button" onClick={onCancel} className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700">
-        {t('modal.cancel')}
-      </button>
-      <button
-        type="button"
-        onClick={onReplace}
-        className="px-4 py-2 rounded-md border border-red-300 text-red-700 hover:bg-red-50 text-sm"
-      >
-        {t('backup.replaceAll')}
-      </button>
-      <button
-        type="button"
-        data-autofocus
-        onClick={onAdd}
-        className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
-      >
-        {t('backup.addToMine')}
-      </button>
-    </>
-  );
+  const footer = [
+    <Button key="cancel" onClick={onCancel}>
+      {t('modal.cancel')}
+    </Button>,
+    <Button key="replace" danger onClick={onReplace}>
+      {t('backup.replaceAll')}
+    </Button>,
+    // The safe choice gets the focus first.
+    <Button key="add" type="primary" autoFocus onClick={onAdd}>
+      {t('backup.addToMine')}
+    </Button>,
+  ];
+
+  const listed = backup.cvs.slice(0, MAX_LISTED);
 
   return (
-    <Modal isOpen title={t('backup.restoreTitle')} onCancel={onCancel} footer={footer} size="lg">
+    <Modal open title={t('backup.restoreTitle')} onCancel={onCancel} footer={footer} width={640} destroyOnHidden>
       <div className="space-y-4">
         <p>
           {t('backup.fileContains', { count: backup.cvs.length })}
           {dateText && <> {t('backup.savedOn', { date: dateText })}</>}
         </p>
 
-        <ul className="list-disc space-y-1 pl-5 text-gray-800">
-          {backup.cvs.slice(0, MAX_LISTED).map((cv) => (
-            <li key={cv.id}>{cv.title}</li>
+        <ul className="divide-y divide-gray-100 rounded-md border border-gray-200">
+          {listed.map((cv) => (
+            <li key={cv.id} className="px-3 py-2 text-gray-800">
+              {cv.title}
+            </li>
           ))}
           {backup.cvs.length > MAX_LISTED && (
-            <li className="list-none text-gray-500">{t('backup.andMore', { count: backup.cvs.length - MAX_LISTED })}</li>
+            <li className="px-3 py-2 text-gray-500">{t('backup.andMore', { count: backup.cvs.length - MAX_LISTED })}</li>
           )}
         </ul>
 
-        <div className="space-y-2 rounded-md bg-gray-50 p-3">
-          <p>
-            <strong>{t('backup.addToMine')}:</strong> {t('backup.addHelp')}
-          </p>
-          <p>
-            <strong className="text-red-700">{t('backup.replaceAll')}:</strong>{' '}
-            {t('backup.replaceHelp', { count: currentCount })}
-          </p>
-        </div>
+        <Alert
+          type="info"
+          description={
+            <div className="space-y-2">
+              <p>
+                <strong>{t('backup.addToMine')}:</strong> {t('backup.addHelp')}
+              </p>
+              <p>
+                <strong className="text-red-700">{t('backup.replaceAll')}:</strong>{' '}
+                {t('backup.replaceHelp', { count: currentCount })}
+              </p>
+            </div>
+          }
+        />
       </div>
     </Modal>
   );

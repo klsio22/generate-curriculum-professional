@@ -1,39 +1,34 @@
 import { useTranslation } from 'react-i18next';
+import { Segmented } from 'antd';
 
+const LANGUAGES = [
+  { value: 'pt-BR', short: 'PT', nameKey: 'language.pt' },
+  { value: 'en', short: 'EN', nameKey: 'language.en' },
+] as const;
+
+/** PT / EN switch; the choice is kept for the next visit. */
 export const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
 
-  const handleLanguageChange = (language: string) => {
-    i18n.changeLanguage(language);
-    localStorage.setItem('language', language);
-  };
-
   return (
-    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-      <button
-        onClick={() => handleLanguageChange('pt-BR')}
-        aria-label="Português"
-        title={t('language.pt')}
-        className={`px-2 py-1 rounded text-xs md:text-sm font-medium transition-colors whitespace-nowrap ${
-          i18n.language === 'pt-BR'
-            ? 'bg-indigo-600 text-white'
-            : 'text-gray-700 hover:bg-gray-200'
-        }`}
-      >
-        PT
-      </button>
-      <button
-        onClick={() => handleLanguageChange('en')}
-        aria-label="English"
-        title={t('language.en')}
-        className={`px-2 py-1 rounded text-xs md:text-sm font-medium transition-colors whitespace-nowrap ${
-          i18n.language === 'en'
-            ? 'bg-indigo-600 text-white'
-            : 'text-gray-700 hover:bg-gray-200'
-        }`}
-      >
-        EN
-      </button>
-    </div>
+    <Segmented
+      size="small"
+      aria-label={t('language.label')}
+      value={i18n.language === 'en' ? 'en' : 'pt-BR'}
+      onChange={(language) => {
+        // The texts are already loaded, so there is nothing to wait for.
+        void i18n.changeLanguage(language);
+        localStorage.setItem('language', language);
+      }}
+      options={LANGUAGES.map((language) => ({
+        value: language.value,
+        title: t(language.nameKey),
+        label: (
+          <span lang={language.value} aria-label={t(language.nameKey)}>
+            {language.short}
+          </span>
+        ),
+      }))}
+    />
   );
 };

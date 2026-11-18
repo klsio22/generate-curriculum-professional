@@ -1,5 +1,5 @@
 import { Printer, Settings, Sparkles } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Badge, Button, type ButtonProps } from 'antd';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next';
 import type { CVData } from '@/types/cv';
@@ -19,6 +19,8 @@ interface AppHeaderProps {
   isAIConfigured: boolean;
 }
 
+type SizeType = ButtonProps['size'];
+
 export const AppHeader = ({
   data,
   activeTitle,
@@ -32,44 +34,31 @@ export const AppHeader = ({
   const { t } = useTranslation();
   const pdfFileName = buildPdfFileName(data, activeTitle);
 
-  const tailorButton = (iconSize: number, extraClass: string) => (
-    <button
-      type="button"
-      onClick={onOpenTailor}
-      className={`flex items-center gap-2 bg-violet-700 text-white rounded-md hover:bg-violet-800 transition whitespace-nowrap ${extraClass}`}
-    >
-      <Sparkles size={iconSize} aria-hidden />
-      <span>{t('ai.tailor.open')}</span>
-    </button>
+  const tailorButton = (size: SizeType) => (
+    <Button color="purple" variant="solid" size={size} icon={<Sparkles size={16} aria-hidden />} onClick={onOpenTailor}>
+      {t('ai.tailor.open')}
+    </Button>
   );
 
-  const aiSettingsButton = (iconSize: number, extraClass: string) => (
-    <button
-      type="button"
-      onClick={onOpenAISettings}
-      aria-label={isAIConfigured ? t('header.aiSettingsConfigured') : t('header.aiSettings')}
-      className={`relative flex items-center gap-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition whitespace-nowrap ${extraClass}`}
-    >
-      <Settings size={iconSize} aria-hidden />
-      <span>{t('header.aiSettings')}</span>
-      {isAIConfigured && (
-        <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" aria-hidden />
-      )}
-    </button>
+  const aiSettingsButton = (size: SizeType) => (
+    <Badge dot={isAIConfigured} color="green" offset={[-4, 4]}>
+      <Button
+        size={size}
+        icon={<Settings size={16} aria-hidden />}
+        onClick={onOpenAISettings}
+        aria-label={isAIConfigured ? t('header.aiSettingsConfigured') : t('header.aiSettings')}
+      >
+        {t('header.aiSettings')}
+      </Button>
+    </Badge>
   );
 
-  const downloadButton = (iconSize: number, extraClass: string, label: ReactNode) => (
+  const downloadButton = (size: SizeType) => (
     <PDFDownloadLink document={<CVDocument data={data} />} fileName={pdfFileName}>
       {({ loading }) => (
-        <button
-          type="button"
-          disabled={loading}
-          onClick={onDownloadPdf}
-          className={`flex items-center gap-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${extraClass}`}
-        >
-          <Printer size={iconSize} aria-hidden />
-          {label}
-        </button>
+        <Button type="primary" size={size} loading={loading} icon={<Printer size={16} aria-hidden />} onClick={onDownloadPdf}>
+          {t('header.download')}
+        </Button>
       )}
     </PDFDownloadLink>
   );
@@ -85,27 +74,18 @@ export const AppHeader = ({
         </div>
 
         <div className="hidden md:flex items-center gap-2">
-          {tailorButton(18, 'px-4 py-2 text-base')}
-          {aiSettingsButton(18, 'px-4 py-2 text-base')}
-          <BackupMenu
-            onSaveBackup={onSaveBackup}
-            onRestoreFile={onRestoreFile}
-            buttonClassName="px-4 py-2 text-base"
-          />
-          {downloadButton(20, 'px-4 py-2 text-base', <span>{t('header.download')}</span>)}
+          {tailorButton('large')}
+          {aiSettingsButton('large')}
+          <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} size="large" />
+          {downloadButton('large')}
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto mt-3 md:hidden flex flex-wrap gap-2 justify-center items-center">
-        {tailorButton(16, 'px-3 py-2 text-sm')}
-        {aiSettingsButton(16, 'px-3 py-2 text-sm')}
-        <BackupMenu
-          onSaveBackup={onSaveBackup}
-          onRestoreFile={onRestoreFile}
-          buttonClassName="px-3 py-2 text-sm"
-          iconSize={16}
-        />
-        {downloadButton(16, 'px-3 py-2 text-sm', <span>{t('header.download')}</span>)}
+        {tailorButton('middle')}
+        {aiSettingsButton('middle')}
+        <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} size="middle" />
+        {downloadButton('middle')}
       </div>
     </header>
   );

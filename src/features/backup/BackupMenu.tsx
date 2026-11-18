@@ -1,51 +1,56 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { cloneElement, isValidElement, useRef, type CSSProperties, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button, Dropdown, theme, type ButtonProps, type MenuProps } from 'antd';
 import { ArchiveRestore, ChevronDown, Download, HardDrive, Upload } from 'lucide-react';
+import { useFocusReturn } from '@/shared/components/useFocusReturn';
 
 interface BackupMenuProps {
   onSaveBackup: () => void;
   onRestoreFile: (file: File) => void;
-  /** Extra classes for the trigger button (sizes differ between desktop and mobile). */
-  buttonClassName?: string;
-  iconSize?: number;
+  size?: ButtonProps['size'];
 }
 
 /**
- * "Backup" button that opens a small panel explaining what a backup is,
- * with "Save backup" and "Restore backup" actions (disclosure pattern).
+ * "Backup" button that opens a menu explaining what a backup is, with
+ * "Save backup" and "Restore backup" (antd Dropdown: arrows, Enter, Escape).
  */
-export const BackupMenu = ({ onSaveBackup, onRestoreFile, buttonClassName = '', iconSize = 18 }: BackupMenuProps) => {
+export const BackupMenu = ({ onSaveBackup, onRestoreFile, size }: BackupMenuProps) => {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const ids = { panel: useId(), intro: useId(), saveHelp: useId(), restoreHelp: useId() };
+  const { token } = theme.useToken();
+  const { triggerRef: menuTriggerRef, onOpenChange: onMenuOpenChange } = useFocusReturn();
+  const panelStyle: CSSProperties = {
+    background: token.colorBgElevated,
+    borderRadius: token.borderRadiusLG,
+    boxShadow: token.boxShadowSecondary,
+  };
 
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-    document.addEventListener('mousedown', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
+  const itemLabel = (title: string, help: string) => (
+    <span className="block max-w-72 py-1">
+      <span className="block font-medium">{title}</span>
+      <span className="block text-xs text-gray-500 whitespace-normal">{help}</span>
+    </span>
+  );
 
-  const itemClass =
-    'flex w-full items-start gap-3 rounded-md p-3 text-left hover:bg-gray-100 focus-visible:bg-gray-100';
+  const items: MenuProps['items'] = [
+    {
+      key: 'save',
+      icon: <Download size={18} className="text-emerald-700" aria-hidden />,
+      label: itemLabel(t('backup.save'), t('backup.saveHelp')),
+      onClick: onSaveBackup,
+    },
+    {
+      key: 'restore',
+      icon: <Upload size={18} className="text-indigo-700" aria-hidden />,
+      label: itemLabel(t('backup.restore'), t('backup.restoreHelp')),
+      onClick: () => fileRef.current?.click(),
+    },
+  ];
 
   return (
-    <div ref={rootRef} className="relative">
+    <>
+      {/* The native file picker has no antd equivalent that a menu item can open. */}
+      {/* eslint-disable-next-line no-restricted-syntax */}
       <input
         ref={fileRef}
         type="file"
@@ -59,67 +64,31 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, buttonClassName = '', 
           if (file) onRestoreFile(file);
         }}
       />
-
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-expanded={open}
-        aria-controls={ids.panel}
-        onClick={() => setOpen((value) => !value)}
-        className={`flex items-center gap-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition whitespace-nowrap ${buttonClassName}`}
+      <Dropdown
+        trigger={['click']}
+        autoFocus
+        onOpenChange={onMenuOpenChange}
+        placement="bottomRight"
+        menu={{ items }}
+        popupRender={(menu) => (
+          <div className="max-w-80" style={panelStyle}>
+            <p className="px-4 pb-1 pt-3 text-sm text-gray-600">{t('backup.intro')}</p>
+            {/* The panel already has the shadow. */}
+            {isValidElement(menu)
+              ? cloneElement(menu as ReactElement<{ style?: CSSProperties }>, { style: { boxShadow: 'none' } })
+              : menu}
+            <p className="flex gap-2 px-4 pb-3 pt-1 text-xs text-gray-500">
+              <ArchiveRestore size={14} className="mt-0.5 shrink-0" aria-hidden />
+              {t('backup.fileHint')}
+            </p>
+          </div>
+        )}
       >
-        <HardDrive size={iconSize} aria-hidden />
-        <span>{t('backup.menu')}</span>
-        <ChevronDown size={16} aria-hidden className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-
-      {open && (
-        <div
-          id={ids.panel}
-          className="z-20 mt-2 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-xl max-md:fixed max-md:inset-x-4 md:absolute md:right-0 md:w-80"
-        >
-          <p id={ids.intro} className="px-3 pb-2 pt-1 text-gray-600">
-            {t('backup.intro')}
-          </p>
-
-          <button
-            type="button"
-            aria-describedby={ids.saveHelp}
-            onClick={() => {
-              setOpen(false);
-              onSaveBackup();
-            }}
-            className={itemClass}
-          >
-            <Download size={18} className="mt-0.5 shrink-0 text-emerald-700" aria-hidden />
-            <span>
-              <span className="block font-medium text-gray-900">{t('backup.save')}</span>
-              <span id={ids.saveHelp} className="block text-gray-600">{t('backup.saveHelp')}</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            aria-describedby={ids.restoreHelp}
-            onClick={() => {
-              setOpen(false);
-              fileRef.current?.click();
-            }}
-            className={itemClass}
-          >
-            <Upload size={18} className="mt-0.5 shrink-0 text-indigo-700" aria-hidden />
-            <span>
-              <span className="block font-medium text-gray-900">{t('backup.restore')}</span>
-              <span id={ids.restoreHelp} className="block text-gray-600">{t('backup.restoreHelp')}</span>
-            </span>
-          </button>
-
-          <p className="flex gap-2 px-3 pb-1 pt-2 text-xs text-gray-500">
-            <ArchiveRestore size={14} className="mt-0.5 shrink-0" aria-hidden />
-            {t('backup.fileHint')}
-          </p>
-        </div>
-      )}
-    </div>
+        <Button ref={menuTriggerRef} size={size} icon={<HardDrive size={16} aria-hidden />}>
+          {t('backup.menu')}
+          <ChevronDown size={14} aria-hidden />
+        </Button>
+      </Dropdown>
+    </>
   );
 };
