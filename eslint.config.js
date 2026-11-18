@@ -19,5 +19,21 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      'no-empty': ['error', { allowEmptyCatch: true }],
+    },
+  },
+  {
+    files: ['src/app/**/*.tsx', 'src/features/**/*.tsx', 'src/shared/**/*.tsx'],
+    ignores: ['src/features/pdf/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...['button', 'input', 'select', 'textarea', 'label'].map((element) => ({
+          selector: `JSXOpeningElement[name.name='${element}']`,
+          message: `Use the Ant Design component instead of <${element}> (see docs/componentes.md).`,
+        })),
+      ],
+    },
   },
 ])
