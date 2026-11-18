@@ -11,10 +11,10 @@ import { useTranslation } from 'react-i18next';
 import styles from './pdfStyles';
 import type { CVData } from '@/types/cv';
 import { formatDate, normalizeUrl } from './textUtils';
+import { Description } from './Description';
 import { buildPdfMetadata } from './pdfMetadata';
 import { GITHUB_PATH, LINKEDIN_PATH } from '@/shared/brandPaths';
 import { detectResumeLocale } from '@/shared/locale';
-import type { ReactNode } from 'react';
 
 export interface PDFPreviewProps {
     data: CVData;
@@ -32,46 +32,6 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
             .filter(Boolean) || [];
     const langsList = data.languages?.split('\n').filter((l) => l.trim()) || [];
     const softList = data.softSkills?.split('\n').filter((s) => s.trim()) || [];
-
-    const renderDescription = (descriptionText?: string, elementKeyPrefix = ''): ReactNode => {
-        if (!descriptionText) return null;
-
-        const descriptionLines = descriptionText.split('\n');
-        const renderedElements: ReactNode[] = [];
-        let isInsideSubheading = false;
-
-        descriptionLines.forEach((line, lineIndex) => {
-            const trimmedLineText = line.trim();
-
-            if (!trimmedLineText) {
-                isInsideSubheading = false;
-                return;
-            }
-
-            if (trimmedLineText.endsWith(':')) {
-                renderedElements.push(
-                    <Text key={`${elementKeyPrefix}-subheading-${lineIndex}`} style={styles.subHeading}>
-                        {trimmedLineText}
-                    </Text>
-                );
-                isInsideSubheading = true;
-            } else if (isInsideSubheading) {
-                renderedElements.push(
-                    <Text key={`${elementKeyPrefix}-subitem-${lineIndex}`} style={styles.bulletItem}>
-                        {trimmedLineText}
-                    </Text>
-                );
-            } else {
-                renderedElements.push(
-                    <Text key={`${elementKeyPrefix}-paragraph-${lineIndex}`} style={styles.bulletItem}>
-                        {trimmedLineText}
-                    </Text>
-                );
-            }
-        });
-
-        return renderedElements;
-    };
 
     return (
         <Document {...metadata}>
@@ -152,7 +112,7 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                                     </Text>
                                     {exp.description && (
                                         <View style={styles.bulletList}>
-                                            {renderDescription(exp.description, `${exp.company}-${exp.role}`)}
+                                            <Description text={exp.description} />
                                         </View>
                                     )}
                                 </View>
@@ -211,7 +171,7 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                                     )}
                                     {project.description && (
                                         <View style={styles.bulletList}>
-                                            {renderDescription(project.description, `project-${project.id || project.name}`)}
+                                            <Description text={project.description} />
                                         </View>
                                     )}
                                     {project.link && (
@@ -261,7 +221,7 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                         <View style={styles.sectionContent}>
                             <Text style={styles.sectionTitle}>{t('pdf.interpersonalSkills')}</Text>
                             <View style={styles.bulletList}>
-                                {renderDescription(data.interpersonalSkills, 'interpersonal')}
+                                <Description text={data.interpersonalSkills} />
                             </View>
                         </View>
                     )}

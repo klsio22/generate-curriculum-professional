@@ -139,6 +139,23 @@ export const pdfStyles = StyleSheet.create({
     marginBottom: 3,
     lineHeight: 1.4,
   },
+  subItem: {
+    flexDirection: 'row',
+    marginLeft: 8,
+    marginBottom: 3,
+  },
+  subItemMarker: {
+    width: 8,
+    fontSize: 9,
+    color: '#333333',
+    lineHeight: 1.4,
+  },
+  subItemText: {
+    flex: 1,
+    fontSize: 9,
+    color: '#333333',
+    lineHeight: 1.4,
+  },
   objective: {
     fontSize: 9,
     color: '#333333',

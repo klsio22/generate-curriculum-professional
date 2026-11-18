@@ -30,3 +30,29 @@ export const normalizeUrl = (u?: string) => {
   if (!u) return '';
   return /^https?:\/\//i.test(u) ? u : `https://${u}`;
 };
+export type DescriptionBlock = { kind: 'subheading' | 'item' | 'paragraph'; text: string; line: number };
+
+const LEADING_MARKER = /^[•●▪◦‣∙·*-]\s+/;
+
+export const parseDescription = (text?: string): DescriptionBlock[] => {
+  const blocks: DescriptionBlock[] = [];
+  let insideSubheading = false;
+  (text ?? '').split('\n').forEach((raw, line) => {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      insideSubheading = false;
+      return;
+    }
+    if (trimmed.endsWith(':')) {
+      blocks.push({ kind: 'subheading', text: trimmed, line });
+      insideSubheading = true;
+      return;
+    }
+    if (insideSubheading) {
+      blocks.push({ kind: 'item', text: trimmed.replace(LEADING_MARKER, ''), line });
+      return;
+    }
+    blocks.push({ kind: 'paragraph', text: trimmed, line });
+  });
+  return blocks;
+};
