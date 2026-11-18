@@ -19,7 +19,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-hook-form', 'react-i18next', 'i18next'],
-          pdf: ['@react-pdf/renderer', 'react-to-print'],
+          pdf: ['@react-pdf/renderer'],
           ui: ['lucide-react', '@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           // Ant Design changes less often than the app code, so browsers can keep it cached.
           antd: ['antd', '@ant-design/cssinjs'],

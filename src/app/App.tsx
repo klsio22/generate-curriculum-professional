@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useReactToPrint } from 'react-to-print';
 import { useTranslation } from 'react-i18next';
 import type { CVData, SavedCV } from '@/types/cv';
 import { emptyCV } from '@/features/cv-editor/defaultCV';
@@ -97,8 +96,6 @@ function App() {
     });
   };
 
-  const contentRef = useRef<HTMLDivElement>(null);
-  const reactToPrintFn = useReactToPrint({ contentRef });
 
   // Success messages close by themselves; errors stay until closed.
   const showNotice = useCallback(
@@ -221,7 +218,7 @@ function App() {
           activeTitle={activeCV?.title || 'meu_curriculo'}
           onRestoreFile={handleRestoreFile}
           onSaveBackup={handleSaveBackup}
-          onDownloadPdf={reactToPrintFn}
+          onDownloadError={() => showNotice('error', t('header.downloadError'))}
           onOpenAISettings={() => setShowAISettings(true)}
           onOpenTailor={() => setShowTailor(true)}
           isAIConfigured={aiSettings.isConfigured}

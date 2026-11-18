@@ -1,5 +1,6 @@
 export const ptBR = {
   header: {
+    downloadError: 'Não foi possível gerar o PDF. Tente de novo.',
     title: 'Gerador de Currículo ABNT',
     download: 'Baixar Currículo',
     edit: 'Editar Informações',

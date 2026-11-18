@@ -1,9 +1,9 @@
+import { useState } from 'react';
 import { Printer, Settings, Sparkles } from 'lucide-react';
 import { Badge, Button, type ButtonProps } from 'antd';
-import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next';
 import type { CVData } from '@/types/cv';
-import { CVDocument } from '@/features/pdf/CVDocument';
+import { downloadResumePdf } from '@/features/pdf/downloadPdf';
 import { buildPdfFileName } from '@/features/pdf/pdfMetadata';
 import { LanguageSelector } from '@/shared/components/LanguageSelector';
 import { BackupMenu } from '@/features/backup/BackupMenu';
@@ -13,7 +13,7 @@ interface AppHeaderProps {
   activeTitle: string;
   onRestoreFile: (file: File) => void;
   onSaveBackup: () => void;
-  onDownloadPdf: () => void;
+  onDownloadError: () => void;
   onOpenAISettings: () => void;
   onOpenTailor: () => void;
   isAIConfigured: boolean;
@@ -26,13 +26,24 @@ export const AppHeader = ({
   activeTitle,
   onRestoreFile,
   onSaveBackup,
-  onDownloadPdf,
+  onDownloadError,
   onOpenAISettings,
   onOpenTailor,
   isAIConfigured,
 }: AppHeaderProps) => {
   const { t } = useTranslation();
-  const pdfFileName = buildPdfFileName(data, activeTitle);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadResumePdf(data, buildPdfFileName(data, activeTitle));
+    } catch {
+      onDownloadError();
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const tailorButton = (size: SizeType) => (
     <Button color="purple" variant="solid" size={size} icon={<Sparkles size={16} aria-hidden />} onClick={onOpenTailor}>
@@ -54,13 +65,9 @@ export const AppHeader = ({
   );
 
   const downloadButton = (size: SizeType) => (
-    <PDFDownloadLink document={<CVDocument data={data} />} fileName={pdfFileName}>
-      {({ loading }) => (
-        <Button type="primary" size={size} loading={loading} icon={<Printer size={16} aria-hidden />} onClick={onDownloadPdf}>
-          {t('header.download')}
-        </Button>
-      )}
-    </PDFDownloadLink>
+    <Button type="primary" size={size} loading={downloading} icon={<Printer size={16} aria-hidden />} onClick={handleDownload}>
+      {t('header.download')}
+    </Button>
   );
 
   return (
