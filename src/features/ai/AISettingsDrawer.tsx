@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Eye, EyeOff, ExternalLink, Trash2 } from 'lucide-react';
-import { Drawer } from '@/shared/components/Drawer';
+import { Eye, EyeOff, ExternalLink, Trash2 } from 'lucide-react';
+import { Alert, Button, Collapse, Drawer, Form, Input, Select, Space, Typography } from 'antd';
 import { StatusAlert } from '@/shared/components/StatusAlert';
 import { listModels, testConnection } from './client';
 import { describeAIError } from './errorMessage';
@@ -26,8 +26,6 @@ type Status =
   | { kind: 'success'; message: string }
   | { kind: 'error'; message: string; detail?: string };
 
-const inputClass =
-  'block w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
 /** Mounted only while open, so every opening starts from the saved settings. */
 export const AISettingsDrawer = ({ isOpen, ...props }: AISettingsDrawerProps) =>
@@ -112,63 +110,46 @@ const AISettingsDialog = ({
     .join(' ');
   const keyHelpWithoutLink = draft.provider === 'proxy' ? 'ai.settings.proxyKeyHelp' : 'ai.settings.customKeyHelp';
 
+  const providerOptions = Object.values(AI_PROVIDERS).map((option) => ({
+    value: option.id,
+    label: option.id === 'custom' || option.id === 'proxy' ? t(`ai.settings.providerName.${option.id}`) : option.label,
+  }));
+
   const footer = (
-    <>
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
-      >
-        {t('modal.cancel')}
-      </button>
-      <button
-        type="button"
-        onClick={handleSave}
-        className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
-      >
+    <div className="flex justify-end gap-2">
+      <Button onClick={onClose}>{t('modal.cancel')}</Button>
+      <Button type="primary" onClick={handleSave}>
         {t('ai.settings.save')}
-      </button>
-    </>
+      </Button>
+    </div>
   );
 
   return (
-    <Drawer isOpen title={t('ai.settings.title')} onClose={onClose} footer={footer}>
-      <form
-        className="space-y-5"
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleSave();
-        }}
-      >
-        <p className="text-gray-600">{t('ai.settings.intro')}</p>
+    <Drawer open onClose={onClose} title={t('ai.settings.title')} footer={footer} size={480} placement="right">
+      <Form layout="vertical" onFinish={handleSave} requiredMark={false}>
+        <p className="mb-4 text-gray-600">{t('ai.settings.intro')}</p>
 
-        <div>
-          <label htmlFor={ids.provider} className="block text-sm font-medium text-gray-700 mb-1">
-            {t('ai.settings.provider')}
-          </label>
-          <select
+        <Form.Item label={t('ai.settings.provider')} htmlFor={ids.provider}>
+          <Select
             id={ids.provider}
-            data-autofocus
+            autoFocus
             value={draft.provider}
-            onChange={(e) => changeProvider(e.target.value as AIProviderId)}
-            className={inputClass}
-          >
-            {Object.values(AI_PROVIDERS).map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.id === 'custom' || option.id === 'proxy'
-                  ? t(`ai.settings.providerName.${option.id}`)
-                  : option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            onChange={(provider: AIProviderId) => changeProvider(provider)}
+            options={providerOptions}
+          />
+        </Form.Item>
 
         {preset.editableBaseUrl && (
-          <div>
-            <label htmlFor={ids.baseUrl} className="block text-sm font-medium text-gray-700 mb-1">
-              {t('ai.settings.baseUrl')}
-            </label>
-            <input
+          <Form.Item
+            label={t('ai.settings.baseUrl')}
+            htmlFor={ids.baseUrl}
+            extra={
+              <span id={ids.baseUrlHelp}>
+                {t(draft.provider === 'proxy' ? 'ai.settings.proxyUrlHelp' : 'ai.settings.customUrlHelp')}
+              </span>
+            }
+          >
+            <Input
               id={ids.baseUrl}
               type="url"
               value={draft.baseUrl}
@@ -176,20 +157,30 @@ const AISettingsDialog = ({
               placeholder={preset.baseUrl || 'http://localhost:11434/v1'}
               aria-describedby={ids.baseUrlHelp}
               spellCheck={false}
-              className={inputClass}
             />
-            <p id={ids.baseUrlHelp} className="mt-1 text-xs text-gray-500">
-              {t(draft.provider === 'proxy' ? 'ai.settings.proxyUrlHelp' : 'ai.settings.customUrlHelp')}
-            </p>
-          </div>
+          </Form.Item>
         )}
 
-        <div>
-          <label htmlFor={ids.apiKey} className="block text-sm font-medium text-gray-700 mb-1">
-            {t('ai.settings.apiKey')}
-          </label>
-          <div className="flex gap-2">
-            <input
+        <Form.Item
+          label={t('ai.settings.apiKey')}
+          htmlFor={ids.apiKey}
+          extra={
+            <span id={ids.apiKeyHelp}>
+              {preset.keyUrl ? (
+                <Typography.Link href={preset.keyUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+                  {t('ai.settings.getKey', { provider: preset.label })}
+                  <ExternalLink size={12} aria-hidden />
+                  <span className="sr-only">{t('ai.settings.opensInNewTab')}</span>
+                </Typography.Link>
+              ) : (
+                t(keyHelpWithoutLink)
+              )}
+            </span>
+          }
+        >
+          {/* A real toggle button: the eye icon of Input.Password cannot be reached with the keyboard. */}
+          <Space.Compact className="w-full">
+            <Input
               id={ids.apiKey}
               type={showKey ? 'text' : 'password'}
               value={draft.apiKey}
@@ -197,54 +188,32 @@ const AISettingsDialog = ({
               placeholder={preset.keyPrefix ? `${preset.keyPrefix}...` : undefined}
               autoComplete="off"
               spellCheck={false}
+              status={keyHint === 'ok' ? undefined : 'warning'}
               aria-describedby={keyDescribedBy}
               aria-invalid={keyHint !== 'ok' || undefined}
-              className={inputClass}
             />
-            <button
-              type="button"
+            <Button
               onClick={() => setShowKey((v) => !v)}
               aria-pressed={showKey}
               aria-label={showKey ? t('ai.settings.hideKey') : t('ai.settings.showKey')}
-              className="px-3 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100"
-            >
-              {showKey ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
-            </button>
-          </div>
-          {keyHint !== 'ok' && (
-            <p
-              id={ids.apiKeyWarning}
-              className="mt-2 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900"
-            >
-              <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden />
-              {t(`ai.settings.keyFormat.${keyHint}`, {
-                provider: preset.label,
-                prefix: preset.keyPrefix,
-              })}
-            </p>
-          )}
-          <p id={ids.apiKeyHelp} className="mt-1 text-xs text-gray-500">
-            {preset.keyUrl ? (
-              <a
-                href={preset.keyUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-indigo-700 underline"
-              >
-                {t('ai.settings.getKey', { provider: preset.label })}
-                <ExternalLink size={12} aria-hidden />
-                <span className="sr-only">{t('ai.settings.opensInNewTab')}</span>
-              </a>
-            ) : (
-              t(keyHelpWithoutLink)
-            )}
-          </p>
-        </div>
+              title={showKey ? t('ai.settings.hideKey') : t('ai.settings.showKey')}
+              icon={showKey ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+            />
+          </Space.Compact>
+        </Form.Item>
 
-        <div>
-          <label htmlFor={ids.model} className="block text-sm font-medium text-gray-700 mb-1">
-            {t('ai.settings.model')}
-          </label>
+        {keyHint !== 'ok' && (
+          <Alert
+            id={ids.apiKeyWarning}
+            type="warning"
+            showIcon
+            role="presentation"
+            className="-mt-2 mb-4"
+            title={t(`ai.settings.keyFormat.${keyHint}`, { provider: preset.label, prefix: preset.keyPrefix })}
+          />
+        )}
+
+        <Form.Item label={t('ai.settings.model')} htmlFor={ids.model}>
           <ModelCombobox
             id={ids.model}
             value={draft.model}
@@ -258,42 +227,48 @@ const AISettingsDialog = ({
           <p id={ids.modelHelp} className="sr-only">
             {t('ai.settings.modelHelp')}
           </p>
+        </Form.Item>
+
+        <div id={ids.privacy} className="mb-4">
+          <Alert
+            type="warning"
+            showIcon
+            role="presentation"
+            title={
+              <div>
+                <p>{t('ai.settings.privacyShort')}</p>
+                <Collapse
+                  ghost
+                  size="small"
+                  className="-ml-4 mt-1"
+                  items={[
+                    {
+                      key: 'privacy',
+                      label: t('ai.settings.privacyMore'),
+                      children: (
+                        <ul className="list-disc space-y-0.5 pl-5 text-xs">
+                          <li>{t('ai.settings.privacyKey')}</li>
+                          <li>{t('ai.settings.privacySent')}</li>
+                          <li>{t('ai.settings.privacyNotSent')}</li>
+                          <li>{t('ai.settings.privacyShared')}</li>
+                        </ul>
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+            }
+          />
         </div>
 
-        <div
-          id={ids.privacy}
-          className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
-        >
-          <p>{t('ai.settings.privacyShort')}</p>
-          <details className="mt-1">
-            <summary className="cursor-pointer font-medium underline">{t('ai.settings.privacyMore')}</summary>
-            <ul className="mt-1 list-disc space-y-0.5 pl-5">
-              <li>{t('ai.settings.privacyKey')}</li>
-              <li>{t('ai.settings.privacySent')}</li>
-              <li>{t('ai.settings.privacyNotSent')}</li>
-              <li>{t('ai.settings.privacyShared')}</li>
-            </ul>
-          </details>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={handleTest}
-            disabled={!canTest}
-            className="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <Button onClick={handleTest} disabled={!canTest}>
             {t('ai.settings.test')}
-          </button>
+          </Button>
           {settings.apiKey && (
-            <button
-              type="button"
-              onClick={handleForgetKey}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:text-red-700 hover:underline"
-            >
-              <Trash2 size={14} aria-hidden />
+            <Button type="text" danger icon={<Trash2 size={14} aria-hidden />} onClick={handleForgetKey}>
               {t('ai.settings.forgetKey')}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -306,7 +281,7 @@ const AISettingsDialog = ({
             </StatusAlert>
           )}
         </div>
-      </form>
+      </Form>
     </Drawer>
   );
 };

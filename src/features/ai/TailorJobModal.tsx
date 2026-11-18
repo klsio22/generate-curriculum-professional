@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Alert, Button, Collapse, Descriptions, Form, Input, Modal, Select, Steps, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Sparkles } from 'lucide-react';
-import { Modal } from '@/shared/components/Modal';
+import { Check, Sparkles } from 'lucide-react';
 import type { SavedCV } from '@/types/cv';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
 import { StatusAlert } from '@/shared/components/StatusAlert';
@@ -33,11 +33,6 @@ type OutputLanguage = 'auto' | 'pt-BR' | 'en';
 const STEPS: Step[] = ['input', 'analysis', 'result'];
 const PRIORITIES: KeywordPriority[] = ['high', 'medium', 'low'];
 
-const fieldClass =
-  'block w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500';
-const primaryButton =
-  'inline-flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed';
-const secondaryButton = 'px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700';
 
 const resolveLanguage = (choice: OutputLanguage, analysis: JobAnalysis): string => {
   if (choice !== 'auto') return choice;
@@ -61,7 +56,7 @@ const TailorJobDialog = ({
   onSave,
 }: TailorJobDialogProps) => {
   const { t } = useTranslation();
-  const ids = { base: useId(), job: useId(), count: useId(), lang: useId() };
+  const ids = { base: useId(), job: useId(), lang: useId() };
 
   const [step, setStep] = useState<Step>('input');
   const [baseId, setBaseId] = useState(activeId ?? cvs[0]?.id ?? '');
@@ -154,67 +149,60 @@ const TailorJobDialog = ({
   };
 
   const stepIndex = STEPS.indexOf(step) + 1;
-  const stepLabel = { input: t('ai.tailor.stepInput'), analysis: t('ai.tailor.stepAnalysis'), result: t('ai.tailor.stepResult') }[step];
+  const stepLabels: Record<Step, string> = {
+    input: t('ai.tailor.stepInput'),
+    analysis: t('ai.tailor.stepAnalysis'),
+    result: t('ai.tailor.stepResult'),
+  };
 
-  const busyFooter = (
-    <button type="button" onClick={handleCancelRequest} className={secondaryButton}>
-      {t('ai.tailor.cancel')}
-    </button>
-  );
+  const busyFooter = <Button onClick={handleCancelRequest}>{t('ai.tailor.cancel')}</Button>;
 
   const footers: Record<Step, ReactNode> = {
     input: (
       <>
-        <button type="button" onClick={onClose} className={secondaryButton}>
-          {t('modal.cancel')}
-        </button>
-        <button
-          type="button"
-          onClick={handleAnalyze}
-          disabled={!isConfigured || !baseCV || jobText.trim().length < 50}
-          className={primaryButton}
-        >
+        <Button onClick={onClose}>{t('modal.cancel')}</Button>
+        <Button type="primary" onClick={handleAnalyze} disabled={!isConfigured || !baseCV || jobText.trim().length < 50}>
           {t('ai.tailor.analyze')}
-        </button>
+        </Button>
       </>
     ),
     analysis: (
       <>
-        <button type="button" onClick={() => setStep('input')} className={secondaryButton}>
-          {t('ai.tailor.back')}
-        </button>
-        <button type="button" onClick={handleGenerate} disabled={!baseCV} className={primaryButton}>
-          <Sparkles size={16} aria-hidden />
+        <Button onClick={() => setStep('input')}>{t('ai.tailor.back')}</Button>
+        <Button type="primary" icon={<Sparkles size={16} aria-hidden />} onClick={handleGenerate} disabled={!baseCV}>
           {t('ai.tailor.generate')}
-        </button>
+        </Button>
       </>
     ),
     result: (
       <>
-        <button type="button" onClick={onClose} className={secondaryButton}>
-          {t('ai.tailor.discard')}
-        </button>
-        <button type="button" onClick={() => setStep('analysis')} className={secondaryButton}>
-          {t('ai.tailor.back')}
-        </button>
-        <button type="button" onClick={handleSave} className={primaryButton}>
+        <Button onClick={onClose}>{t('ai.tailor.discard')}</Button>
+        <Button onClick={() => setStep('analysis')}>{t('ai.tailor.back')}</Button>
+        <Button type="primary" onClick={handleSave}>
           {t('ai.tailor.save')}
-        </button>
+        </Button>
       </>
     ),
   };
 
   return (
     <Modal
-      isOpen
+      open
       title={t('ai.tailor.title')}
       onCancel={busy ? handleCancelRequest : onClose}
       footer={busy ? busyFooter : footers[step]}
-      size="xl"
+      width={900}
+      destroyOnHidden
     >
       <div className="space-y-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          {t('ai.tailor.stepOf', { current: stepIndex, total: STEPS.length })}: {stepLabel}
+        <Steps
+          size="small"
+          current={stepIndex - 1}
+          items={STEPS.map((item) => ({ title: stepLabels[item] }))}
+          aria-hidden
+        />
+        <p className="sr-only">
+          {t('ai.tailor.stepOf', { current: stepIndex, total: STEPS.length })}: {stepLabels[step]}
         </p>
 
         <div role="alert">
@@ -227,80 +215,72 @@ const TailorJobDialog = ({
 
         <div role="status" aria-live="polite">
           {busy && (
-            <p className="flex items-center gap-2 rounded-md bg-indigo-50 p-3 text-indigo-900">
-              <Loader2 size={18} className="animate-spin" aria-hidden />
-              {busy === 'analyzing' ? t('ai.tailor.analyzing') : t('ai.tailor.generating')}
-            </p>
+            <StatusAlert tone="busy">{busy === 'analyzing' ? t('ai.tailor.analyzing') : t('ai.tailor.generating')}</StatusAlert>
           )}
         </div>
 
         {step === 'input' && (
-          <div className="space-y-4">
-            <p className="text-gray-600">{t('ai.tailor.intro')}</p>
+          <Form layout="vertical" component={false}>
+            <div className="space-y-4">
+              <p className="text-gray-600">{t('ai.tailor.intro')}</p>
 
-            {!isConfigured && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
-                <span>{t('ai.tailor.notConfigured')}</span>
-                <button type="button" onClick={onOpenSettings} className={primaryButton}>
-                  {t('ai.tailor.openSettings')}
-                </button>
-              </div>
-            )}
+              {!isConfigured && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  title={t('ai.tailor.notConfigured')}
+                  action={
+                    <Button type="primary" onClick={onOpenSettings}>
+                      {t('ai.tailor.openSettings')}
+                    </Button>
+                  }
+                />
+              )}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label htmlFor={ids.base} className="mb-1 block text-sm font-medium text-gray-700">
-                  {t('ai.tailor.baseCv')}
-                </label>
-                <select id={ids.base} value={baseId} onChange={(e) => setBaseId(e.target.value)} className={fieldClass}>
-                  {cvs.map((cv) => (
-                    <option key={cv.id} value={cv.id}>
-                      {cv.title}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid gap-x-4 md:grid-cols-2">
+                <Form.Item label={t('ai.tailor.baseCv')} htmlFor={ids.base}>
+                  <Select
+                    id={ids.base}
+                    value={baseId || undefined}
+                    onChange={setBaseId}
+                    options={cvs.map((cv) => ({ value: cv.id, label: cv.title }))}
+                  />
+                </Form.Item>
+                <Form.Item label={t('ai.tailor.outputLanguage')} htmlFor={ids.lang}>
+                  <Select
+                    id={ids.lang}
+                    value={language}
+                    onChange={setLanguage}
+                    options={[
+                      { value: 'auto', label: t('ai.tailor.languageAuto') },
+                      { value: 'pt-BR', label: t('ai.tailor.languagePt') },
+                      { value: 'en', label: t('ai.tailor.languageEn') },
+                    ]}
+                  />
+                </Form.Item>
               </div>
-              <div>
-                <label htmlFor={ids.lang} className="mb-1 block text-sm font-medium text-gray-700">
-                  {t('ai.tailor.outputLanguage')}
-                </label>
-                <select
-                  id={ids.lang}
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value as OutputLanguage)}
-                  className={fieldClass}
-                >
-                  <option value="auto">{t('ai.tailor.languageAuto')}</option>
-                  <option value="pt-BR">{t('ai.tailor.languagePt')}</option>
-                  <option value="en">{t('ai.tailor.languageEn')}</option>
-                </select>
-              </div>
+
+              <Form.Item label={t('ai.tailor.jobDescription')} htmlFor={ids.job} className="mb-0">
+                <Input.TextArea
+                  id={ids.job}
+                  autoFocus
+                  rows={12}
+                  value={jobText}
+                  maxLength={MAX_JOB_DESCRIPTION_LENGTH}
+                  showCount={{
+                    formatter: ({ count, maxLength }) =>
+                      t('ai.tailor.charCount', {
+                        count: count.toLocaleString(),
+                        max: (maxLength ?? MAX_JOB_DESCRIPTION_LENGTH).toLocaleString(),
+                      }),
+                  }}
+                  onChange={(e) => setJobText(e.target.value)}
+                  placeholder={t('ai.tailor.jobPlaceholder')}
+                  disabled={busy !== null}
+                />
+              </Form.Item>
             </div>
-
-            <div>
-              <label htmlFor={ids.job} className="mb-1 block text-sm font-medium text-gray-700">
-                {t('ai.tailor.jobDescription')}
-              </label>
-              <textarea
-                id={ids.job}
-                data-autofocus
-                rows={12}
-                value={jobText}
-                maxLength={MAX_JOB_DESCRIPTION_LENGTH}
-                onChange={(e) => setJobText(e.target.value)}
-                placeholder={t('ai.tailor.jobPlaceholder')}
-                aria-describedby={ids.count}
-                disabled={busy !== null}
-                className={fieldClass}
-              />
-              <p id={ids.count} className="mt-1 text-right text-xs text-gray-500">
-                {t('ai.tailor.charCount', {
-                  count: jobText.length.toLocaleString(),
-                  max: MAX_JOB_DESCRIPTION_LENGTH.toLocaleString(),
-                })}
-              </p>
-            </div>
-          </div>
+          </Form>
         )}
 
         {step === 'analysis' && analysis && (
@@ -308,18 +288,17 @@ const TailorJobDialog = ({
             <h3 ref={headingRef} tabIndex={-1} className="text-base font-semibold text-gray-800 outline-none">
               {t('ai.tailor.stepAnalysis')}
             </h3>
-            <dl className="grid gap-3 rounded-md bg-gray-50 p-3 sm:grid-cols-3">
-              {[
-                [t('ai.tailor.jobTitle'), analysis.jobTitle],
-                [t('ai.tailor.company'), analysis.company],
-                [t('ai.tailor.seniority'), analysis.seniority],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="text-xs uppercase text-gray-500">{label}</dt>
-                  <dd className="font-medium text-gray-800">{value || t('ai.tailor.notInformed')}</dd>
-                </div>
-              ))}
-            </dl>
+            <Descriptions
+              size="small"
+              bordered
+              column={{ xs: 1, sm: 3 }}
+              layout="vertical"
+              items={[
+                { key: 'job', label: t('ai.tailor.jobTitle'), children: analysis.jobTitle || t('ai.tailor.notInformed') },
+                { key: 'company', label: t('ai.tailor.company'), children: analysis.company || t('ai.tailor.notInformed') },
+                { key: 'seniority', label: t('ai.tailor.seniority'), children: analysis.seniority || t('ai.tailor.notInformed') },
+              ]}
+            />
             {analysis.summary && <p className="text-gray-700">{analysis.summary}</p>}
 
             <section>
@@ -338,22 +317,20 @@ const TailorJobDialog = ({
                     <h5 className="mb-1 text-xs font-semibold uppercase text-gray-500">
                       {t(`ai.tailor.priority_${priority}`)}
                     </h5>
-                    <ul className="flex flex-wrap gap-2">
+                    <ul className="flex flex-wrap gap-y-2">
                       {items.map((k) => (
-                        <li
-                          key={k.term}
-                          className={`rounded-full border px-3 py-1 text-sm ${
-                            k.count > 0
-                              ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-                              : 'border-gray-300 bg-white text-gray-700'
-                          }`}
-                        >
-                          <span aria-hidden>{k.count > 0 ? '✓ ' : '○ '}</span>
-                          {k.term}
-                          <span className="sr-only">
-                            {' '}
-                            ({k.count > 0 ? t('ai.tailor.inResume') : t('ai.tailor.notInResume')})
-                          </span>
+                        <li key={k.term}>
+                          <Tag
+                            color={k.count > 0 ? 'success' : undefined}
+                            icon={k.count > 0 ? <Check size={12} className="mr-1 inline" aria-hidden /> : undefined}
+                            className="text-sm"
+                          >
+                            {k.term}
+                            <span className="sr-only">
+                              {' '}
+                              ({k.count > 0 ? t('ai.tailor.inResume') : t('ai.tailor.notInResume')})
+                            </span>
+                          </Tag>
                         </li>
                       ))}
                     </ul>
@@ -363,16 +340,21 @@ const TailorJobDialog = ({
             </section>
 
             {analysis.requirements.length > 0 && (
-              <details className="rounded-md border border-gray-200">
-                <summary className="cursor-pointer px-3 py-2 font-medium text-gray-800">
-                  {t('ai.tailor.requirements')}
-                </summary>
-                <ul className="list-disc space-y-1 px-3 pb-3 pl-8">
-                  {analysis.requirements.map((req) => (
-                    <li key={req}>{req}</li>
-                  ))}
-                </ul>
-              </details>
+              <Collapse
+                items={[
+                  {
+                    key: 'requirements',
+                    label: <span className="font-medium">{t('ai.tailor.requirements')}</span>,
+                    children: (
+                      <ul className="list-disc space-y-1 pl-5">
+                        {analysis.requirements.map((req) => (
+                          <li key={req}>{req}</li>
+                        ))}
+                      </ul>
+                    ),
+                  },
+                ]}
+              />
             )}
           </div>
         )}
