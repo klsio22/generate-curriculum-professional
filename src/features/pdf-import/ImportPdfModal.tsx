@@ -32,8 +32,8 @@ const ImportReview = ({ fileName, result, onCreate, onCancel }: PdfImportState &
   const missing = <span className="text-gray-400">{t('pdfImport.notFound')}</span>;
   const textValue = (field: (typeof TEXT_FIELDS)[number]) => {
     if (!cv[field]) return missing;
-    if (field === 'objective') return t('pdfImport.filled');
-    return <span className="break-all">{cv[field]}</span>;
+    if (field === 'objective') return <span>{t('pdfImport.filled')}</span>;
+    return <span className="wrap-anywhere">{cv[field]}</span>;
   };
   const items: DescriptionsProps['items'] = [
     ...TEXT_FIELDS.map((field) => ({
@@ -78,7 +78,14 @@ const ImportReview = ({ fileName, result, onCreate, onCancel }: PdfImportState &
           </Form>
         </div>
 
-        <Descriptions title={t('pdfImport.found')} items={items} column={{ xs: 1, sm: 2 }} size="small" bordered />
+        <Descriptions
+          title={t('pdfImport.found')}
+          items={items}
+          column={{ xs: 1, sm: 2 }}
+          size="small"
+          bordered
+          styles={{ label: { width: '20%' }, content: { width: '30%' } }}
+        />
 
         {unmatched.length > 0 && (
           <Collapse
