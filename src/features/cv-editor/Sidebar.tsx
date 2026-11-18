@@ -6,7 +6,6 @@ import {
   Copy,
   FileText,
   GripVertical,
-  Menu,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -48,12 +47,14 @@ interface SidebarProps {
   onRequestDelete: (id: string) => void;
   onRequestClear: () => void;
   isOpen: boolean;
-  toggleSidebar: () => void;
+  isPushed: boolean;
+  onClose: () => void;
+  footerActions: React.ReactNode;
 }
 
 const iconColor = (isAI: boolean, isActive: boolean) => {
   if (isAI) return 'text-amber-300';
-  return isActive ? 'text-indigo-400' : 'text-gray-400';
+  return isActive ? 'text-purple-300' : 'text-gray-400';
 };
 
 const restrictToVerticalAxis: Modifier = ({ transform }) => ({ ...transform, x: 0 });
@@ -69,7 +70,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRequestDelete,
   onRequestClear,
   isOpen,
-  toggleSidebar,
+  isPushed,
+  onClose,
+  footerActions,
 }) => {
   const { t, i18n } = useTranslation();
   const [renamingId, setRenamingId] = React.useState<string | null>(null);
@@ -134,34 +137,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <>
-      <Button
-        type="primary"
-        onClick={toggleSidebar}
-        aria-label={t('sidebar.openSidebar')}
-        aria-expanded={isOpen}
-        title={t('sidebar.openSidebar')}
-        icon={<Menu size={20} aria-hidden />}
-        className="fixed left-0 top-28 z-40 rounded-l-none bg-gray-900 shadow-md hover:bg-gray-800 lg:top-6"
-      />
-
-      <ConfigProvider
-        theme={{
-          algorithm: theme.darkAlgorithm,
-          token: { colorPrimary: BRAND.primary, colorPrimaryHover: '#6366f1', colorPrimaryActive: '#4f46e5' },
-          components: { Button: { defaultHoverBg: '#1f2937', defaultHoverColor: '#ffffff', defaultHoverBorderColor: '#6366f1' } },
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: { colorPrimary: BRAND.primary, colorPrimaryHover: '#6366f1', colorPrimaryActive: '#4f46e5' },
+        components: { Button: { defaultHoverBg: '#1f2937', defaultHoverColor: '#ffffff', defaultHoverBorderColor: '#6366f1' } },
+      }}
+    >
+      <Drawer
+        open={isOpen}
+        onClose={onClose}
+        placement="left"
+        size={288}
+        title={t('sidebar.title')}
+        closable={isPushed ? false : { 'aria-label': t('sidebar.closeSidebar') }}
+        mask={isPushed ? false : { blur: true }}
+        classNames={{ body: 'scrollbar-thin' }}
+        styles={{
+          mask: { background: 'rgb(9 9 11 / 0.6)' },
+          body: { padding: 16, display: 'flex', flexDirection: 'column' },
+          footer: { padding: 16, paddingBottom: 'max(16px, env(safe-area-inset-bottom))' },
         }}
-      >
-        <Drawer
-          open={isOpen}
-          onClose={toggleSidebar}
-          placement="left"
-          size={288}
-          title={t('sidebar.title')}
-          closable={{ 'aria-label': t('sidebar.closeSidebar') }}
-          styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column' } }}
-          footer={
-            <div className="flex flex-col items-center gap-1 py-1">
+        footer={
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">{footerActions}</div>
+            <div className="flex flex-col items-center gap-1">
               <Typography.Text type="secondary" className="text-xs">
                 {t('sidebar.saved', { count: cvs.length })}
               </Typography.Text>
@@ -169,47 +169,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {t('sidebar.clearData')}
               </Button>
             </div>
-          }
+          </div>
+        }
+      >
+        <Button type="primary" size="large" block icon={<Plus size={20} aria-hidden />} onClick={onCreate} className="mb-4">
+          {t('sidebar.newCV')}
+        </Button>
+
+        <p className="sr-only" aria-live="polite">
+          {announcement}
+        </p>
+
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis]}
+          onDragEnd={handleDragEnd}
+          accessibility={{ announcements, screenReaderInstructions: { draggable: t('sidebar.dnd.instructions') } }}
         >
-          <Button type="primary" size="large" block icon={<Plus size={20} aria-hidden />} onClick={onCreate} className="mb-4">
-            {t('sidebar.newCV')}
-          </Button>
-
-          <p className="sr-only" aria-live="polite">
-            {announcement}
-          </p>
-
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            accessibility={{ announcements, screenReaderInstructions: { draggable: t('sidebar.dnd.instructions') } }}
-          >
-            <SortableContext items={cvs.map((cv) => cv.id)} strategy={verticalListSortingStrategy}>
-              <ul aria-label={t('sidebar.listLabel')} className="-mx-1 flex-1 space-y-2 overflow-y-auto px-1 pb-2">
-                {cvs.map((cv, index) => (
-                  <SortableResumeItem
-                    key={cv.id}
-                    cv={cv}
-                    isActive={activeId === cv.id}
-                    isRenaming={renamingId === cv.id}
-                    dateLocale={dateLocale}
-                    onSelect={() => onSelect(cv.id)}
-                    onRenameDone={(title) => {
-                      setRenamingId(null);
-                      const newTitle = title?.trim();
-                      if (newTitle && newTitle !== cv.title) onRename(cv.id, newTitle);
-                    }}
-                    menuItems={menuItemsFor(cv, index)}
-                  />
-                ))}
-              </ul>
-            </SortableContext>
-          </DndContext>
-        </Drawer>
-      </ConfigProvider>
-    </>
+          <SortableContext items={cvs.map((cv) => cv.id)} strategy={verticalListSortingStrategy}>
+            <ul
+              aria-label={t('sidebar.listLabel')}
+              className="scrollbar-thin -mx-1 min-h-0 flex-1 space-y-2 overflow-y-auto px-1 pb-2"
+            >
+              {cvs.map((cv, index) => (
+                <SortableResumeItem
+                  key={cv.id}
+                  cv={cv}
+                  isActive={activeId === cv.id}
+                  isRenaming={renamingId === cv.id}
+                  dateLocale={dateLocale}
+                  onSelect={() => onSelect(cv.id)}
+                  onRenameDone={(title) => {
+                    setRenamingId(null);
+                    const newTitle = title?.trim();
+                    if (newTitle && newTitle !== cv.title) onRename(cv.id, newTitle);
+                  }}
+                  menuItems={menuItemsFor(cv, index)}
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
+      </Drawer>
+    </ConfigProvider>
   );
 };
 
@@ -245,9 +248,9 @@ const SortableResumeItem = ({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`group relative flex items-start gap-1 rounded border-l-4 py-2 pl-1 pr-1 transition-colors ${
-        isActive ? 'border-indigo-500 bg-gray-800' : 'border-transparent hover:bg-gray-800'
-      } ${isDragging ? 'z-10 shadow-lg ring-1 ring-indigo-400 bg-gray-800' : ''}`}
+      className={`group relative flex items-start gap-1 rounded border-l-2 py-2 pl-1 pr-1 transition-colors ${
+        isActive ? 'border-purple-400 bg-white/10' : 'border-transparent hover:bg-white/5'
+      } ${isDragging ? 'z-10 bg-zinc-800 shadow-lg ring-1 ring-purple-400' : ''}`}
     >
       <Button
         ref={setActivatorNodeRef}
@@ -272,7 +275,9 @@ const SortableResumeItem = ({
         >
           <Icon size={18} aria-hidden className={`mt-0.5 shrink-0 ${iconColor(isAI, isActive)}`} />
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="line-clamp-2 text-sm font-medium leading-snug">{cv.title}</span>
+            <span className={`line-clamp-2 text-sm leading-snug ${isActive ? 'font-semibold text-white' : 'font-medium'}`}>
+              {cv.title}
+            </span>
             {isAI && <span className="sr-only">{t('sidebar.aiTailored')}</span>}
             {subtitle && <span className="truncate text-xs text-gray-300">{subtitle}</span>}
             <span className="text-xs text-gray-500">{new Date(cv.updatedAt).toLocaleDateString(dateLocale)}</span>
@@ -284,11 +289,10 @@ const SortableResumeItem = ({
         <Button
           ref={menuTriggerRef}
           type="text"
-          size="small"
           aria-label={t('sidebar.actionsFor', { title: cv.title })}
           title={t('sidebar.actionsFor', { title: cv.title })}
           icon={<MoreHorizontal size={18} aria-hidden />}
-          className="mt-1"
+          className="h-10 w-10 shrink-0 lg:h-8 lg:w-8"
         />
       </Dropdown>
     </li>

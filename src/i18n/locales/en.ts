@@ -2,6 +2,7 @@ export const en = {
   header: {
     downloadError: 'Could not build the PDF. Please try again.',
     title: 'Professional Resume Generator ABNT',
+    shortTitle: 'ABNT Resume',
     download: 'Download Resume',
     edit: 'Edit Information',
     preview: 'Preview',

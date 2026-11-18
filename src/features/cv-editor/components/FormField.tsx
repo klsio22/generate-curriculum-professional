@@ -45,7 +45,7 @@ export const FormField = ({ control, name, label, placeholder, rows, type = 'tex
           <Form.Item
             label={hideLabel ? undefined : label}
             htmlFor={id}
-            className={secondary ? 'mb-0 mt-2 [&_label]:text-xs [&_label]:text-gray-500' : 'mb-0'}
+            className={secondary ? 'mb-0 [&_label]:text-xs [&_label]:text-gray-500' : 'mb-0'}
           >
             {input}
           </Form.Item>

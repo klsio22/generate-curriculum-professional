@@ -1,100 +1,58 @@
-import { useState } from 'react';
-import { Printer, Settings, Sparkles } from 'lucide-react';
-import { Badge, Button, type ButtonProps } from 'antd';
+import { Menu, PanelLeftClose } from 'lucide-react';
+import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CVData } from '@/types/cv';
-import { downloadResumePdf } from '@/features/pdf/downloadPdf';
-import { buildPdfFileName } from '@/features/pdf/pdfMetadata';
+import { DownloadPdfButton } from '@/features/pdf/DownloadPdfButton';
+import { TailorButton } from '@/features/ai/TailorButton';
 import { LanguageSelector } from '@/shared/components/LanguageSelector';
-import { BackupMenu } from '@/features/backup/BackupMenu';
 
 interface AppHeaderProps {
   data: CVData;
   activeTitle: string;
-  onRestoreFile: (file: File) => void;
-  onImportPdf: (file: File) => void;
-  onSaveBackup: () => void;
   onDownloadError: () => void;
-  onOpenAISettings: () => void;
   onOpenTailor: () => void;
-  isAIConfigured: boolean;
+  isSidebarOpen: boolean;
+  onToggleSidebar: () => void;
 }
-
-type SizeType = ButtonProps['size'];
 
 export const AppHeader = ({
   data,
   activeTitle,
-  onRestoreFile,
-  onImportPdf,
-  onSaveBackup,
   onDownloadError,
-  onOpenAISettings,
   onOpenTailor,
-  isAIConfigured,
+  isSidebarOpen,
+  onToggleSidebar,
 }: AppHeaderProps) => {
   const { t } = useTranslation();
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownload = async () => {
-    setDownloading(true);
-    try {
-      await downloadResumePdf(data, buildPdfFileName(data, activeTitle));
-    } catch {
-      onDownloadError();
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const tailorButton = (size: SizeType) => (
-    <Button color="purple" variant="solid" size={size} icon={<Sparkles size={16} aria-hidden />} onClick={onOpenTailor}>
-      {t('ai.tailor.open')}
-    </Button>
-  );
-
-  const aiSettingsButton = (size: SizeType) => (
-    <Badge dot={isAIConfigured} color="green" offset={[-4, 4]}>
-      <Button
-        size={size}
-        icon={<Settings size={16} aria-hidden />}
-        onClick={onOpenAISettings}
-        aria-label={isAIConfigured ? t('header.aiSettingsConfigured') : t('header.aiSettings')}
-      >
-        {t('header.aiSettings')}
-      </Button>
-    </Badge>
-  );
-
-  const downloadButton = (size: SizeType) => (
-    <Button type="primary" size={size} loading={downloading} icon={<Printer size={16} aria-hidden />} onClick={handleDownload}>
-      {t('header.download')}
-    </Button>
-  );
+  const sidebarLabel = isSidebarOpen ? t('sidebar.closeSidebar') : t('sidebar.openSidebar');
 
   return (
-    <header className="bg-white shadow p-4 sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto flex justify-center md:justify-between items-center gap-2 md:gap-4">
-        <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <h1 className="text-lg md:text-2xl font-bold text-gray-800 truncate">
-            {t('header.title')}
-          </h1>
+    <header className="sticky top-0 z-10 bg-white shadow">
+      <div className="mx-auto grid h-14 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 md:flex md:h-16 md:gap-3 md:px-4">
+        <Button
+          type="text"
+          size="large"
+          onClick={onToggleSidebar}
+          aria-label={sidebarLabel}
+          aria-expanded={isSidebarOpen}
+          title={sidebarLabel}
+          icon={isSidebarOpen ? <PanelLeftClose size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
+          className="justify-self-start"
+        />
+
+        <h1 className="min-w-0 truncate text-lg font-bold text-gray-800 md:text-xl">
+          <span className="md:hidden">{t('header.shortTitle')}</span>
+          <span className="hidden md:inline">{t('header.title')}</span>
+        </h1>
+
+        <div className="justify-self-end">
           <LanguageSelector />
         </div>
 
-        <div className="hidden md:flex items-center gap-2">
-          {tailorButton('large')}
-          {aiSettingsButton('large')}
-          <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} onImportPdf={onImportPdf} size="large" />
-          {downloadButton('large')}
+        <div className="ml-auto hidden items-center gap-2 md:flex">
+          <TailorButton size="large" onClick={onOpenTailor} />
+          <DownloadPdfButton data={data} activeTitle={activeTitle} onError={onDownloadError} size="large" />
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto mt-3 md:hidden flex flex-wrap gap-2 justify-center items-center">
-        {tailorButton('middle')}
-        {aiSettingsButton('middle')}
-        <BackupMenu onSaveBackup={onSaveBackup} onRestoreFile={onRestoreFile} onImportPdf={onImportPdf} size="middle" />
-        {downloadButton('middle')}
       </div>
     </header>
   );

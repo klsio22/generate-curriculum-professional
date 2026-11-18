@@ -1,14 +1,13 @@
 import { cloneElement, isValidElement, useRef, type CSSProperties, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Dropdown, theme, type ButtonProps, type MenuProps } from 'antd';
-import { ArchiveRestore, ChevronDown, Download, FileText, HardDrive, Upload } from 'lucide-react';
+import { Button, Dropdown, theme, type MenuProps } from 'antd';
+import { ArchiveRestore, ChevronUp, Download, FileText, HardDrive, Upload } from 'lucide-react';
 import { useFocusReturn } from '@/shared/components/useFocusReturn';
 
 interface BackupMenuProps {
   onSaveBackup: () => void;
   onRestoreFile: (file: File) => void;
   onImportPdf: (file: File) => void;
-  size?: ButtonProps['size'];
 }
 
 type FileAction = 'restore' | 'importPdf';
@@ -18,7 +17,7 @@ const ACCEPT: Record<FileAction, string> = {
   importPdf: 'application/pdf,.pdf',
 };
 
-export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf, size }: BackupMenuProps) => {
+export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf }: BackupMenuProps) => {
   const { t } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
   const fileActionRef = useRef<FileAction>('restore');
@@ -33,7 +32,9 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf, size }: B
   const itemLabel = (title: string, help: string) => (
     <span className="block max-w-72 py-1">
       <span className="block font-medium">{title}</span>
-      <span className="block text-xs text-gray-500 whitespace-normal">{help}</span>
+      <span className="block text-xs whitespace-normal" style={{ color: token.colorTextDescription }}>
+        {help}
+      </span>
     </span>
   );
 
@@ -47,19 +48,19 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf, size }: B
   const items: MenuProps['items'] = [
     {
       key: 'save',
-      icon: <Download size={18} className="text-emerald-700" aria-hidden />,
+      icon: <Download size={18} className="text-emerald-400" aria-hidden />,
       label: itemLabel(t('backup.save'), t('backup.saveHelp')),
       onClick: onSaveBackup,
     },
     {
       key: 'restore',
-      icon: <Upload size={18} className="text-indigo-700" aria-hidden />,
+      icon: <Upload size={18} className="text-indigo-300" aria-hidden />,
       label: itemLabel(t('backup.restore'), t('backup.restoreHelp')),
       onClick: () => pickFile('restore'),
     },
     {
       key: 'importPdf',
-      icon: <FileText size={18} className="text-amber-700" aria-hidden />,
+      icon: <FileText size={18} className="text-amber-300" aria-hidden />,
       label: itemLabel(t('pdfImport.menu'), t('pdfImport.menuHelp')),
       onClick: () => pickFile('importPdf'),
     },
@@ -87,24 +88,26 @@ export const BackupMenu = ({ onSaveBackup, onRestoreFile, onImportPdf, size }: B
         trigger={['click']}
         autoFocus
         onOpenChange={onMenuOpenChange}
-        placement="bottomRight"
+        placement="topLeft"
         menu={{ items }}
         popupRender={(menu) => (
           <div className="max-w-80" style={panelStyle}>
-            <p className="px-4 pb-1 pt-3 text-sm text-gray-600">{t('backup.intro')}</p>
+            <p className="px-4 pb-1 pt-3 text-sm" style={{ color: token.colorTextSecondary }}>
+              {t('backup.intro')}
+            </p>
             {isValidElement(menu)
               ? cloneElement(menu as ReactElement<{ style?: CSSProperties }>, { style: { boxShadow: 'none' } })
               : menu}
-            <p className="flex gap-2 px-4 pb-3 pt-1 text-xs text-gray-500">
+            <p className="flex gap-2 px-4 pb-3 pt-1 text-xs" style={{ color: token.colorTextDescription }}>
               <ArchiveRestore size={14} className="mt-0.5 shrink-0" aria-hidden />
               {t('backup.fileHint')}
             </p>
           </div>
         )}
       >
-        <Button ref={menuTriggerRef} size={size} icon={<HardDrive size={16} aria-hidden />}>
+        <Button ref={menuTriggerRef} block icon={<HardDrive size={16} aria-hidden />}>
           {t('backup.menu')}
-          <ChevronDown size={14} aria-hidden />
+          <ChevronUp size={14} aria-hidden />
         </Button>
       </Dropdown>
     </>

@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { useFieldArray, type Control, type Path } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Card, Form } from 'antd';
@@ -30,7 +31,7 @@ const PERSONAL: PersonalFieldSpec[] = [
   { key: 'jobTitle', label: 'form.jobTitle', placeholder: 'form.jobTitlePlaceholder' },
   { key: 'email', label: 'form.email', type: 'email' },
   { key: 'phone', label: 'form.phone' },
-  { key: 'address', label: 'form.address' },
+  { key: 'address', label: 'form.address', wide: true },
   {
     key: 'linkedin',
     label: 'form.linkedin',
@@ -131,14 +132,14 @@ export const CVForm = ({ control, onSave }: CVFormProps) => {
   return (
     <Card className="shadow-sm">
       <Form layout="vertical" component={false}>
-        <div className="space-y-4">
+        <div className="space-y-8">
           <FormSection title={t('form.personalData')}>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2">
               {PERSONAL.map((spec) => (
-                <div key={spec.key}>
-                  {field(spec.key, spec)}
-                  {spec.display && field(spec.display.key, spec.display, { secondary: true })}
-                </div>
+                <Fragment key={spec.key}>
+                  <div className={spec.wide ? 'md:col-span-2' : undefined}>{field(spec.key, spec)}</div>
+                  {spec.display && <div>{field(spec.display.key, spec.display, { secondary: true })}</div>}
+                </Fragment>
               ))}
             </div>
           </FormSection>
