@@ -34,6 +34,17 @@ export interface Project {
   endDate?: string;
 }
 
+/** Information about how a resume was generated (set when it is tailored to a job). */
+export interface CVMeta {
+  targetJob?: string;
+  company?: string;
+  /** Job keywords, used for PDF metadata and keyword coverage. */
+  keywords?: string[];
+  /** Id of the resume this one was generated from. */
+  sourceCvId?: string;
+  createdByAI?: boolean;
+}
+
 export interface CVData {
   fullName: string;
   jobTitle: string; // Cargo/posição
@@ -56,6 +67,8 @@ export interface CVData {
   interpersonalSkills?: string; // multiline field for demonstrated interpersonal competencies
   
   references?: Reference[];
+
+  meta?: CVMeta;
 }
 
 export interface SavedCV extends CVData {

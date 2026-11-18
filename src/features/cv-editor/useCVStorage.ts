@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useCallback } from 'react';
-import type { SavedCV } from '../types';
-import { defaultCV } from '../data/defaultCV';
+import type { SavedCV } from '@/types/cv';
+import { defaultCV } from './defaultCV';
 
 const STORAGE_KEY = 'cv-data';
 const SELECTED_KEY = 'cv-selected-id';
@@ -46,6 +46,11 @@ interface SelectAction {
   payload: string;
 }
 
+interface MoveAction {
+  type: 'MOVE';
+  payload: { id: string; toIndex: number };
+}
+
 interface ResetAction {
   type: 'RESET';
   payload: { cvs: SavedCV[]; activeId?: string | null };
@@ -57,7 +62,20 @@ type Action =
   | DeleteAction
   | UpdateAction
   | SelectAction
+  | MoveAction
   | ResetAction;
+
+/** Moves one resume to another position, keeping the others in order. Pure, for the reducer and tests. */
+export function moveCVInList<T extends { id: string }>(list: T[], id: string, toIndex: number): T[] {
+  const from = list.findIndex((item) => item.id === id);
+  if (from === -1) return list;
+  const to = Math.min(Math.max(toIndex, 0), list.length - 1);
+  if (from === to) return list;
+  const next = [...list];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -100,6 +118,10 @@ function reducer(state: State, action: Action): State {
         ...state,
         cvs: newCvs,
       };
+    }
+    case 'MOVE': {
+      // Reordering does not count as editing: updatedAt stays the same.
+      return { ...state, cvs: moveCVInList(state.cvs, action.payload.id, action.payload.toIndex) };
     }
     case 'SELECT': {
       return {
@@ -198,6 +220,13 @@ export function useCVStorage() {
     dispatch({ type: 'CREATE', payload: newCV });
   }, [state.cvs]);
 
+  /** Adds a ready resume (e.g. one tailored by AI) and selects it. Returns the new id. */
+  const addCV = useCallback((cv: Omit<SavedCV, 'id' | 'updatedAt'>) => {
+    const newCV: SavedCV = { ...cv, id: crypto.randomUUID(), updatedAt: Date.now() };
+    dispatch({ type: 'CREATE', payload: newCV });
+    return newCV.id;
+  }, []);
+
   const deleteCV = useCallback((id: string) => {
     // Pre-generate a new CV in case deletions make the list empty
     const newCVIfEmpty = generateNewCV();
@@ -233,6 +262,11 @@ export function useCVStorage() {
     });
   }, []);
 
+  /** Puts a resume at a new position in the list (drag and drop or "move up/down"). */
+  const moveCV = useCallback((id: string, toIndex: number) => {
+    dispatch({ type: 'MOVE', payload: { id, toIndex } });
+  }, []);
+
   const setActiveId = useCallback((id: string) => {
     dispatch({ type: 'SELECT', payload: id });
   }, []);
@@ -250,5 +284,7 @@ export function useCVStorage() {
     clearAll,
     duplicateCV,
     importCVs,
+    addCV,
+    moveCV,
   };
 }

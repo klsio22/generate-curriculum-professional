@@ -8,9 +8,10 @@ import {
     Path,
 } from '@react-pdf/renderer';
 import { useTranslation } from 'react-i18next';
-import styles from '../styles/pdfStyles';
-import type { CVData } from '../types';
-import { formatDate, normalizeUrl } from '../utils/textUtils';
+import styles from './pdfStyles';
+import type { CVData } from '@/types/cv';
+import { formatDate, normalizeUrl } from './textUtils';
+import { buildPdfMetadata } from './pdfMetadata';
 import type { ReactNode } from 'react';
 
 export interface PDFPreviewProps {
@@ -18,7 +19,8 @@ export interface PDFPreviewProps {
 }
 
 export const CVDocument = ({ data }: PDFPreviewProps) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const metadata = buildPdfMetadata(data, i18n.language, t('pdf.resume'));
     const skillsList =
         data.skills
             ?.split('\n')
@@ -74,7 +76,7 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
     };
 
     return (
-        <Document>
+        <Document {...metadata}>
             <Page size="A4" style={styles.page}>
                 {/* MAIN CONTENT */}
                 <View style={styles.mainContent}>
