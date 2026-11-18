@@ -341,6 +341,10 @@ export const ptBR = {
     addFactsOk: 'Guardar',
     factsAdded: 'Fatos guardados em "{{title}}".',
     appliedNotice: 'Mudança aplicada em "{{title}}".',
+    clear: 'Limpar conversa',
+    clearTitle: 'Limpar a conversa?',
+    clearMessage: 'As mensagens deste chat serão apagadas deste navegador. O currículo, o histórico e os fatos anotados não mudam.',
+    clearOk: 'Limpar',
   },
   history: {
     close: 'Fechar histórico',

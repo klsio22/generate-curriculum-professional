@@ -2,13 +2,14 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { App as AntdApp, Alert, Button, Drawer, Input } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
-import { Check, MessageSquare, Send } from 'lucide-react';
+import { Check, MessageSquare, Send, Trash2 } from 'lucide-react';
 import type { CVData, SavedCV } from '@/types/cv';
 import { StatusAlert } from '@/shared/components/StatusAlert';
-import { contentOf } from '@/features/history/history';
+import { contentOf, type ResumeContent } from '@/features/history/history';
 import { contentLocaleOf } from '@/shared/locale';
 import { describeAIError, type AIErrorDescription } from './errorMessage';
 import { compareResumes } from './compareResumes';
+import { itemsToSend, loadChat, saveChat, trimItems, type ChatItem, type ProposalStatus } from './chatHistory';
 import { refineResume } from './refine';
 import { ResumeComparison } from './ResumeComparison';
 import type { RefineTurn } from './prompts';
@@ -28,7 +29,7 @@ interface ChatBodyProps {
   settings: AISettings;
   isConfigured: boolean;
   onOpenSettings: () => void;
-  onApply: (next: CVData, request: string, reply: string) => void;
+  onApply: (next: ResumeContent, request: string, reply: string) => void;
   onFacts: (facts: string[]) => void;
   onAddFactsToBase: (facts: string[]) => void;
 }
@@ -38,21 +39,9 @@ interface RefineChatDrawerProps extends Omit<ChatBodyProps, 'cv'> {
   onClose: () => void;
 }
 
-type ProposalStatus = 'pending' | 'applied' | 'discarded';
-
-interface ChatItem {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  request?: string;
-  proposal?: { cv: CVData; base: CVData; status: ProposalStatus };
-  facts?: string[];
-  discardedItems?: number;
-}
-
 const SUGGESTIONS = ['suggestion_shorter', 'suggestion_results', 'suggestion_review'] as const;
 
-const sameContent = (a: CVData, b: CVData) => JSON.stringify(contentOf(a)) === JSON.stringify(contentOf(b));
+const sameContent = (base: ResumeContent, current: CVData) => JSON.stringify(base) === JSON.stringify(contentOf(current));
 
 const toTurns = (items: ChatItem[]): RefineTurn[] =>
   items.map((item) =>
@@ -140,7 +129,7 @@ const ChatBody = ({
   const { t, i18n } = useTranslation();
   const { modal } = AntdApp.useApp();
   const hintId = useId();
-  const [items, setItems] = useState<ChatItem[]>([]);
+  const [items, setItems] = useState<ChatItem[]>(() => loadChat(cv.id));
   const [draft, setDraft] = useState(initialMessage);
   const [seenInitial, setSeenInitial] = useState(initialMessage);
   const [busy, setBusy] = useState(false);
@@ -157,6 +146,10 @@ const ChatBody = ({
   useEffect(() => () => abortRef.current?.abort(), []);
 
   useEffect(() => {
+    saveChat(cv.id, items);
+  }, [cv.id, items]);
+
+  useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [items, busy]);
 
@@ -168,7 +161,7 @@ const ChatBody = ({
   const send = async () => {
     const request = draft.trim();
     if (!request || busy || !isConfigured) return;
-    const withRequest: ChatItem[] = [...items, { id: crypto.randomUUID(), role: 'user', text: request }];
+    const withRequest = trimItems([...items, { id: crypto.randomUUID(), role: 'user', text: request }]);
     setItems(withRequest);
     setDraft('');
     setError(null);
@@ -180,7 +173,7 @@ const ChatBody = ({
       const result = await refineResume(
         settings,
         cv,
-        toTurns(withRequest),
+        toTurns(itemsToSend(withRequest)),
         {
           uiLanguage: i18n.language,
           resumeLanguage: contentLocaleOf(cv, i18n.language),
@@ -190,18 +183,18 @@ const ChatBody = ({
         { signal: controller.signal },
       );
       if (result.declaredFacts.length > 0) onFacts(result.declaredFacts);
-      setItems((current) => [
+      setItems((current) => trimItems([
         ...current,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
           text: result.reply,
           request,
-          proposal: result.cv ? { cv: result.cv, base: cv, status: 'pending' } : undefined,
+          proposal: result.cv ? { cv: contentOf(result.cv), base: contentOf(cv), status: 'pending' } : undefined,
           facts: result.declaredFacts,
           discardedItems: result.discardedItems,
         },
-      ]);
+      ]));
     } catch (err) {
       if (!controller.signal.aborted) setError(describeAIError(err, t, settings.provider));
     } finally {
@@ -231,6 +224,22 @@ const ChatBody = ({
     });
   };
 
+  const confirmClear = () => {
+    modal.confirm({
+      title: t('chat.clearTitle'),
+      content: t('chat.clearMessage'),
+      okText: t('chat.clearOk'),
+      okButtonProps: { danger: true },
+      cancelText: t('modal.cancel'),
+      onOk: () => {
+        abortRef.current?.abort();
+        setBusy(false);
+        setError(null);
+        setItems([]);
+      },
+    });
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -247,6 +256,11 @@ const ChatBody = ({
     <div className="flex h-full flex-col">
       <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto p-4">
         <p className="text-gray-600">{t('chat.intro')}</p>
+        {items.length > 0 && (
+          <Button size="small" icon={<Trash2 size={14} aria-hidden />} onClick={confirmClear}>
+            {t('chat.clear')}
+          </Button>
+        )}
         {job && <Alert type="info" showIcon title={t('chat.jobContext', { job: job.title })} />}
         {!isConfigured && (
           <Alert

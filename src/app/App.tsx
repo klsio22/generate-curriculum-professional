@@ -26,13 +26,14 @@ import {
 } from '@/features/backup/backup';
 import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
 import { useCVHistory } from '@/features/history/useCVHistory';
-import { contentOf, entriesFor, type HistoryEntry, type HistoryRecord } from '@/features/history/history';
+import { contentOf, entriesFor, type HistoryEntry, type HistoryRecord, type ResumeContent } from '@/features/history/history';
 import { HistoryDrawer } from '@/features/history/HistoryDrawer';
 import { ImportPdfModal, type PdfImportState } from '@/features/pdf-import/ImportPdfModal';
 import { BackupMenu } from '@/features/backup/BackupMenu';
 import { AISettingsButton } from '@/features/ai/AISettingsButton';
 import { AIActions, type AIActionsProps } from '@/features/ai/AIActions';
 import { RefineChatDrawer } from '@/features/ai/RefineChatDrawer';
+import { clearChats, keepChatsFor, removeChatFor } from '@/features/ai/chatHistory';
 import { computeKeywordCoverage } from '@/features/ai/keywords';
 import { DownloadPdfButton } from '@/features/pdf/DownloadPdfButton';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
@@ -107,6 +108,7 @@ function App() {
       onOk: () => {
         deleteCV(id);
         history.removeFor(id);
+        removeChatFor(id);
       },
     });
   };
@@ -121,6 +123,7 @@ function App() {
       onOk: () => {
         clearAll();
         history.replaceAll([]);
+        clearChats();
       },
     });
   };
@@ -170,6 +173,7 @@ function App() {
     importCVs(pendingRestore.cvs, pendingRestore.activeId);
     const restoredIds = new Set(pendingRestore.cvs.map((cv) => cv.id));
     history.replaceAll(pendingRestore.history.filter((entry) => restoredIds.has(entry.cvId)));
+    keepChatsFor(restoredIds);
     showNotice('success', t('backup.replaced', { count: pendingRestore.cvs.length }));
     setPendingRestore(null);
   };
@@ -253,14 +257,14 @@ function App() {
     updateCV(cv.id, { meta: { ...cv.meta, declaredFacts } });
   };
 
-  const handleApplyChat = (next: CVData, request: string, reply: string) => {
+  const handleApplyChat = (next: ResumeContent, request: string, reply: string) => {
     if (!chatCV) return;
     history.record(
       chatCV.id,
-      { kind: 'chat', before: contentOf(chatCV), after: contentOf(next), changes: reply ? [reply] : [], request },
+      { kind: 'chat', before: contentOf(chatCV), after: structuredClone(next), changes: reply ? [reply] : [], request },
       aiSettings.settings.model,
     );
-    updateCV(chatCV.id, contentOf(next));
+    updateCV(chatCV.id, structuredClone(next));
     showNotice('success', t('chat.appliedNotice', { title: chatCV.title }));
   };
 

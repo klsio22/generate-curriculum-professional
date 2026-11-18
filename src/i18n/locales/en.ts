@@ -341,6 +341,10 @@ export const en = {
     addFactsOk: 'Keep',
     factsAdded: 'Facts kept in "{{title}}".',
     appliedNotice: 'Change applied to "{{title}}".',
+    clear: 'Clear conversation',
+    clearTitle: 'Clear the conversation?',
+    clearMessage: 'The messages in this chat will be deleted from this browser. The resume, the history and the noted facts do not change.',
+    clearOk: 'Clear',
   },
   history: {
     close: 'Close history',
