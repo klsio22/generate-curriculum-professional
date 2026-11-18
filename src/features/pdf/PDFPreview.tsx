@@ -17,7 +17,7 @@ export const PDFPreview = memo(({ data }: PDFPreviewProps) => {
 
   return (
     <div className="h-192 max-h-max border border-gray-200 rounded-lg overflow-hidden w-full">
-      <PDFViewer style={{ width: '100%', height: '100%' }}>{document}</PDFViewer>
+      <PDFViewer showToolbar={false} style={{ width: '100%', height: '100%' }}>{document}</PDFViewer>
     </div>
   );
 });
