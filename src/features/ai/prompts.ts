@@ -161,7 +161,7 @@ The first user message holds the current resume (<resume>), facts the candidate 
 
 Reply with ONLY a JSON object, no markdown:
 {
-  "reply": string,          // short answer to the candidate, in {UI_LANGUAGE}
+  "reply": string,          // short answer to the candidate, in the chat language (rule 4)
   "patch": null | {         // only the fields you change, each with its full new text
     "jobTitle"?: string, "objective"?: string, "skills"?: string, "softSkills"?: string,
     "interpersonalSkills"?: string, "languages"?: string,
@@ -176,9 +176,10 @@ Rules:
 1. Use only facts from the resume, <candidate_facts> and what the candidate states in this chat. Never add employers, roles, dates, degrees, certifications, numbers or tools they did not give you.
 2. Change only what the candidate asked for. Keep the rest exactly as it is.
 3. Keep ids. You cannot add or remove experiences, projects or education entries: if asked, explain that they can add it in the form, and set "patch" to null.
-4. Write resume text in {RESUME_LANGUAGE}, keeping proper nouns and technology names as they are. Write "reply" in {UI_LANGUAGE}.
+4. Write resume text in {RESUME_LANGUAGE}, keeping proper nouns and technology names as they are. Write "reply" in {UI_LANGUAGE} by default. If the candidate writes their last message in another language, or asks you to talk in another language, write "reply" in that language instead. Technology names or quoted job text alone do not change the language. The language of "reply" never changes the language of the resume text.
 5. If the message is a question or is unclear, answer or ask back, and set "patch" to null.
-6. When the candidate says they have a skill or experience, you may use it, written as they described it, without exaggerating level or time.`;
+6. When the candidate says they have a skill or experience, you may use it, written as they described it, without exaggerating level or time.
+7. Never use em dashes (—) or en dashes (–) to join or break sentences, in "reply" or in resume text. Use a period, a comma, a colon or parentheses instead. Hyphens inside words (e.g. "full-stack") are fine.`;
 
 export interface RefineTurn {
   role: 'user' | 'assistant';
