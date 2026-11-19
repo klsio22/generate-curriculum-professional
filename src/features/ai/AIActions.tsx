@@ -1,4 +1,4 @@
-import { ChevronDown, History, Languages, MessageSquare, Sparkles } from 'lucide-react';
+import { ChevronDown, History, Languages, MessageSquare, ScanSearch, Sparkles } from 'lucide-react';
 import { Button, Dropdown, Space, type ButtonProps, type MenuProps } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { ResumeLocale } from '@/types/cv';
@@ -9,6 +9,7 @@ export interface AIActionsProps {
   onChat: () => void;
   onTranslate: () => void;
   onHistory: () => void;
+  onAts: () => void;
   translateTo: ResumeLocale;
   size?: ButtonProps['size'];
   block?: boolean;
@@ -17,7 +18,7 @@ export interface AIActionsProps {
 const SOFT_PURPLE =
   'border-purple-200 bg-[#F3E8FF] text-purple-800 hover:border-purple-300 hover:bg-purple-200 hover:text-purple-900';
 
-export const AIActions = ({ onTailor, onChat, onTranslate, onHistory, translateTo, size, block }: AIActionsProps) => {
+export const AIActions = ({ onTailor, onChat, onTranslate, onHistory, onAts, translateTo, size, block }: AIActionsProps) => {
   const { t } = useTranslation();
   const { triggerRef, onOpenChange } = useFocusReturn();
 
@@ -30,6 +31,7 @@ export const AIActions = ({ onTailor, onChat, onTranslate, onHistory, translateT
       onClick: onTranslate,
     },
     { key: 'history', icon: <History size={16} aria-hidden />, label: t('sidebar.history'), onClick: onHistory },
+    { key: 'ats', icon: <ScanSearch size={16} aria-hidden />, label: t('ats.open'), onClick: onAts },
   ];
 
   return (
