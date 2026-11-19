@@ -20,6 +20,7 @@ Files are grouped by feature:
 | `src/features/pdf/` | `CVDocument.tsx`, `Description.tsx`, `PDFPreview.tsx`, `DownloadPdfButton.tsx`, `pdfMetadata.ts`, `pdfStyles.ts`, `textUtils.ts` |
 | `src/features/backup/` | `backup.ts`, `BackupMenu.tsx`, `MenuItemLabel.tsx`, `RestoreBackupModal.tsx` |
 | `src/features/history/` | `history.ts`, `useCVHistory.ts`, `HistoryDrawer.tsx` |
+| `src/features/ats/` | `atsRules.ts`, `readBackResume.tsx`, `AtsDrawer.tsx` |
 | `src/features/pdf-import/` | `extractPdf.ts`, `parseResume.ts`, `importResumePdf.ts`, `ImportPdfModal.tsx` |
 | `src/features/ai/` | `client.ts`, `providers.ts`, `prompts.ts`, `parse.ts`, `jobTailoring.ts`, `keywords.ts`, `useAISettings.ts`, `AISettingsButton.tsx`, `AISettingsDrawer.tsx`, `ModelCombobox.tsx`, `AIActions.tsx`, `TailorJobModal.tsx`, `TailorResultView.tsx`, `ResumeComparison.tsx`, `compareResumes.ts`, `translation.ts`, `TranslateModal.tsx`, `refine.ts`, `RefineChatDrawer.tsx` |
 | `src/shared/` | `locale.ts` (resume language), `text.ts` |
@@ -53,7 +54,7 @@ Responsibilities:
 
 - left, on the page margin (aligned with "Edit information"): the button that opens the resume list (☰; while the list is open it shows "close panel" and closes it) and the title
 - on small screens the title is the short one (`header.shortTitle`), centered between ☰ and the language selector
-- on the right: the site language (🌐 PT ▾), then, from `md`, only the two workflow actions: "Tailor to a job" (`AIActions`, secondary, soft purple, with a ▾ menu for the chat, translation and AI history of the open resume) and "Download resume" (`DownloadPdfButton`, primary)
+- on the right: the site language (🌐 PT ▾), then, from `md`, only the two workflow actions: "Tailor to a job" (`AIActions`, secondary, soft purple, with a ▾ menu for the chat, translation, AI history and ATS check of the open resume) and "Download resume" (`DownloadPdfButton`, primary)
 - "AI settings" and "Backup" are not here: they are in the sidebar footer
 
 ## CVForm.tsx
@@ -140,7 +141,13 @@ For antd `Dropdown`: when the menu closes and focus was lost (on `<body>` or sti
 
 ## RefineChatDrawer.tsx
 
-See "Adjust in a chat" in `ia-adaptacao-vaga.md`. An antd `Drawer` from the right: intro, the job used as context, suggestions to start, "I have …" shortcuts, the conversation (`role="log"`, announced politely), each AI answer with its proposal (`ResumeComparison` of the changed sections, Apply / Discard) and its declared facts, and a message box at the bottom (Enter sends, Shift+Enter adds a line, Cancel while waiting). The conversation is saved per resume in this browser (`chatHistory.ts`, see "Adjust in a chat"), and "Clear conversation" deletes it.
+See "Adjust in a chat" in `ia-adaptacao-vaga.md`. An antd `Drawer` from the right: intro, the job used as context, suggestions to start, "I have …" shortcuts, the conversation (`role="log"`, announced politely), each AI answer with its proposal (`ResumeComparison` of the changed sections, Apply / Discard) and its declared facts, and a message box at the bottom (Enter sends, Shift+Enter adds a line, Cancel while waiting). The conversation is saved per resume in this browser (`chatHistory.ts`, see "Adjust in a chat"), and "Clear conversation" deletes it. The conversation opens scrolled to the latest message: the panel scrolls to the end after its opening animation (`afterOpenChange`) and after each new message.
+
+## AtsDrawer.tsx
+
+See `ats.md`. An antd `Drawer` from the right, opened by "ATS check" in the ▾ menu of "Tailor to a job". On open it generates the PDF of the open resume and reads it back (`readBackResume.tsx`, loaded only then), then shows "N of 13 items ok" with a progress bar and one card per rule: rules that need attention first (amber, with what to fix and in which field), then the ones that pass (green check). Busy and error states use `StatusAlert`; "Check again" runs it once more. The check itself does not use the AI and needs no key.
+
+When something fails, a "Fixes" box under the summary offers "Fix automatically (N)" for structural fixes (a confirmation lists each change, then `App` records an `ats` history entry and saves, and a green "Changed automatically" box lists them) and "Fix with the AI (N)" (closes the panel and opens `RefineChatDrawer` with the request written from the failing rules); warnings that need the user's own data are only counted. See `ats.md`.
 
 ## HistoryDrawer.tsx
 
@@ -195,7 +202,7 @@ Initial data used as a base for new resumes.
 
 Responsibilities:
 
-- provide a complete prefilled example
+- provide a complete prefilled example that passes the ATS checklist (`ats.md`): contact with city, links printed as their address, past dates in one format, results as bullet items, skills that match the profile
 - act as fallback when no saved data exists
 
 ## pdfStyles.ts
