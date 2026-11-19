@@ -9,6 +9,7 @@ This directory centralizes the technical documentation for the resume generator 
 - [Dependencies and libraries](./dependencias.md)
 - [Backup (save and restore)](./import-export-json.md)
 - [Tailor a resume to a job (AI)](./ia-adaptacao-vaga.md)
+- [ATS readiness](./ats.md)
 
 ## Scope
 
@@ -20,6 +21,7 @@ The documentation here covers:
 - core libraries and the role of each one
 - backup and restore flow
 - AI job tailoring: providers, privacy and honesty guarantees
+- ATS readiness of the generated PDF and how it is tested
 - common extension points
 
 ## How to use

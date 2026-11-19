@@ -2,36 +2,34 @@ import type { CVData } from '@/types/cv';
 
 export const defaultCV: CVData = {
   fullName: 'Catarina Dantas',
-  jobTitle: 'DESENVOLVEDORA DE SOFTWARE',
-  address: '',
-  phone: '(12) 456-7890',
-  email: 'ola@grandesite.com.br',
-  linkedin: 'www.linkedin.com/in/usuario',
-  linkedinName: 'usuario-linkedin',
-  github: 'github.com/usuario',
-  githubName: 'usuario',
-  portfolio: 'www.grandesite.com.br',
-  portfolioName: 'meu-portfolio',
+  jobTitle: 'Engenheira de Software Sênior',
+  address: 'São José dos Campos, SP',
+  phone: '(12) 98765-4321',
+  email: 'catarina.dantas@exemplo.com.br',
+  linkedin: 'linkedin.com/in/catarina-dantas',
+  linkedinName: '',
+  github: 'github.com/catarinadantas',
+  githubName: '',
+  portfolio: 'catarinadantas.dev',
+  portfolioName: '',
   objective:
-    'Desenvolvedora de software e arquiteta de sistemas com experiência em projetar, programar e testar sistemas complexos. Minha expertise está nas linguagens de programação C#, Java e Ruby.',
+    'Engenheira de software com experiência em desenvolvimento back-end e web com C#, .NET, Java e Ruby on Rails. Lidero equipes, desenho arquiteturas escaláveis e implanto testes automatizados, com foco em desempenho, qualidade e redução de custos.',
   education: [
     {
       id: '1',
       course: 'Mestrado em Ciência da Computação',
       institution: 'Universidade de Monte Verde',
-      startDate: 'Maio de 2030',
-      endDate: 'Maio de 2032',
-      topics:
-        'Deep Learning\nNatural Language Processing\nAdvanced Operating Systems\nDistributed Computing\nComputer Networks',
+      startDate: 'Mar 2019',
+      endDate: 'Dez 2021',
+      topics: 'Aprendizado profundo\nProcessamento de linguagem natural\nSistemas distribuídos\nRedes de computadores',
     },
     {
       id: '2',
-      course: 'Ciência da Computação',
+      course: 'Bacharelado em Ciência da Computação',
       institution: 'Universidade de Monte Verde',
-      startDate: 'Jun 2026',
-      endDate: 'Jun 2030',
-      topics:
-        'Applied Mathematics\nDiscrete Mathematics\nAlgorithms\nDatabases\nMachine Learning\nArtificial Intelligence\nNatural Language Processing\nCloud Computing\nDistributed Computing',
+      startDate: 'Fev 2014',
+      endDate: 'Dez 2017',
+      topics: 'Algoritmos e estruturas de dados\nBanco de dados\nEngenharia de software\nComputação em nuvem',
     },
   ],
   experience: [
@@ -39,53 +37,47 @@ export const defaultCV: CVData = {
       id: '1',
       role: 'Engenheira de Software Sênior',
       company: 'Macedo Design de Sistemas',
-      startDate: 'Jan 2034',
-      endDate: 'Jun 2038',
+      startDate: 'Jan 2022',
+      endDate: '',
       description:
-        'Liderou uma equipe de 10 engenheiros no desenvolvimento de uma nova arquitetura que aumentou o desempenho do sistema em 40% e reduziu os custos do servidor em 20%\nImplementou com sucesso protocolos de testes automatizados, reduzindo incidentes relacionados a bugs em 40% nos primeiros seis meses',
+        'Principais resultados:\nLiderei uma equipe de 10 engenheiros na migração para uma nova arquitetura em .NET, aumentando o desempenho do sistema em 40% e reduzindo os custos de servidor em 20%\nImplantei testes automatizados com xUnit e integração contínua, reduzindo em 40% os incidentes causados por bugs nos primeiros seis meses',
     },
     {
       id: '2',
       role: 'Desenvolvedora de Software',
       company: 'Cia. de Tecnologia Pinheiros',
-      startDate: 'Set 2030',
-      endDate: 'Dez 2033',
+      startDate: 'Set 2018',
+      endDate: 'Dez 2021',
       description:
-        'Melhorou o desempenho do app em 30% por meio da otimização de consultas ao banco de dados\nColaborou com sucesso com uma equipe de 5 desenvolvedores para concluir um grande projeto, entregando o produto final 1 semana antes do prazo de 6 meses e 15% abaixo do orçamento\nImplementou procedimentos de testes automatizados que reduziram os relatórios de bugs em 40%, aumentando a confiabilidade geral do software e a satisfação do cliente',
+        'Principais resultados:\nMelhorei o desempenho da aplicação em 30% otimizando consultas SQL no PostgreSQL\nEntreguei com uma equipe de 5 desenvolvedores um projeto de 6 meses uma semana antes do prazo e 15% abaixo do orçamento\nCriei testes automatizados em Java e Ruby que reduziram os relatos de bugs em 40%',
     },
   ],
   skills:
-    'Análise de Sistemas\nPesquisa de Usuários\nMachine Learning\nMetodologia Ágil\nBanco de Dados',
-  languages: 'Inglês: B1 (Intermediário avançado) - Leitura técnica fluente, participação em code reviews internacionais',
-  softSkills: '',
-  interpersonalSkills: `Liderança e Mentoria: Conduzo revisões de código detalhadas e sessões de pair programming, reduzindo tempo de onboarding de novos desenvolvedores em 50%. Assumo naturalmente papel de referência técnica, propondo soluções para problemas complexos e educando a equipe sobre trade-offs técnicos.
-  Comunicação e Colaboração: Facilito comunicação efetiva entre equipes técnicas e não-técnicas, traduzindo requisitos de negócio em soluções técnicas viáveis. Demonstro empatia ao entender perspectivas de designers, PMs e stakeholders, criando consenso através de apresentações claras e negociação construtiva.
-  Resolução de Problemas: Aplico pensamento analítico sistemático para diagnosticar problemas complexos, como evidenciado pela resolução de bug crítico de race condition que salvou dados de clientes e pela otimização de performance que aumentou conversões em 25%.
-  Autonomia e Proatividade: Identifico oportunidades de melhoria sem ser solicitado, como criação de biblioteca de componentes que reduziu tempo de desenvolvimento em 60% e documentação técnica que diminuiu code reviews em 50%.
-  Resiliência e Aprendizado: Enfrento desafios técnicos complexos com persistência, dedicando tempo para dominar código legado difícil e transformá-lo em solução moderna e manutenível, enquanto documento o processo para benefício da equipe.
-  Gestão de Tempo e Organização: Entrego projetos consistentemente no prazo através de planejamento cuidadoso, priorização efetiva e comunicação proativa sobre riscos e impedimentos.`,
-
-  
+    'C#\n.NET\nJava\nSpring Boot\nRuby on Rails\nReact\nTypeScript\nPostgreSQL\nDocker\nTestes automatizados\nIntegração contínua\nArquitetura de software\nScrum',
+  languages: 'Português: nativo\nInglês: avançado',
+  softSkills: 'Liderança\nComunicação\nTrabalho em equipe\nResolução de problemas',
+  interpersonalSkills:
+    'Liderança e mentoria: conduzo revisões de código e pair programming, o que reduziu pela metade o tempo de integração de novos desenvolvedores.\nComunicação: traduzo requisitos de negócio em soluções técnicas para designers e gestores de produto.\nAutonomia: criei uma biblioteca de componentes que reduziu em 60% o tempo de desenvolvimento de novas telas.',
   projects: [
     {
       id: '1',
       name: 'Sistema de Gestão Hospitalar',
       description:
-        'Desenvolvimento de sistema web completo para gestão de pacientes, agendamentos e registros médicos. Implementei a arquitetura backend com Java Spring Boot e frontend com React.',
+        'Sistema web para gestão de pacientes, agendamentos e prontuários. Desenvolvi a arquitetura back-end com Java e Spring Boot e o front-end com React.',
       technologies: 'Java, Spring Boot, React, PostgreSQL',
-      link: 'github.com/usuario/hospital-system',
-      startDate: 'Jan 2032',
-      endDate: 'Ago 2032',
+      link: 'github.com/catarinadantas/gestao-hospitalar',
+      startDate: 'Jan 2021',
+      endDate: 'Ago 2021',
     },
     {
       id: '2',
-      name: 'App Mobile de Finanças Pessoais',
+      name: 'App de Finanças Pessoais',
       description:
-        'Aplicativo mobile para controle de despesas e orçamento pessoal com gráficos de análise. Participei como desenvolvedora principal na implementação das funcionalidades de dashboard e relatórios.',
-      technologies: 'React Native, Firebase, Expo',
-      link: 'github.com/usuario/finance-app',
-      startDate: 'Mar 2031',
-      endDate: 'Jul 2031',
+        'Aplicativo para controle de despesas e orçamento pessoal com gráficos de análise. Desenvolvi o painel e os relatórios.',
+      technologies: 'React Native, TypeScript, Firebase',
+      link: 'github.com/catarinadantas/financas-pessoais',
+      startDate: 'Mar 2020',
+      endDate: 'Jul 2020',
     },
   ],
 };

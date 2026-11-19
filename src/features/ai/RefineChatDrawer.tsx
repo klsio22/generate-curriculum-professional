@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { App as AntdApp, Alert, Button, Drawer, Input } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
@@ -32,12 +32,17 @@ interface ChatBodyProps {
   onApply: (next: ResumeContent, request: string, reply: string) => void;
   onFacts: (facts: string[]) => void;
   onAddFactsToBase: (facts: string[]) => void;
+  scrollRef: RefObject<HTMLDivElement | null>;
 }
 
-interface RefineChatDrawerProps extends Omit<ChatBodyProps, 'cv'> {
+interface RefineChatDrawerProps extends Omit<ChatBodyProps, 'cv' | 'scrollRef'> {
   cv: SavedCV | null;
   onClose: () => void;
 }
+
+const scrollToEnd = (element: HTMLElement | null) => {
+  if (element) element.scrollTop = element.scrollHeight;
+};
 
 const SUGGESTIONS = ['suggestion_shorter', 'suggestion_results', 'suggestion_review'] as const;
 
@@ -125,6 +130,7 @@ const ChatBody = ({
   onApply,
   onFacts,
   onAddFactsToBase,
+  scrollRef,
 }: ChatBodyProps) => {
   const { t, i18n } = useTranslation();
   const { modal } = AntdApp.useApp();
@@ -136,7 +142,6 @@ const ChatBody = ({
   const [error, setError] = useState<AIErrorDescription | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<TextAreaRef>(null);
-  const endRef = useRef<HTMLDivElement>(null);
 
   if (initialMessage !== seenInitial) {
     setSeenInitial(initialMessage);
@@ -150,8 +155,8 @@ const ChatBody = ({
   }, [cv.id, items]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' });
-  }, [items, busy]);
+    scrollToEnd(scrollRef.current);
+  }, [items, busy, scrollRef]);
 
   const fillDraft = (text: string) => {
     setDraft(text);
@@ -254,7 +259,7 @@ const ChatBody = ({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto p-4">
+      <div ref={scrollRef} className="scrollbar-thin flex-1 space-y-4 overflow-y-auto p-4">
         <p className="text-gray-600">{t('chat.intro')}</p>
         {items.length > 0 && (
           <Button size="small" icon={<Trash2 size={14} aria-hidden />} onClick={confirmClear}>
@@ -333,7 +338,6 @@ const ChatBody = ({
           )}
         </div>
         <output className="block">{busy && <StatusAlert tone="busy">{t('chat.thinking')}</StatusAlert>}</output>
-        <div ref={endRef} />
       </div>
 
       <div className="space-y-2 border-t border-gray-200 p-4">
@@ -367,10 +371,14 @@ const ChatBody = ({
 
 export const RefineChatDrawer = ({ cv, onClose, ...props }: RefineChatDrawerProps) => {
   const { t } = useTranslation();
+  const scrollRef = useRef<HTMLDivElement>(null);
   return (
     <Drawer
       open={cv !== null}
       onClose={onClose}
+      afterOpenChange={(open) => {
+        if (open) scrollToEnd(scrollRef.current);
+      }}
       placement="right"
       size={560}
       title={
@@ -382,7 +390,7 @@ export const RefineChatDrawer = ({ cv, onClose, ...props }: RefineChatDrawerProp
       closable={{ 'aria-label': t('chat.close') }}
       styles={{ body: { padding: 0 } }}
     >
-      {cv && <ChatBody key={cv.id} cv={cv} {...props} />}
+      {cv && <ChatBody key={cv.id} cv={cv} scrollRef={scrollRef} {...props} />}
     </Drawer>
   );
 };

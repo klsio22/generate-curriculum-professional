@@ -108,7 +108,7 @@ export const CVDocument = ({ data }: PDFPreviewProps) => {
                                     <Text style={styles.itemSubtitle}>{exp.company}</Text>
                                     <Text style={styles.itemDate}>
                                         {formatDate(exp.startDate)}
-                                        {exp.endDate ? ` - ${formatDate(exp.endDate)}` : ' - Atual'}
+                                        {exp.endDate ? ` - ${formatDate(exp.endDate)}` : ` - ${t('pdf.current')}`}
                                     </Text>
                                     {exp.description && (
                                         <View style={styles.bulletList}>

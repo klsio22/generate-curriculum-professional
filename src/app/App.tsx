@@ -28,6 +28,7 @@ import { RestoreBackupModal } from '@/features/backup/RestoreBackupModal';
 import { useCVHistory } from '@/features/history/useCVHistory';
 import { contentOf, entriesFor, type HistoryEntry, type HistoryRecord, type ResumeContent } from '@/features/history/history';
 import { HistoryDrawer } from '@/features/history/HistoryDrawer';
+import { AtsDrawer } from '@/features/ats/AtsDrawer';
 import { ImportPdfModal, type PdfImportState } from '@/features/pdf-import/ImportPdfModal';
 import { BackupMenu } from '@/features/backup/BackupMenu';
 import { AISettingsButton } from '@/features/ai/AISettingsButton';
@@ -61,6 +62,7 @@ function App() {
   const [returnToTailor, setReturnToTailor] = useState(false);
   const [translateId, setTranslateId] = useState<string | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
+  const [atsId, setAtsId] = useState<string | null>(null);
   const [chat, setChat] = useState<{ cvId: string; initial: string } | null>(null);
   const [showTailor, setShowTailor] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
@@ -233,6 +235,20 @@ function App() {
     showNotice('success', t('history.restored', { date }));
   };
 
+  const atsCV = cvs.find((cv) => cv.id === atsId) ?? null;
+
+  const handleAtsAutoFix = (next: CVData, changes: string[]) => {
+    if (!atsCV) return;
+    history.record(atsCV.id, { kind: 'ats', before: contentOf(atsCV), after: contentOf(next), changes });
+    updateCV(atsCV.id, {
+      ...contentOf(next),
+      linkedinName: next.linkedinName,
+      githubName: next.githubName,
+      portfolioName: next.portfolioName,
+    });
+    showNotice('success', t('ats.autoFixed', { count: changes.length, title: atsCV.title }));
+  };
+
   const chatCV = cvs.find((cv) => cv.id === chat?.cvId) ?? null;
   const chatTailorEntry = chatCV ? entriesFor(history.entries, chatCV.id).find((entry) => entry.kind === 'tailor') : undefined;
   const chatJob = chatTailorEntry?.job
@@ -275,6 +291,7 @@ function App() {
     },
     onTranslate: () => setTranslateId(activeId),
     onHistory: () => setHistoryId(activeId),
+    onAts: () => setAtsId(activeId),
     translateTo: otherLocale(contentLocaleOf(activeCV ?? {}, i18n.language)),
   };
 
@@ -361,6 +378,16 @@ function App() {
           onOpenSettings={() => setShowAISettings(true)}
           onClose={() => setTranslateId(null)}
           onSave={handleSaveTranslated}
+        />
+
+        <AtsDrawer
+          cv={atsCV}
+          onClose={() => setAtsId(null)}
+          onAutoFix={handleAtsAutoFix}
+          onFixWithAI={(message) => {
+            if (atsCV) setChat({ cvId: atsCV.id, initial: message });
+            setAtsId(null);
+          }}
         />
 
         <HistoryDrawer

@@ -69,7 +69,7 @@ The AI translates the headline, summary, skills, soft and interpersonal skills, 
 
 ## Adjust in a chat
 
-The ▾ next to "Tailor to a job" opens a menu with **Adjust in a chat**, **Translate** and **AI history** for the open resume (`AIActions.tsx`).
+The ▾ next to "Tailor to a job" opens a menu with **Adjust in a chat**, **Translate**, **AI history** and **ATS check** for the open resume (`AIActions.tsx`). The ATS check does not call the AI (`ats.md`).
 
 The chat (`RefineChatDrawer.tsx`, `refine.ts`) works on the open resume. The candidate asks for changes in their own words ("make the summary shorter", "I studied GraphQL in 2026"). If the resume came from a job tailoring, the job posting goes along as context and the keywords the resume still does not show become "I have …" shortcuts that start the message.
 
@@ -90,6 +90,7 @@ The conversation is saved per resume in `localStorage` (key `cv-chat`, `chatHist
 - **Tailored to <job>**: date, model, keyword coverage before → after, new terms, keywords the resume could not support, the AI's list of changes, the job posting (collapsed) and a before/after of every section.
 - **Translated from <language> to <language>**: date, model and the before/after.
 - **Adjusted in the chat**: the request, the AI's reply and the before/after.
+- **Automatic fixes from the ATS check**: the list of fixes (dates, link display names) and the before/after (`ats.md`).
 - **Version restored**: when a version is brought back.
 
 The keywords that were missing in a tailoring have an "I have …" button that opens the chat with the message started.
