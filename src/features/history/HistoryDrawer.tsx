@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { App as AntdApp, Alert, Button, Collapse, Drawer, Empty, type CollapseProps } from 'antd';
-import { History, Languages, MessageSquare, RotateCcw, Sparkles } from 'lucide-react';
+import { History, Languages, MessageSquare, RotateCcw, ScanSearch, Sparkles } from 'lucide-react';
 import type { ResumeLocale, SavedCV } from '@/types/cv';
 import { ResumeComparison } from '@/features/ai/ResumeComparison';
 import { compareResumes } from '@/features/ai/compareResumes';
@@ -16,7 +16,7 @@ interface HistoryDrawerProps {
 
 const LOCALE_TEXT_KEY: Record<ResumeLocale, string> = { 'pt-BR': 'ai.translate.language_pt', en: 'ai.translate.language_en' };
 
-const KIND_ICON = { tailor: Sparkles, translate: Languages, restore: RotateCcw, chat: MessageSquare } as const;
+const KIND_ICON = { tailor: Sparkles, translate: Languages, restore: RotateCcw, chat: MessageSquare, ats: ScanSearch } as const;
 const MAX_REQUEST_PREVIEW = 80;
 
 const EntryTitle = ({ entry }: { entry: HistoryEntry }) => {
@@ -33,6 +33,7 @@ const EntryTitle = ({ entry }: { entry: HistoryEntry }) => {
     const preview = request.length > MAX_REQUEST_PREVIEW ? `${request.slice(0, MAX_REQUEST_PREVIEW)}…` : request;
     return <>{t('history.kind_chat', { request: preview })}</>;
   }
+  if (entry.kind === 'ats') return <>{t('history.kind_ats')}</>;
   return <>{t('history.kind_restore')}</>;
 };
 

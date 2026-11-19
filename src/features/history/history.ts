@@ -4,7 +4,7 @@ import type { JobAnalysis } from '@/features/ai/types';
 export const HISTORY_KEY = 'cv-history';
 export const MAX_ENTRIES_PER_CV = 20;
 
-export type HistoryKind = 'tailor' | 'translate' | 'restore' | 'chat';
+export type HistoryKind = 'tailor' | 'translate' | 'restore' | 'chat' | 'ats';
 
 const CONTENT_FIELDS = [
   'jobTitle',
@@ -67,7 +67,7 @@ export const removeEntriesFor = (entries: HistoryEntry[], cvId: string): History
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const KINDS = new Set<HistoryKind>(['tailor', 'translate', 'restore', 'chat']);
+const KINDS = new Set<HistoryKind>(['tailor', 'translate', 'restore', 'chat', 'ats']);
 
 const isContent = (value: unknown): value is ResumeContent =>
   isRecord(value) && Array.isArray(value.experience) && Array.isArray(value.education);

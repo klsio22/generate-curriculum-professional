@@ -355,6 +355,7 @@ export const ptBR = {
     kind_translate: 'Traduzido de {{from}} para {{to}}',
     kind_restore: 'Versão restaurada',
     kind_chat: 'Ajustado pelo chat: "{{request}}"',
+    kind_ats: 'Correções automáticas da análise de ATS',
     jobFallback: 'uma vaga',
     model: 'Modelo: {{model}}',
     coverage: 'Palavras-chave da vaga no currículo: {{before}} → {{after}} de {{total}}',

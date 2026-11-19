@@ -355,6 +355,7 @@ export const en = {
     kind_translate: 'Translated from {{from}} to {{to}}',
     kind_restore: 'Version restored',
     kind_chat: 'Adjusted in the chat: "{{request}}"',
+    kind_ats: 'Automatic fixes from the ATS check',
     jobFallback: 'a job',
     model: 'Model: {{model}}',
     coverage: 'Job keywords in the resume: {{before}} → {{after}} of {{total}}',
